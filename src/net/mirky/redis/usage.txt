@@ -1,0 +1,27 @@
+redis -- retrocomputing dis-kimage and dis-assembly tool
+
+usage: redis -[ilxrth] filename.suf
+
+ -i, --identify       show data identifying this file
+                      (recursively if container file)
+ -l, --list           list files extractable from image
+ -x, --extract        extract files from a given image
+ -r, --reconstruct    reconstruct original image from the rcn and
+                      extracted files
+ -t, --test           attempt reconstruction but don't rewrite
+                      the image
+ -h, --hexdump        hexdump the image's content
+ --format=SPEC        treat the given file as an object of this format                    
+
+ --help               print this usage
+ --version            print version data
+
+The following reflective operations are mainly useful for diagnostics.
+ --dump-lang          dump the content of disassembly tables given
+                      in parameter, for diagnostics
+ --list-simple-types  list known simple (that is, single-valued) option
+                      types
+ 
+PLEASE NOTE: redis' attempts to deduce file format based on
+not just magic header (which is not found in many old formats)
+but also its name.

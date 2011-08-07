@@ -1,0 +1,145 @@
+Redis is a tool for analysing and extracting files contained within ancient
+disk, tape and other images.
+
+
+Modes of operation
+==================
+
+Redis can *extract* child objects from a given container object such as disk
+image (currently, Commodore 64's D64 images and ZX Spectrum's TAP and TZX
+images are supported), attempt to *identify* an object (not necessarily
+container object) and its content, *hexdump* an object (if container, also its
+children), *dis* an object (currently, disassembly for i8080, Z80, and MOS 6502
+is supported, and ZX Spectrum's BASIC programs can be decoded), or
+*reconstruct* an image from its extract children and the reconstruction
+instructions generated during extraction.
+
+Examples
+--------
+
+    redis -d PROGRAM.COM
+
+will treat PROGRAM.COM as a COM file (because of its filename suffix) of the
+CP/M operating system running on a Z80 based computer (hoping for the best),
+and dis (in this context, disassemble) it accordingly.
+
+    redis -d MONITOR.ROM -f /origin=0xE000/cpu=i8080
+
+will treat MONITOR.ROM as a headerless ROM dump based at the address 0xE000 and
+containing i8080 machine code, and disassemble it accordingly.
+
+    redis -h HelloWorld.tzx
+
+will treat HelloWorld.tzx as a TZX file (because of its filename suffix), attempt
+to extract ZX Spectrum style files from it, and hexdump these files individually.
+
+    redis -h HelloWorld.tzx -f bin
+
+will hexdump HelloWorld.tzx as a raw binary object, without any regard to its
+possible internal structure.
+
+    redis -x Utilities.d64
+
+will treat Utilities.d64 as a Commodore 1541 disk image (because of its name),
+deduce the disk's track count by its size, and attempt to extract all contained
+files (and some non-file data zones, see below) as separate files.
+
+
+Specific details of extraction
+==============================
+
+D64 images
+----------
+
+* header.sct
+    Always present.  Holds the content of the header sector (track 18, sector 0).
+
+* directory.sct
+    Always present.  Holds the content of all the directory sectors (starting
+    from track 18, sector 1 and chained via the two-byte sector prefix).
+
+* TnnSnn.seq or TnnSnnBAD.sct
+    Optional.  These files hold individual sectors that are not contained in
+    any other extracted file and are not blank; nn and nn are track and sector
+    number.  The badness indicator is derived from sector error data, if it
+    appears in the D64 image.
+
+* secterr.bin
+    Optional.  Holds sector error data, one byte per sector, if the original
+    D64 image has such data and it is not fully blank (that is, if some sectors
+    are marked bad).
+
+The contained files (currently, only files of types SEQ and PRG are supported)
+are extracted under their original names (with some fascist filename
+validation) using type-based .seq or .prg suffix.  For each file whose slack
+space is not blank, the slack is extracted under a name derived by attaching
+the suffix .slack to the parent file's name.
+
+
+ZX Spectrum TAP and TZX images
+------------------------------
+
+Files are only generated from actual data blocks.  Extra metadata words found
+in header blocks are encoded into the filenames according to the ZXLFN
+conventions, see <http://baze.au.com/divide/temp/zxlfn.txt> for details.
+Because ZXLFN specifies a way for encoding arbitrary filename characters, there
+is no need to consider any filename inside a TAP image invalid.
+
+ZX Spectrum BASIC Program images (named *.zx0 in accordance with ZXLFN) are
+"extracted" into two parts, the real code (currently named ".zxsbc"), and the
+saved variables (currently named ".zxsbv").  The latter is only generated if it's
+non-empty.
+
+In dis mode, Redis can also decode the RST 5 calculator's bytecode and recognise
+the RST 1 error codes.
+
+Note that TZX is a complex format.  Not all TZX block types are currently
+supported, only the most common ones.
+
+
+Reconstruction
+==============
+
+As Redis extracts files from an image, it also writes out an .rcn file
+containing precise details on where each file or each file's block resides in
+the original image.  Using the -r (--reconstruct) option, it is possible to
+rebuild the original image using only the .rcn file and extracted files.
+
+The .rcn file looks like a text file but that is mainly for ease of debugging
+and diagnostics.  It is not intended to be edited by a human.  (Not that it has
+ever stopped a truly dedicated human, of course.  Especially in the field of
+digital archæology.)  For now, its syntax is deliberately left undocumented,
+and it is likely to change in the future, most importantly, for a more efficient
+serial container format support.
+
+
+Terminal requirements
+=====================
+
+Redis' output assumes a terminal capable of processing UTF-8 and vt100 colour
+sequences.  Most modern implementations of xterm should work fine.
+
+
+Problems
+========
+
+Microrevolution-era data formats were often poorly specified, and specifications
+poorly followed.  In order to try and minimise risk of data loss, Redis often
+errs on the side of caution, reporting errors where recovery might be possible.
+This capriciousness is anticipated to improve as more experience gets written
+into Redis.
+
+
+Packaging
+=========
+
+Redis is implemented as a self-contained Java archive with a shell script
+stub.  The file "redis" in the distribution zipfile is at once an executable
+shell script and a JAR (or ZIP) file.
+
+
+Installation
+============
+
+In order to install Redis, copy the redis executable into a handy location
+such as /usr/local/bin and ensure it has the executable bit(s) set.

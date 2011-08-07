@@ -1,0 +1,10 @@
+Dispatch-suboffset: 3
+
+reg[]  b, c, d, e, h, l, m, a
+indexreg[] ix, iy
+shiftop[] rlcr, rrcr, ralr, rarr, slar, srar, <error>, srlr
+bitop[] <error>, bit, res, set
+
+[0o0?6-0o066]  <byte 3, shr 3, shiftop> <byte 2, signed>[<byte 0, shr 5, indexreg>]
+
+[0o??6-0o0?6]  <byte 3, shr 6, bitop> <byte 3, shr 3, and 7, decimal>, <byte 2, signed>[<byte 0, shr 5, indexreg>]

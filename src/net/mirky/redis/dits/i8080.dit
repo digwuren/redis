@@ -1,0 +1,80 @@
+# Disassembly tables for the plain i8080 CPU
+# Notation is mostly Intel's, except we spell register pair names fully out
+# (f. e., dad bc, not dad b)
+
+reg[]  b, c, d, e, h, l, m, a
+rp[]  bc, de, hl, sp
+strp[]  bc, de, hl, psw
+cond[]  nz, z, nc, c, po, pe, p, m
+alua[]  add, adc, sub, sbb, ana, xra, ora, cmp
+aluimm[]  adi, aci, sui, sbi, ani, xri, ori, cpi
+
+[0o1??-0x76]  mov <byte 0, shr 3, reg>, <byte 0, reg>
+[0o0?6]       mvi <byte 0, shr 3, reg>, <byte 1, unsigned>
+
+[0x0A]        ldax bc
+[0x1A]        ldax de
+
+[0x3A]        lda <lewyde 1, entry byte, unsigned>
+
+[0x02]        stax bc
+[0x12]        stax de
+
+[0x32]        sta <lewyde 1, entry byte, unsigned>
+
+[0b00??0001]  lxi <byte 0, shr 4, rp>, <lewyde 1, unsigned>
+
+[0x2A]        lhld <lewyde 1, entry lewyde, unsigned>
+[0x22]        shld <lewyde 1, entry lewyde, unsigned>
+
+[0xF9]        sphl
+
+[0b11??0101]  push <byte 0, shr 4, strp>
+[0b11??0001]  pop <byte 0, shr 4, strp>
+
+[0xEB]        xchg
+[0xE3]        xthl
+
+[0o2??]       <byte 0, shr 3, alua> <byte 0, reg>
+[0o3?6]       <byte 0, shr 3, aluimm> <byte 1, unsigned>
+
+[0o0?4]       inr <byte 0, shr 3, reg>
+[0o0?5]       dcr <byte 0, shr 3, reg>
+
+[0x27]        daa
+[0x2F]        cma
+[0x3F]        cmc
+[0x37]        stc
+
+[0x00]        nop
+
+[0x76]        hlt
+
+[0xF3]        di
+[0xFB]        ei
+
+[0b00??1001]  dad <byte 0, shr 4, rp>
+
+[0b00??0011]  inx <byte 0, shr 4, rp>
+[0b00??1011]  dcx <byte 0, shr 4, rp>
+
+[0x07]        rlc
+[0x0F]        rrc
+[0x17]        ral
+[0x1F]        rar
+
+[0xC3]        jmp <lewyde 1, entry, unsigned><terminate>
+[0o3?2]       j<byte 0, shr 3, cond> <lewyde 1, entry, unsigned>
+
+[0xE9]        pchl<terminate>
+
+[0xCD]        call <lewyde 1, subrentry, unsigned>
+[0o3?4]       c<byte 0, shr 3, cond> <lewyde 1, subrentry, unsigned>
+
+[0xC9]        ret<terminate>
+[0o3?0]       r<byte 0, shr 3, cond>
+
+[0o3?7]       rst <byte 0, and 0x38, subrentry, shr 3, decimal>
+
+[0xDB]        in <byte 1, unsigned>
+[0xD3]        out <byte 1, unsigned>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Redis" default="dist" basedir=".">
+    <property name="version" value="0.1" />
+
+    <target name="dist" depends="clean">
+        <mkdir dir="build" />
+        <javac srcdir="src" destdir="build" />
+        <mkdir dir="dist" />
+        <zip destfile="dist/Redis-${version}-src.zip">
+            <zipfileset dir="src" prefix="Redis-${version}-src/src" />
+            <zipfileset file="build.xml" prefix="Redis-${version}-src" />
+            <zipfileset file="README" prefix="Redis-${version}-src" />
+        </zip>
+        <jar destfile="dist/Redis-${version}.jar" basedir="build">
+            <manifest>
+                <attribute name="Main-Class" value="net.mirky.redis.Main" />
+            </manifest>
+            <fileset dir="src" includes="**/usage.txt" />
+            <fileset dir="src" includes="**/filesizes.txt" />
+            <fileset dir="src" includes="**/checksums.txt" />
+            <fileset dir="src" includes="**/suffixen.txt" />
+            <fileset dir="src" includes="**/*.dit" />
+            <fileset dir="src" includes="**/zxsbaskw.tab" />
+            <fileset dir="src" includes="META-INF/services/*" />
+        </jar>
+        <concat destfile="dist/redis" binary="yes">
+            <file file="src/shellstub" />
+            <file file="dist/Redis-${version}.jar" />
+        </concat>
+        <zip destfile="dist/Redis-${version}.zip">
+            <zipfileset file="dist/redis" prefix="Redis-${version}" />
+            <zipfileset file="README" prefix="Redis-${version}" />
+        </zip>
+        <chmod perm="a+x" file="dist/redis" />
+    </target>
+
+    <target name="clean">
+        <delete dir="build" />
+        <delete dir="dist" />
+    </target>
+</project>

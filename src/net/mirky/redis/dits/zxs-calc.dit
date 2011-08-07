@@ -1,0 +1,89 @@
+[0x00]  jump-true <byte 1, signedrel 1, entry, unsigned>
+[0x01]  exchange
+[0x02]  delete
+[0x03]  subtract
+[0x04]  multiply
+[0x05]  division
+[0x06]  to-power
+[0x07]  or
+[0x08]  no-and-no
+[0x09]  no-l-eql
+[0x0A]  no-gr-eq
+[0x0B]  nos-neql
+[0x0C]  no-grtr
+[0x0D]  no-less
+[0x0E]  nos-eql
+[0x0F]  addition
+[0x10]  str-and-no
+[0x11]  str-l-eql
+[0x12]  str-gr-eq
+[0x13]  strs-neql
+[0x14]  str-grtr
+[0x15]  str-less
+[0x16]  strs-eql
+[0x17]  strs-add
+[0x18]  val$
+[0x19]  usr$
+[0x1A]  read-in
+[0x1B]  negate
+[0x1C]  code
+[0x1D]  val
+[0x1E]  len
+[0x1F]  sin
+[0x20]  cos
+[0x21]  tan
+[0x22]  asn
+[0x23]  acs
+[0x24]  atn
+[0x25]  ln
+[0x26]  exp
+[0x27]  int
+[0x28]  sqr
+[0x29]  sgn
+[0x2A]  abs
+[0x2B]  peek
+[0x2C]  in
+[0x2D]  usr-no
+[0x2E]  str$
+[0x2F]  chr$
+[0x30]  not
+[0x31]  duplicate
+[0x32]  n-mod-m
+[0x33]  jump <byte 1, signedrel 1, entry, unsigned><terminate>
+[0x34]  stk-data<tempswitch 1*condensed-zxsnum>
+[0x35]  dec-jr-nz <byte 1, signedrel 1, entry, unsigned>
+
+[0x36]  less-0
+[0x37]  greater-0
+[0x38]  end-calc<switchback>
+[0x39]  get-argt
+[0x3A]  truncate
+[0x3B]  fp-calc-2
+[0x3C]  e-to-fp
+[0x3D]  re-stack
+
+# There is some meaning to opcodes 0x3E .. 0x41, but they're supposed to be invoked through 0x86..0xE5.
+
+[0x86]  series-06<tempswitch 6*condensed-zxsnum>
+[0x88]  series-08<tempswitch 8*condensed-zxsnum>
+[0x8C]  series-0C<tempswitch 12*condensed-zxsnum>
+
+[0xA0]  stk-zero
+[0xA1]  stk-one
+[0xA2]  stk-half
+[0xA3]  stk-half-pi
+[0xA4]  stk-ten
+
+[0xC0]  st-mem-0
+[0xC1]  st-mem-1
+[0xC2]  st-mem-2
+[0xC3]  st-mem-3
+[0xC4]  st-mem-4
+[0xC5]  st-mem-5
+
+[0xE0]  get-mem-0
+[0xE1]  get-mem-1
+[0xE2]  get-mem-2
+[0xE3]  get-mem-3
+[0xE4]  get-mem-4
+[0xE5]  get-mem-5

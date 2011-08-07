@@ -1,0 +1,38 @@
+Dispatch-suboffset: 1
+
+reg[]  b, c, d, e, h, l, m, a
+alua[]  add, adc, sub, sbb, ana, xra, ora, cmp
+indexreg[]  x, y
+
+[0xCB]  <byte 3, dispatch z80-xd-cb>
+
+[0o1?6-0o166]  mov <byte 1, shr 3, reg>, <byte 2, signed>[i<byte 0, shr 5, indexreg>]
+[0o16?-0o166]  mov <byte 2, signed>[i<byte 0, shr 5, indexreg>], <byte 1, reg>
+[0x36]         mvi <byte 2, signed>[i<byte 0, shr 5, indexreg>], <byte 3, unsigned>
+
+[0x21]  lxi i<byte 0, shr 5, indexreg>, <lewyde 2, unsigned>
+
+[0x2A]  li<byte 0, shr 5, indexreg>d, <lewyde 2, entry lewyde, unsigned>
+[0x22]  si<byte 0, shr 5, indexreg>d, <lewyde 2, entry lewyde, unsigned>
+
+[0xF9]  spi<byte 0, shr 5, indexreg>
+
+[0xE5]  push i<byte 0, shr 5, indexreg>
+[0xE1]  pop i<byte 0, shr 5, indexreg>
+
+[0xE3]  xti<byte 0, shr 5, indexreg>
+
+[0o2?6]  <byte 1, shr 3, alua> <byte 2, signed>[i<byte 0, shr 5, indexreg>]
+
+[0x34]  inr <byte 2, signed>[i<byte 0, shr 5, indexreg>]
+[0x35]  dcr <byte 2, signed>[i<byte 0, shr 5, indexreg>]
+
+[0x09]  dad<byte 0, shr 5, indexreg> bc
+[0x19]  dad<byte 0, shr 5, indexreg> de
+[0x29]  dad<byte 0, shr 5, indexreg> i<byte 0, shr 5, indexreg>
+[0x39]  dad<byte 0, shr 5, indexreg> sp
+
+[0x23]  inx i<byte 0, shr 5, indexreg>
+[0x2B]  dcx i<byte 0, shr 5, indexreg>
+
+[0xE9]  pci<byte 0, shr 5, indexreg><terminate>

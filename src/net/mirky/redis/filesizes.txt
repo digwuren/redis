@@ -1,0 +1,11 @@
+0: null file
+512: raw IBM PC disk sector image
+768: raw ZX Spectrum bitmap font
+6912: raw ZX Spectrum screen dump
+174848: raw Commodore 1541 disk image, 35 tracks
+175531: raw Commodore 1541 disk image, 35 tracks & sector error data
+196608: raw Commodore 1541 disk image, 40 tracks
+197376: raw Commodore 1541 disk image, 40 tracks & sector error data
+205312: raw Commodore 1541 disk image, 42 tracks
+206114: raw Commodore 1541 disk image, 42 tracks & sector error data
+1474560: raw IBM PC "1.44 MB" disk image
