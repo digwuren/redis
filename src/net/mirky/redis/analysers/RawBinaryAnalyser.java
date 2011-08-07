@@ -9,7 +9,8 @@ import net.mirky.redis.Analyser;
 import net.mirky.redis.ReconstructionDataCollector;
 
 @Format.Optionses({
-        @Format.Options("binary/decoding:decoding=ascii/origin:unsigned-hex=0/cpu:lang=none/api:api=none/entry:entry"),
+        @Format.Options(value = "binary/decoding:decoding=ascii/origin:unsigned-hex=0/cpu:lang=none/api:api=none/entry:entry",
+                aliases = "bin"),
 
         /*
          * Headerless ZXS file. We'll imply the CPU and decoding from context

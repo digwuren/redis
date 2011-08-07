@@ -33,7 +33,7 @@ containing i8080 machine code, and disassemble it accordingly.
 will treat HelloWorld.tzx as a TZX file (because of its filename suffix), attempt
 to extract ZX Spectrum style files from it, and hexdump these files individually.
 
-    redis -h HelloWorld.tzx -f bin
+    redis -h HelloWorld.tzx -f binary
 
 will hexdump HelloWorld.tzx as a raw binary object, without any regard to its
 possible internal structure.
