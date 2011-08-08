@@ -1430,7 +1430,7 @@ public final class Disassembler {
          * 0x0000. While normally, this would be JMPed to, some programs instead
          * RST 0 to it, so we need to support it as a subroutine, too.
          */
-        static final API CPM = new API("cp/m") {
+        static final API CPM = new API("cpm") {
             @Override
             final void affectSequencer(int vector, LangSequencer sequencer) {
                 if (vector == 0x0000) {
