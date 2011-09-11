@@ -81,36 +81,6 @@ public final class Decoding {
 		}
 	}
 
-	private static final char[] ZX_SPECTRUM_CODES = new char[256];
-	static {
-		for (int i = 0; i < 256; i++) {
-			ZX_SPECTRUM_CODES[i] = 0;
-		}
-		for (int i = 0x20; i <= 0x7E; i++) {
-			ZX_SPECTRUM_CODES[i] = (char) i;
-		}
-		ZX_SPECTRUM_CODES[0x5E] = 0x2191;
-		ZX_SPECTRUM_CODES[0x60] = 0x00A3;
-		ZX_SPECTRUM_CODES[0x7F] = 0x00A9;
-		// block graphics
-		ZX_SPECTRUM_CODES[0X80] = 0X00A0;
-		ZX_SPECTRUM_CODES[0x81] = 0x259D;
-        ZX_SPECTRUM_CODES[0x82] = 0x2598;
-        ZX_SPECTRUM_CODES[0x83] = 0x2580;
-        ZX_SPECTRUM_CODES[0x84] = 0x2597;
-        ZX_SPECTRUM_CODES[0x85] = 0x2590;
-        ZX_SPECTRUM_CODES[0x86] = 0x259A;
-        ZX_SPECTRUM_CODES[0x87] = 0x259C;
-        ZX_SPECTRUM_CODES[0x88] = 0x2596;
-        ZX_SPECTRUM_CODES[0x89] = 0x259E;
-        ZX_SPECTRUM_CODES[0x8A] = 0x258C;
-        ZX_SPECTRUM_CODES[0x8B] = 0x259B;
-        ZX_SPECTRUM_CODES[0x8C] = 0x2584;
-        ZX_SPECTRUM_CODES[0x8D] = 0x259F;
-        ZX_SPECTRUM_CODES[0x8E] = 0x2599;
-        ZX_SPECTRUM_CODES[0x8F] = 0x2588;
-	}
-
 	private static final char[] PETSCII_CODES = new char[256];
 	static {
 		for (int i = 0; i < 256; i++) {
@@ -303,7 +273,7 @@ public final class Decoding {
 		decodings.put("ascii", DecodingBuilder.parse("ascii"));
 		decodings.put("folded-ascii", DecodingBuilder.parse("folded-ascii"));
 		decodings.put("latin-1", DecodingBuilder.parse("latin-1"));
-		decodings.put("zx-spectrum", new Decoding("zx-spectrum", ZX_SPECTRUM_CODES));
+		decodings.put("zx-spectrum", DecodingBuilder.parse("zx-spectrum"));
 		decodings.put("petscii", new Decoding("petscii", PETSCII_CODES));
 	}
 
