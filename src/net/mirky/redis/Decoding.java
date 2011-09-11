@@ -81,21 +81,6 @@ public final class Decoding {
 		}
 	}
 
-	private static final char[] LATIN_1_CODES = new char[256];
-	static {
-		for (int i = 0; i < 256; i++) {
-			LATIN_1_CODES[i] = 0;
-		}
-		for (int i = 0x20; i <= 0x7E; i++) {
-			LATIN_1_CODES[i] = (char) i;
-		}
-		for (int i = 0xA1; i <= 0xFF; i++) { // leave out $A0, hard space ...
-			LATIN_1_CODES[i] = (char) i;
-		}
-		// ... and $AD, soft hyphen
-		LATIN_1_CODES[0xAD] = 0;
-	}
-	
 	private static final char[] ZX_SPECTRUM_CODES = new char[256];
 	static {
 		for (int i = 0; i < 256; i++) {
@@ -317,7 +302,7 @@ public final class Decoding {
 	static {
 		decodings.put("ascii", DecodingBuilder.parse("ascii"));
 		decodings.put("folded-ascii", DecodingBuilder.parse("folded-ascii"));
-		decodings.put("latin-1", new Decoding("latin-1", LATIN_1_CODES));
+		decodings.put("latin-1", DecodingBuilder.parse("latin-1"));
 		decodings.put("zx-spectrum", new Decoding("zx-spectrum", ZX_SPECTRUM_CODES));
 		decodings.put("petscii", new Decoding("petscii", PETSCII_CODES));
 	}
