@@ -81,86 +81,6 @@ public final class Decoding {
 		}
 	}
 
-	private static final char[] PETSCII_CODES = new char[256];
-	static {
-		for (int i = 0; i < 256; i++) {
-			PETSCII_CODES[i] = 0;
-		}
-		for (int i = 0x20; i <= 0x5A; i++) {
-			PETSCII_CODES[i] = (char) i;
-		}
-		PETSCII_CODES[0x5B] = '[';
-		PETSCII_CODES[0x5C] = 0x00A3; // pound sterling
-		PETSCII_CODES[0x5D] = ']';
-		PETSCII_CODES[0x5E] = 0x2191; // up arrow
-		PETSCII_CODES[0x5F] = 0x2190; // left arrow
-		
-		PETSCII_CODES[0x60] = 0x2500; // horizontal
-		PETSCII_CODES[0x61] = 0x2660; // filled spades
-		PETSCII_CODES[0x62] = 0x2502; // vertical
-		PETSCII_CODES[0x63] = 0x2500; // also horizontal
-		// 0x64 .. 0x66 are displaced horizontals with no Unicode match
-		// 0x67 .. 0x68 are displaced verticals with no Unicode match
-		PETSCII_CODES[0x69] = 0x256E; // arc down and left
-		PETSCII_CODES[0x6A] = 0x2570; // arc up and right
-		PETSCII_CODES[0x6B] = 0x256F; // arc up and left
-		// 0x6C is bottom quarter block overstruck with left quarter block, no Unicode match
-		PETSCII_CODES[0x6D] = 0x2572; // diagonal from top left to bottom right
-		PETSCII_CODES[0x6E] = 0x2571; // diagonal from top right to bottom left
-		// 0x6F is top quarter block overstruck with left quarter block, no Unicode match
-		
-		// 0x70 is top quarter block overstruck with right quarter block, no Unicode match
-		PETSCII_CODES[0x71] = 0x25CF; // filled circle
-		// 0x72 is a displaced horizontal with no Unicode match
-		PETSCII_CODES[0x73] = 0x2665; // filled hearts
-		// 0x74 is a displaced vertical with no Unicode match
-		PETSCII_CODES[0x75] = 0x256D; // arc down and right
-		PETSCII_CODES[0x76] = 0x2573; // diagonal cross
-		PETSCII_CODES[0x77] = 0x25CB; // hollow circle
-		PETSCII_CODES[0x78] = 0x2663; // filled clubs
-		// 0x79 is a displaced vertical with no Unicode match
-		PETSCII_CODES[0x7A] = 0x2666; // filled diamonds
-		PETSCII_CODES[0x7B] = 0x253C; // horizontal and vertical
-		// 0x7C is left half shade, no Unicode match
-		PETSCII_CODES[0x7D] = 0x2502; // also vertical
-		PETSCII_CODES[0x7E] = 0x03C0; // Greek lowercase pi
-		PETSCII_CODES[0x7F] = 0x25E5; // upper right triangle
-		
-		PETSCII_CODES[0xA0] = 0x00A0; // nbsp
-		PETSCII_CODES[0xA1] = 0x258C; // left half block
-		PETSCII_CODES[0xA2] = 0x2584; // bottom half block
-		PETSCII_CODES[0xA3] = 0x2594; // top one eighth block
-		PETSCII_CODES[0xA4] = 0x2581; // bottom one eighth block
-		PETSCII_CODES[0xA5] = 0x258E; // left quarter block
-		PETSCII_CODES[0xA6] = 0x2592; // shade
-		// 0xA7 is right one quarter block, no Unicode match
-		// 0xA8 is bottom half shade, no Unicode match
-		PETSCII_CODES[0xA9] = 0x25E4; // upper left triangle
-		// 0xAA is also right one quarter block, no Unicode match
-		PETSCII_CODES[0xAB] = 0x251C; // vertical and right
-		PETSCII_CODES[0xAC] = 0x2597; // lower right quadrant
-		PETSCII_CODES[0xAD] = 0x2514; // up and right
-		PETSCII_CODES[0xAE] = 0x2510; // down and left
-		PETSCII_CODES[0xAF] = 0x2582; // bottom quarter block
-		
-		PETSCII_CODES[0xB0] = 0x250C; // down and right
-		PETSCII_CODES[0xB1] = 0x2534; // horizontal and up
-		PETSCII_CODES[0xB2] = 0x252C; // horizontal and down
-		PETSCII_CODES[0xB3] = 0x2524; // vertical and left
-		PETSCII_CODES[0xB4] = 0x258E; // also left quarter block
-		PETSCII_CODES[0xB5] = 0x258D; // left 3/8 block
-		// 0xB6 is right 3/8 block, no Unicode match
-		// 0xB7 is top quarter block, no Unicode match
-		// 0xB8 is top 3/8 block, no Unicode match
-		PETSCII_CODES[0xB9] = 0X2583; // bottom 3/8 block
-		// 0xBA is bottom quarter block overstruck with right quarter block, no Unicode match
-		PETSCII_CODES[0xBB] = 0x2596; // lower left quadrant
-		PETSCII_CODES[0xBC] = 0x259D; // upper right quadrant
-		PETSCII_CODES[0xBD] = 0x2518; // up and left
-		PETSCII_CODES[0xBE] = 0x2598; // upper left quadrant
-		PETSCII_CODES[0xBF] = 0x259A; // upper left and lower right quadrant
-	}
-	
 	public static final class DecodingBuilder {
 	    private final char[] codes;
 	    
@@ -198,8 +118,12 @@ public final class Decoding {
 	    public static final Decoding parse(String name) {
             DecodingBuilder builder = new DecodingBuilder();
             for (String line : new TextResource(name + ".decoding")) {
+                int commentStart = line.indexOf('#');
+                if (commentStart >= 0) {
+                    line = line.substring(0, commentStart);
+                }
                 line = line.trim();
-                if (line.length() != 0 && line.charAt(0) != '#') {
+                if (line.length() != 0) {
                     Matcher matcher;
                     if ((matcher = DecodingBuilder.SINGLE_ENTRY_RE.matcher(line)).matches()) {
                         int local = Integer.parseInt(matcher.group(1), 16);
@@ -274,7 +198,7 @@ public final class Decoding {
 		decodings.put("folded-ascii", DecodingBuilder.parse("folded-ascii"));
 		decodings.put("latin-1", DecodingBuilder.parse("latin-1"));
 		decodings.put("zx-spectrum", DecodingBuilder.parse("zx-spectrum"));
-		decodings.put("petscii", new Decoding("petscii", PETSCII_CODES));
+		decodings.put("petscii", DecodingBuilder.parse("petscii"));
 	}
 
 	static final Decoding get(String name) {

@@ -2,8 +2,8 @@
 * changed the canonical name for the CP/M API format option to "cpm"
 * implemented the --dump-decoding diagnostic command line option
 * implemented a parser for decodings represented in text resources
-* converted some of the previously hardcoded decodings (ascii, folded-ascii,
-  latin-1, zx-spectrum) into text resources
+* converted the previously hardcoded decodings (ascii, folded-ascii,
+  latin-1, zx-spectrum, petscii) into text resources
 
 == v0.1 2011-08-08
 
