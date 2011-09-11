@@ -5,6 +5,8 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // A Decoding instance represents a particular way to decode bytes into characters.
 // Normally, it's like an encoding, except one-way (and the back-way).
@@ -76,16 +78,6 @@ public final class Decoding {
 			throw new RuntimeException("utf-8 is an Unsupported Encoding?  In Java???", e);
 		} catch (IOException e) {
 			throw new RuntimeException("I/O error", e);
-		}
-	}
-
-	private static final char[] ASCII_CODES = new char[256];
-	static {
-		for (int i = 0; i < 256; i++) {
-			ASCII_CODES[i] = 0;
-		}
-		for (int i = 0x20; i <= 0x7E; i++) {
-			ASCII_CODES[i] = (char) i;
 		}
 	}
 
@@ -225,6 +217,82 @@ public final class Decoding {
 		PETSCII_CODES[0xBF] = 0x259A; // upper left and lower right quadrant
 	}
 	
+	public static final class DecodingBuilder {
+	    private final char[] codes;
+	    
+	    public DecodingBuilder() {
+	        codes = new char[256];
+	        for (int i = 0; i < 256; i++) {
+	            codes[i] = 0;
+	        }
+	    }
+	    
+	    public final void addSingleEntry(int local, char unicode) {
+	        assert unicode != 0;
+	        if (codes[local] != 0) {
+	            throw new RuntimeException("multiple decoding rules for $" + Hex.b(local));
+	        }
+	        codes[local] = unicode;
+	    }
+	    
+	    public final void addRange(int firstLocal, int firstUnicode, int count) {
+	        assert count > 1;
+	        assert firstLocal >= 0;
+	        assert firstUnicode > 0; // strict!
+	        assert firstLocal + count <= 0xFF;
+	        assert firstUnicode + count <= 0xFFFF;
+	        for (int i = 0; i < count; i++) {
+	            if (codes[firstLocal + i] != 0) {
+	                throw new RuntimeException("multiple decoding rules for $" + Hex.b(firstLocal + i));
+	            }
+	        }
+            for (int i = 0; i < count; i++) {
+                codes[firstLocal + i] = (char) (firstUnicode + i);
+            }
+	    }
+
+	    public static final Decoding parse(String name) {
+            DecodingBuilder builder = new DecodingBuilder();
+            for (String line : new TextResource(name + ".decoding")) {
+                line = line.trim();
+                if (line.length() != 0 && line.charAt(0) != '#') {
+                    Matcher matcher;
+                    if ((matcher = DecodingBuilder.SINGLE_ENTRY_RE.matcher(line)).matches()) {
+                        int local = Integer.parseInt(matcher.group(1), 16);
+                        int unicode = Integer.parseInt(matcher.group(2), 16);
+                        if (unicode == 0) {
+                            throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+                        }
+                        builder.addSingleEntry(local, (char) unicode);
+                    } else if ((matcher = DecodingBuilder.RANGE_ENTRY_RE.matcher(line)).matches()) {
+                        int firstLocal = Integer.parseInt(matcher.group(1), 16);
+                        int lastLocal = Integer.parseInt(matcher.group(2), 16);
+                        int firstUnicode = Integer.parseInt(matcher.group(3), 16);
+                        int lastUnicode = Integer.parseInt(matcher.group(4) , 16);
+                        if (firstLocal >= lastLocal || firstUnicode >= lastUnicode) {
+                            throw new RuntimeException("invalid range specification");
+                        }
+                        if (lastLocal - firstLocal != lastUnicode - firstUnicode) {
+                            throw new RuntimeException("range size mismatch");
+                        }
+                        if (firstUnicode == 0) {
+                            throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+                        }
+                        builder.addRange(firstLocal, firstUnicode, lastLocal - firstLocal + 1);
+                    } else {
+                        throw new RuntimeException("decoding parse error on line \"" + line + '"');
+                    }
+                }
+            }
+            return new Decoding(name, builder.codes);
+        }
+
+        private static final Pattern SINGLE_ENTRY_RE = Pattern.compile("^\\$([\\da-f]{2})\\s*->\\s*U\\+([\\da-f]{4})$",
+	            Pattern.CASE_INSENSITIVE);
+        private static final Pattern RANGE_ENTRY_RE = Pattern.compile("^\\$([\\da-f]{2})\\s*\\.\\.\\s*\\$([\\da-f]{2})\\s*->\\s*U\\+([\\da-f]{4})\\s*\\.\\.\\s*U\\+([\\da-f]{4})$",
+                Pattern.CASE_INSENSITIVE);
+	}
+
 	public final void dumpDecoding(PrintStream port) {
 	    int rangeStart = -1; // local code (if >= 0)
 	    int delta = 0;
@@ -258,7 +326,7 @@ public final class Decoding {
 	
 	private static final Map<String, Decoding> decodings = new HashMap<String, Decoding>();
 	static {
-		decodings.put("ascii", new Decoding("ascii", ASCII_CODES));
+		decodings.put("ascii", DecodingBuilder.parse("ascii"));
 		decodings.put("folded-ascii", new Decoding("folded-ascii", FOLDED_ASCII_CODES));
 		decodings.put("latin-1", new Decoding("latin-1", LATIN_1_CODES));
 		decodings.put("zx-spectrum", new Decoding("zx-spectrum", ZX_SPECTRUM_CODES));
