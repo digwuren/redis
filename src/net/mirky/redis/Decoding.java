@@ -81,17 +81,6 @@ public final class Decoding {
 		}
 	}
 
-	private static final char[] FOLDED_ASCII_CODES = new char[256];
-	static {
-		for (int i = 0; i < 256; i++) {
-			FOLDED_ASCII_CODES[i] = 0;
-		}
-		for (int i = 0x20; i <= 0x7E; i++) {
-			FOLDED_ASCII_CODES[i] = (char) i;
-			FOLDED_ASCII_CODES[i + 0x80] = (char) i;
-		}
-	}
-
 	private static final char[] LATIN_1_CODES = new char[256];
 	static {
 		for (int i = 0; i < 256; i++) {
@@ -327,7 +316,7 @@ public final class Decoding {
 	private static final Map<String, Decoding> decodings = new HashMap<String, Decoding>();
 	static {
 		decodings.put("ascii", DecodingBuilder.parse("ascii"));
-		decodings.put("folded-ascii", new Decoding("folded-ascii", FOLDED_ASCII_CODES));
+		decodings.put("folded-ascii", DecodingBuilder.parse("folded-ascii"));
 		decodings.put("latin-1", new Decoding("latin-1", LATIN_1_CODES));
 		decodings.put("zx-spectrum", new Decoding("zx-spectrum", ZX_SPECTRUM_CODES));
 		decodings.put("petscii", new Decoding("petscii", PETSCII_CODES));
