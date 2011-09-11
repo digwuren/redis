@@ -232,6 +232,25 @@ public final class Main extends AbstractMain {
             System.exit(1);
         }
     }
+    
+    @Mode("dump-decoding")
+    public final void dumpDecoding() {
+        if (arguments.length < 1) {
+            System.err.println("redis: too few parameters");
+            System.exit(1);
+        }
+        if (arguments.length > 1) {
+            System.err.println("redis: too many parameters");
+            System.exit(1);
+        }
+        Decoding decoding = Decoding.get(arguments[0]);
+        if (decoding == null) {
+            System.err.println("redis: " + arguments[0] + ": unknown decoding");
+            System.exit(1);
+        }
+        assert decoding != null;
+        decoding.dumpDecoding(System.out);
+    }
 
     @Mode("list-simple-types")
     public final void listSimpleTypes() {

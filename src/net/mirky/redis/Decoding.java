@@ -224,7 +224,33 @@ public final class Decoding {
 		PETSCII_CODES[0xBE] = 0x2598; // upper left quadrant
 		PETSCII_CODES[0xBF] = 0x259A; // upper left and lower right quadrant
 	}
+	
+	public final void dumpDecoding(PrintStream port) {
+	    int rangeStart = -1; // local code (if >= 0)
+	    int delta = 0;
+	    for (int i = 0; i <= 0x100; i++) {
+	        char unicode = i <= 0xFF ? codes[i] : 0;
+	        if (rangeStart >= 0 && (unicode == 0 || unicode - i != delta)) {
+                dumpDecodingEntry(rangeStart, delta, i - rangeStart, port);
+                rangeStart = -1;
+            }
+            if (rangeStart < 0 && unicode != 0) {
+                rangeStart = i;
+                delta = unicode - rangeStart;
+            }
+	    }
+	}
 
+    private static final void dumpDecodingEntry(int rangeStart, int delta, int count, PrintStream port) {
+        assert count >= 1;
+        if (count != 1) {
+            port.println('$' + Hex.b(rangeStart) + "..$" + Hex.b(rangeStart + count - 1)
+                    + " -> U+" + Hex.w(rangeStart + delta) + "..U+" + Hex.w(rangeStart + count - 1 + delta));
+        } else {
+            port.println('$' + Hex.b(rangeStart) + " -> U+" + Hex.w(rangeStart + delta));
+        }
+    }
+	
 	private static final Map<String, String> aliases = new HashMap<String, String>();
 	static {
 		aliases.put("latin1", "latin-1");
