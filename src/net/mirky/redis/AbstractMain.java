@@ -24,7 +24,8 @@ public abstract class AbstractMain {
         rules = new CommandLineRules(getClass());
         mode = rules.getDefaultMode();
         ArrayList<String> remainingArguments = new ArrayList<String>();
-        boolean stillParsingOptions = true; // i. e., we haven't encountered
+        boolean stillParsingOptions = true;
+        // i. e., we haven't encountered "--" yet
         try {
             rules.resetFlags(this);
         } catch (IllegalArgumentException e) {
@@ -32,7 +33,6 @@ public abstract class AbstractMain {
         } catch (IllegalAccessException e) {
             throw new RuntimeException("bug detected", e);
         }
-        // "--" yet
         try {
             OUTER_LOOP: for (int i = 0; i < rawArguments.length; i++) {
                 String arg = rawArguments[i];
