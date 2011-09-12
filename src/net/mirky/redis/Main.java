@@ -22,6 +22,9 @@ public final class Main extends AbstractMain {
     public static final void main(String... args) {
 		try {
 	        new Main(args).run();
+        } catch (CommandLineParseError e) {
+            System.err.println("redis: "  + e.getMessage());
+            System.exit(1);
 		} catch (Throwable e) {
 			System.err.println("redis: "  + e.getMessage());
 			e.printStackTrace(System.err);
@@ -159,7 +162,7 @@ public final class Main extends AbstractMain {
     @Mode("dis")
     @Letter('d')
     @ArgCountLimits(min = 1, max = 1)
-    public final void dis() throws CommandLineParseError, ImageError, Format.OptionError {
+    public final void dis() throws ImageError, Format.OptionError {
         String filename = arguments[0];
         TaggedData root = loadRootObject(filename);
         dis(filename, root.format, root.data);

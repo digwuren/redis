@@ -2,6 +2,7 @@ User-visible changes:
 * declared bin as an alias of binary
 * changed the canonical name for the CP/M API format option to "cpm"
 * implemented the --dump-decoding diagnostic command line option
+* don't show stacktrace for command line parse errors
 
 Programmer-visible changes:
 * implemented a parser for decodings represented in text resources
