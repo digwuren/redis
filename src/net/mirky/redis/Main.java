@@ -208,6 +208,17 @@ public final class Main extends AbstractMain {
         }
     }
 
+    @Mode("show-decoding")
+    @ArgCountLimits(min = 1, max = 1)
+    public final void showDecoding() {
+        try {
+            Decoding.get(arguments[0]).showDecoding(System.out);
+        } catch (Decoding.ResolutionError e) {
+            System.err.println("redis: " + e.getMessage());
+            System.exit(1);
+        }
+    }
+
     @Mode("list-simple-types")
     @ArgCountLimits(max = 0)
     public final void listSimpleTypes() {

@@ -19,6 +19,8 @@ usage: redis -[ilxrth] filename.suf
 The following reflective operations are mainly useful for diagnostics.
  --dump-lang          dump the content of disassembly table given
                       in parameter
+ --show-decoding      show the decoding given in parameter as a
+                      character table
  --dump-decoding      dump the content of the decoding table given
                       in parameter                      
  --list-simple-types  list known simple (that is, single-valued) option

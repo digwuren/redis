@@ -190,6 +190,52 @@ public final class Decoding {
             port.println('$' + Hex.b(rangeStart) + " -> U+" + Hex.w(rangeStart + delta));
         }
     }
+    
+    public final void showDecoding(PrintStream port) {
+        port.print("  ");
+        for (int col = 0; col <= 15; col++) {
+            port.print(' ');
+            port.print(Hex.n(col));
+        }
+        port.println();
+        for (int row = 0; row <= 15; row++) {
+            boolean rowUsed = false;
+            for (int col = 0; col <= 15; col++) {
+                if (codes[(row << 4) | col] != 0) {
+                    rowUsed = true;
+                    break;
+                }
+            }
+            if (!rowUsed) {
+                continue;
+            }
+            port.print(Hex.n(row));
+            port.print(' ');
+            for (int col = 0; col <= 15; col++) {
+                port.print(' ');
+                char unicode = codes[(row << 4) | col];
+                if (unicode != 0) {
+                    try {
+                        port.write(Character.toString(unicode).getBytes("utf-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        throw new RuntimeException("utf-8 is an Unsupported Encoding?  In Java???", e);
+                    } catch (IOException e) {
+                        throw new RuntimeException("I/O error", e);
+                    }
+                } else {
+                    port.print(' ');
+                }
+            }
+            port.print("  ");
+            port.println(Hex.n(row));
+        }
+        port.print("  ");
+        for (int col = 0; col <= 15; col++) {
+            port.print(' ');
+            port.print(Hex.n(col));
+        }
+        port.println();
+    }
 	
 	private static final Map<String, String> aliases = new HashMap<String, String>();
 	static {

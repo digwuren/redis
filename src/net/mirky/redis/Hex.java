@@ -27,6 +27,11 @@ public final class Hex {
 		return sb.toString();
 	}
 
+	// n is for nybble
+	public static final String n(int x) {
+	    return Integer.toHexString(x & 0xF).toUpperCase();
+	}
+	
 	public static final String b(int x) {
 		String result = Integer.toHexString(x & 0xFF).toUpperCase();
 		if ((x & 0xFF) < 0x10) {
