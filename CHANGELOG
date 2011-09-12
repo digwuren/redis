@@ -3,6 +3,7 @@ User-visible changes:
 * changed the canonical name for the CP/M API format option to "cpm"
 * implemented the --dump-decoding diagnostic command line option
 * don't show stacktrace for command line parse errors
+* added koi7.decoding
 
 Programmer-visible changes:
 * implemented a parser for decodings represented in text resources
