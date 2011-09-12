@@ -22,11 +22,11 @@ public final class TextResource implements Iterable<String> {
 		private final BufferedReader reader;
 		private String nextLine;
 
-		LineIterator(String name) {
+		LineIterator(String name) throws TextResource.Missing {
 			this.name = name;
 			InputStream stream = Main.class.getResourceAsStream(name);
 			if (stream == null) {
-				throw new RuntimeException("resource " + name + " missing");
+				throw new TextResource.Missing("resource " + name + " missing");
 			}
 			reader = new BufferedReader(new InputStreamReader(stream));
 			try {
@@ -61,5 +61,11 @@ public final class TextResource implements Iterable<String> {
 		public final void remove() {
 			throw new RuntimeException("resource files are not supposed to be modified");
 		}
+	}
+	
+	public static final class Missing extends RuntimeException {
+	    public Missing(String message) {
+	        super(message);
+	    }
 	}
 }

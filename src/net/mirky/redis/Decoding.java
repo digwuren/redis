@@ -115,44 +115,48 @@ public final class Decoding {
             }
 	    }
 
-	    public static final Decoding parse(String name) {
+	    public static final Decoding parse(String name) throws Decoding.ResolutionError {
             DecodingBuilder builder = new DecodingBuilder();
-            for (String line : new TextResource(name + ".decoding")) {
-                int commentStart = line.indexOf('#');
-                if (commentStart >= 0) {
-                    line = line.substring(0, commentStart);
-                }
-                line = line.trim();
-                if (line.length() != 0) {
-                    Matcher matcher;
-                    if ((matcher = DecodingBuilder.SINGLE_ENTRY_RE.matcher(line)).matches()) {
-                        int local = Integer.parseInt(matcher.group(1), 16);
-                        int unicode = Integer.parseInt(matcher.group(2), 16);
-                        if (unicode == 0) {
-                            throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+            try {
+                for (String line : new TextResource(name + ".decoding")) {
+                    int commentStart = line.indexOf('#');
+                    if (commentStart >= 0) {
+                        line = line.substring(0, commentStart);
+                    }
+                    line = line.trim();
+                    if (line.length() != 0) {
+                        Matcher matcher;
+                        if ((matcher = DecodingBuilder.SINGLE_ENTRY_RE.matcher(line)).matches()) {
+                            int local = Integer.parseInt(matcher.group(1), 16);
+                            int unicode = Integer.parseInt(matcher.group(2), 16);
+                            if (unicode == 0) {
+                                throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+                            }
+                            builder.addSingleEntry(local, (char) unicode);
+                        } else if ((matcher = DecodingBuilder.RANGE_ENTRY_RE.matcher(line)).matches()) {
+                            int firstLocal = Integer.parseInt(matcher.group(1), 16);
+                            int lastLocal = Integer.parseInt(matcher.group(2), 16);
+                            int firstUnicode = Integer.parseInt(matcher.group(3), 16);
+                            int lastUnicode = Integer.parseInt(matcher.group(4) , 16);
+                            if (firstLocal >= lastLocal || firstUnicode >= lastUnicode) {
+                                throw new RuntimeException("invalid range specification");
+                            }
+                            if (lastLocal - firstLocal != lastUnicode - firstUnicode) {
+                                throw new RuntimeException("range size mismatch");
+                            }
+                            if (firstUnicode == 0) {
+                                throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+                            }
+                            builder.addRange(firstLocal, firstUnicode, lastLocal - firstLocal + 1);
+                        } else {
+                            throw new RuntimeException("decoding parse error on line \"" + line + '"');
                         }
-                        builder.addSingleEntry(local, (char) unicode);
-                    } else if ((matcher = DecodingBuilder.RANGE_ENTRY_RE.matcher(line)).matches()) {
-                        int firstLocal = Integer.parseInt(matcher.group(1), 16);
-                        int lastLocal = Integer.parseInt(matcher.group(2), 16);
-                        int firstUnicode = Integer.parseInt(matcher.group(3), 16);
-                        int lastUnicode = Integer.parseInt(matcher.group(4) , 16);
-                        if (firstLocal >= lastLocal || firstUnicode >= lastUnicode) {
-                            throw new RuntimeException("invalid range specification");
-                        }
-                        if (lastLocal - firstLocal != lastUnicode - firstUnicode) {
-                            throw new RuntimeException("range size mismatch");
-                        }
-                        if (firstUnicode == 0) {
-                            throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
-                        }
-                        builder.addRange(firstLocal, firstUnicode, lastLocal - firstLocal + 1);
-                    } else {
-                        throw new RuntimeException("decoding parse error on line \"" + line + '"');
                     }
                 }
+                return new Decoding(name, builder.codes);
+            } catch (TextResource.Missing e) {
+                throw new Decoding.ResolutionError(name, "decoding resource not found", e);
             }
-            return new Decoding(name, builder.codes);
         }
 
         private static final Pattern SINGLE_ENTRY_RE = Pattern.compile("^\\$([\\da-f]{2})\\s*->\\s*U\\+([\\da-f]{4})$",
@@ -192,14 +196,7 @@ public final class Decoding {
 		aliases.put("latin1", "latin-1");
 	}
 	
-	private static final Map<String, Decoding> decodings = new HashMap<String, Decoding>();
-	static {
-		decodings.put("ascii", DecodingBuilder.parse("ascii"));
-		decodings.put("folded-ascii", DecodingBuilder.parse("folded-ascii"));
-		decodings.put("latin-1", DecodingBuilder.parse("latin-1"));
-		decodings.put("zx-spectrum", DecodingBuilder.parse("zx-spectrum"));
-		decodings.put("petscii", DecodingBuilder.parse("petscii"));
-	}
+	private static final Map<String, Decoding> decodingCache = new HashMap<String, Decoding>();
 
 	public static final boolean validDecodingName(String candidate) {
 	    if (candidate.length() == 0) {
@@ -225,9 +222,11 @@ public final class Decoding {
 	    if (aliases.containsKey(name)) {
 			return get(aliases.get(name));
 		} else {
-			Decoding decoding = decodings.get(name);
+			Decoding decoding = decodingCache.get(name);
 			if (decoding == null) {
-			    throw new Decoding.ResolutionError(rawName, "unknown decoding");
+			    decoding = DecodingBuilder.parse(name);
+			    decodingCache.put(name, decoding);
+			    return decoding;
 			}
             return decoding;
 		}
@@ -237,5 +236,9 @@ public final class Decoding {
 	    public ResolutionError(String name, String comment) {
 	        super(name + ": " + comment);
 	    }
+
+        public ResolutionError(String name, String comment, Exception cause) {
+            super(name + ": " + comment, cause);
+        }
 	}
 }

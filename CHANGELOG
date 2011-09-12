@@ -5,6 +5,10 @@
 * converted the previously hardcoded decodings (ascii, folded-ascii,
   latin-1, zx-spectrum, petscii) into text resources
 * Decoding.get() now throws Decoding.ResolutionError rather than returning null
+* TextResource.LineIterator() now throws TextResource.Missing, an unchecked
+  exception, when opening the resource fails
+* replaced the fully hardcoded decoding map with a cache backed by decoding
+  resources so new decodings will be easier to add in the future
 
 == v0.1 2011-08-08
 
