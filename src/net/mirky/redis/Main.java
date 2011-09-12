@@ -45,25 +45,19 @@ public final class Main extends AbstractMain {
 
     @Mode("list")
     @Letter('l')
+    @ArgCountLimits(min = 1, max = 1)
     public final void list() throws RuntimeException {
         listOrExtract(false);
     }
 
     @Mode("extract")
     @Letter('x')
+    @ArgCountLimits(min = 1, max = 1)
     public final void extract() throws RuntimeException {
         listOrExtract(true);
     }
 
     private final void listOrExtract(boolean extract) throws RuntimeException {
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-        	System.err.println("redis: too many parameters");
-        	System.exit(1);
-        }
         String filename = arguments[0];
         TaggedData object = null;
         try {
@@ -107,25 +101,19 @@ public final class Main extends AbstractMain {
 
     @Mode("reconstruct")
     @Letter('r')
+    @ArgCountLimits(min = 1, max = 1)
     public final void reconstruct() {
         reconstructOrTest(false);
     }
 
     @Mode("test")
     @Letter('t')
+    @ArgCountLimits(min = 1, max = 1)
     public final void testReconstruction() {
         reconstructOrTest(true);
     }
 
     private final void reconstructOrTest(boolean testOnly) {
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-        	System.err.println("redis: too many parameters");
-        	System.exit(1);
-        }
         if (formatOverride != null && formatOverride.length() != 0) {
         	System.err.println("redis: the --format command line option is not applicable in this mode");
         	System.exit(1);
@@ -162,29 +150,16 @@ public final class Main extends AbstractMain {
 
     @Mode("hexdump")
     @Letter('h')
+    @ArgCountLimits(min = 1, max = 1)
     public final void hexdump() throws ImageError, Format.OptionError {
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-        	System.err.println("redis: too many parameters");
-        	System.exit(1);
-        }
         String filename = arguments[0];
         hexdump(filename, loadRootObject(filename));
     }
 
     @Mode("dis")
     @Letter('d')
+    @ArgCountLimits(min = 1, max = 1)
     public final void dis() throws CommandLineParseError, ImageError, Format.OptionError {
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-            throw new CommandLineParseError("too many parameters");
-        }
         String filename = arguments[0];
         TaggedData root = loadRootObject(filename);
         dis(filename, root.format, root.data);
@@ -193,15 +168,8 @@ public final class Main extends AbstractMain {
     @Mode("identify")
     @Letter('i')
     @DefaultMode
+    @ArgCountLimits(min = 1, max = 1)
     public final void identify() throws ImageError, Format.OptionError {
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-            System.err.println("redis: too many parameters");
-            System.exit(1);
-        }
         loadFilesizes();
         loadSuffixen();
         String filename = arguments[0];
@@ -212,17 +180,10 @@ public final class Main extends AbstractMain {
     }
 
     @Mode("dump-lang")
+    @ArgCountLimits(min = 1, max = 1)
     public final void dumpLang() {
         if (formatOverride != null && formatOverride.length() != 0) {
             System.err.println("redis: the --format command line option is not applicable in this mode");
-            System.exit(1);
-        }
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-            System.err.println("redis: too many parameters");
             System.exit(1);
         }
         try {
@@ -234,15 +195,8 @@ public final class Main extends AbstractMain {
     }
     
     @Mode("dump-decoding")
+    @ArgCountLimits(min = 1, max = 1)
     public final void dumpDecoding() {
-        if (arguments.length < 1) {
-            System.err.println("redis: too few parameters");
-            System.exit(1);
-        }
-        if (arguments.length > 1) {
-            System.err.println("redis: too many parameters");
-            System.exit(1);
-        }
         try {
             Decoding.get(arguments[0]).dumpDecoding(System.out);
         } catch (Decoding.ResolutionError e) {
@@ -252,11 +206,8 @@ public final class Main extends AbstractMain {
     }
 
     @Mode("list-simple-types")
+    @ArgCountLimits(max = 0)
     public final void listSimpleTypes() {
-        if (arguments.length > 0) {
-            System.err.println("redis: too many parameters");
-            System.exit(1);
-        }
         Format.OptionType.listSimpleTypes();
     }
 

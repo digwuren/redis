@@ -122,6 +122,15 @@ public abstract class AbstractMain {
             throw new RuntimeException("bug detected", e);
         }
         this.arguments = remainingArguments.toArray(new String[0]);
+        ArgCountLimits limits = this.mode.getAnnotation(ArgCountLimits.class);
+        if (limits != null) {
+            if (arguments.length < limits.min()) {
+                throw new CommandLineParseError("too few arguments");
+            }
+            if (arguments.length > limits.max()) {
+                throw new CommandLineParseError("too many arguments");
+            }
+        }
     }
 
     public final void run() throws Throwable {
@@ -168,6 +177,16 @@ public abstract class AbstractMain {
     @Target(ElementType.METHOD)
     public static @interface SupremeMode {
         // marker annotation
+    }
+
+    /**
+     * Used to attach argument count limitation to a mode method.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public static @interface ArgCountLimits {
+        int min() default 0;
+        int max() default Integer.MAX_VALUE;
     }
 
     /**
