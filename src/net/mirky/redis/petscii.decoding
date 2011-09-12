@@ -1,0 +1,72 @@
+$20 .. $5A -> U+0020 .. U+005A
+$5B -> U+005B # left bracket
+$5C -> U+00A3 # pound sterling
+$5D -> U+005D # right bracket
+$5E -> U+2191 # up arrow
+$5F -> U+2190 # left arrow
+
+$60 -> U+2500 # horizontal
+$61 -> U+2660 # filled spades
+$62 -> U+2502 # vertical
+$63 -> U+2500 # also horizontal
+# $64 .. $66 are displaced horizontals with no Unicode match
+# $67 .. $68 are displaced verticals with no Unicode match
+$69 -> U+256E # arc down and left
+$6A -> U+2570 # arc up and right
+$6B -> U+256F # arc up and left
+# $6C is bottom quarter block overstruck with left quarter block, no Unicode match
+$6D -> U+2572 # diagonal from top left to bottom right
+$6E -> U+2571 # diagonal from top right to bottom left
+# $6F is top quarter block overstruck with left quarter block, no Unicode match
+
+# 0x70 is top quarter block overstruck with right quarter block, no Unicode match
+$71 -> U+25CF # filled circle
+# 0x72 is a displaced horizontal with no Unicode match
+$73 -> U+2665 # filled hearts
+# 0x74 is a displaced vertical with no Unicode match
+$75 -> U+256D # arc down and right
+$76 -> U+2573 # diagonal cross
+$77 -> U+25CB # hollow circle
+$78 -> U+2663 # filled clubs
+# 0x79 is a displaced vertical with no Unicode match
+$7A -> U+2666 # filled diamonds
+$7B -> U+253C # horizontal and vertical
+# 0x7C is left half shade, no Unicode match
+$7D -> U+2502 # also vertical
+$7E -> U+03C0 # Greek lowercase pi
+$7F -> U+25E5 # upper right triangle
+
+$A0 -> U+00A0 # nbsp
+$A1 -> U+258C # left half block
+$A2 -> U+2584 # bottom half block
+$A3 -> U+2594 # top one eighth block
+$A4 -> U+2581 # bottom one eighth block
+$A5 -> U+258E # left quarter block
+$A6 -> U+2592 # shade
+# 0xA7 is right one quarter block, no Unicode match
+# 0xA8 is bottom half shade, no Unicode match
+$A9 -> U+25E4 # upper left triangle
+# 0xAA is also right one quarter block, no Unicode match
+$AB -> U+251C # vertical and right
+$AC -> U+2597 # lower right quadrant
+$AD -> U+2514 # up and right
+$AE -> U+2510 # down and left
+$AF -> U+2582 # bottom quarter block
+
+$B0 -> U+250C # down and right
+$B1 -> U+2534 # horizontal and up
+$B2 -> U+252C # horizontal and down
+$B3 -> U+2524 # vertical and left
+$B4 -> U+258E # also left quarter block
+$B5 -> U+258D # left 3/8 block
+# 0xB6 is right 3/8 block, no Unicode match
+# 0xB7 is top quarter block, no Unicode match
+# 0xB8 is top 3/8 block, no Unicode match
+$B9 -> U+2583 # bottom 3/8 block
+# 0xBA is bottom quarter block overstruck with right quarter block, no Unicode match
+$BB -> U+2596 # lower left quadrant
+$BC -> U+259D # upper right quadrant
+$BD -> U+2518 # up and left
+$BE -> U+2598 # upper left quadrant
+$BF -> U+259A # upper left and lower right quadrant
+

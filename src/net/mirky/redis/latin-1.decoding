@@ -1,0 +1,5 @@
+$20 .. $7E -> U+0020 .. U+007E
+# leave out $A0, hard space ...
+$A1 .. $AC -> U+00A1 .. U+00AC
+# ... and $AD, soft hyphen
+$AE .. $FF -> U+00AE .. U+00FF
