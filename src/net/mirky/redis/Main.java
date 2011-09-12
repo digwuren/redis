@@ -243,13 +243,12 @@ public final class Main extends AbstractMain {
             System.err.println("redis: too many parameters");
             System.exit(1);
         }
-        Decoding decoding = Decoding.get(arguments[0]);
-        if (decoding == null) {
-            System.err.println("redis: " + arguments[0] + ": unknown decoding");
+        try {
+            Decoding.get(arguments[0]).dumpDecoding(System.out);
+        } catch (Decoding.ResolutionError e) {
+            System.err.println("redis: " + e.getMessage());
             System.exit(1);
         }
-        assert decoding != null;
-        decoding.dumpDecoding(System.out);
     }
 
     @Mode("list-simple-types")

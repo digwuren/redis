@@ -185,11 +185,11 @@ public final class Format {
 
             @Override
             final Decoding parse(String name) throws OptionError {
-                Decoding decoding = Decoding.get(name);
-                if (decoding == null) {
-                    throw new OptionError("unknown decoding " + name);
+                try {
+                    return Decoding.get(name);
+                } catch (Decoding.ResolutionError e) {
+                    throw new OptionError("unknown decoding " + name, e);
                 }
-                return decoding;
             }
         };
 
@@ -699,7 +699,11 @@ public final class Format {
         try {
             return (Decoding) ((Option.SimpleOption) getOption("decoding")).value;
         } catch (UnknownOption e) {
-            return Decoding.get("ascii");
+            try {
+                return Decoding.get("ascii");
+            } catch (Decoding.ResolutionError e1) {
+                throw new RuntimeException("loading the ASCII decoding failed???", e1);
+            }
         }
     }
 

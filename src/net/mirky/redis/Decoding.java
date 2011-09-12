@@ -201,11 +201,41 @@ public final class Decoding {
 		decodings.put("petscii", DecodingBuilder.parse("petscii"));
 	}
 
-	static final Decoding get(String name) {
-		if (aliases.containsKey(name)) {
+	public static final boolean validDecodingName(String candidate) {
+	    if (candidate.length() == 0) {
+	        return false;
+	    }
+	    for (int i = 0; i < candidate.length(); i++) {
+	        char c = Character.toLowerCase(candidate.charAt(i));
+	        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-')) {
+	            return false;
+	        }
+	    }
+	    if (candidate.charAt(0) == '-' || candidate.charAt(candidate.length() - 1) == '-') {
+	        return false;
+	    }
+	    return true;
+	}
+
+	static final Decoding get(String rawName) throws Decoding.ResolutionError {
+	    String name = rawName.toLowerCase();
+	    if (!validDecodingName(name)) {
+	        throw new Decoding.ResolutionError(rawName, "invalid name for a decoding");
+	    }
+	    if (aliases.containsKey(name)) {
 			return get(aliases.get(name));
 		} else {
-			return decodings.get(name);
+			Decoding decoding = decodings.get(name);
+			if (decoding == null) {
+			    throw new Decoding.ResolutionError(rawName, "unknown decoding");
+			}
+            return decoding;
 		}
+	}
+	
+	public static final class ResolutionError extends Exception {
+	    public ResolutionError(String name, String comment) {
+	        super(name + ": " + comment);
+	    }
 	}
 }
