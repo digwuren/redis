@@ -266,16 +266,9 @@ public final class Format {
         static final OptionType<Format.EntryPoint> ENTRY = new OptionType<Format.EntryPoint>() {
             @Override
             final void stringify(Format.EntryPoint value, StringBuilder sb) {
-                sb.append("/entry=0x");
-                if (value.address >= 0 && value.address <= 0xFFFF) {
-                    sb.append(Hex.w(value.address));
-                } else {
-                    sb.append(Hex.t(value.address));
-                }
-                if (value.lang != null) {
-                    sb.append(':');
-                    sb.append(value.lang.name);
-                }
+                String name = "entry";
+                sb.append("/" + name + "=");
+                value.stringify(sb);
             }
 
             @Override
@@ -930,6 +923,22 @@ public final class Format {
 
         final EntryPoint makeExplicit() {
             return new EntryPoint(address, lang, true);
+        }
+
+        /**
+         * Stringifies this entry point and appends it to the given {@link StringBuilder}.
+         */
+        final void stringify(StringBuilder sb) {
+            sb.append("0x");
+            if (address >= 0 && address <= 0xFFFF) {
+                sb.append(Hex.w(address));
+            } else {
+                sb.append(Hex.t(address));
+            }
+            if (lang != null) {
+                sb.append(':');
+                sb.append(lang.name);
+            }
         }
     }
 

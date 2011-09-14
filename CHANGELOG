@@ -20,6 +20,7 @@ Programmer-visible changes:
 * introduced Hex.n() for nybbles
 * documented Format.EntryPoint
 * refactored Format.Option.EntryPointIterator into Format.Option.ArrayIterator
+* extracted Format.EntryPoint.stringify() from Format.OptionType.ENTRY.stringify()
 
 == v0.1 2011-08-08
 
