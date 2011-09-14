@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import net.mirky.redis.analysers.BlockedBinaryAnalyser;
 import net.mirky.redis.analysers.CelledFontAnalyser;
 
 public final class Format {
@@ -904,6 +905,10 @@ public final class Format {
         return s.length();
     }
 
+    /**
+     * Represents an entry point into a memory image. In formats supporting
+     * entry points, several are usually permitted.
+     */
     public static final class EntryPoint {
         public final int address;
         public final Disassembler.Lang lang;
@@ -917,6 +922,31 @@ public final class Format {
 
         final EntryPoint makeExplicit() {
             return new EntryPoint(address, lang, true);
+        }
+    }
+
+    /**
+     * Represents a hierarchy level for a geometry. Currently not used; will
+     * probably only be used by {@link BlockedBinaryAnalyser}. Multiple nested
+     * levels are supported; the lowest level is specified first.
+     * 
+     * Each level specifies three aspects: the name of units at this level, the
+     * number of lower-level units this unit holds, and the number of the first
+     * unit. For an example, a format for floppy disk images having 512-byte
+     * sectors (counted from 1), 9-sector tracks (counted from 0), and 40-track
+     * sides (counted from 1) would be specified as
+     * {@code blocks/geom=512,block,1/geom=9,track,0/geom=40,side,1}.
+     * 
+     */
+    public static final class GeometryLevel {
+        public final String name;
+        public final int size;
+        public final int first;
+        
+        public GeometryLevel(String name, int size, int first) {
+            this.name = name;
+            this.size = size;
+            this.first = first;
         }
     }
 

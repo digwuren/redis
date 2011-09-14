@@ -15,16 +15,16 @@ public class BlockedBinaryAnalyser extends Analyser.Leaf {
     protected final ReconstructionDataCollector dis(Format format, byte[] data, PrintStream port) throws UnknownOption, RuntimeException {
         // Note that we're ignoring the origin here.
         Decoding decoding = format.getDecoding();
-        // Note that the lowest level is given first.
-        AccountingLevel[] accountingLevels = new AccountingLevel[]{
-                new AccountingLevel("block", format.getIntegerOption("bs"), 0)
+        // Note that the lowest level is given zeroth.
+        Format.GeometryLevel[] geometry = new Format.GeometryLevel[]{
+                new Format.GeometryLevel("block", format.getIntegerOption("bs"), 0)
         };
-        int[] accounters = new int[accountingLevels.length];
-        for (int i = 0; i < accounters.length; i++) {
-            accounters[i] = accountingLevels[i].first;
+        int[] address = new int[geometry.length];
+        for (int i = 0; i < address.length; i++) {
+            address[i] = geometry[i].first;
         }
-        for (int blockStart = 0; blockStart < data.length; blockStart += accountingLevels[0].size) {
-            int blockEnd = blockStart + accountingLevels[0].size;
+        for (int blockStart = 0; blockStart < data.length; blockStart += geometry[0].size) {
+            int blockEnd = blockStart + geometry[0].size;
             if (blockEnd > data.length) {
                 blockEnd = data.length;
             }
@@ -33,8 +33,8 @@ public class BlockedBinaryAnalyser extends Analyser.Leaf {
             if (blockStart != 0) {
                 port.println(); // visual separator for blocks
             }
-            for (int i = accounters.length - 1; i >= 0; i--) {
-                port.print(accountingLevels[i].name + " " + accounters[i]);
+            for (int i = address.length - 1; i >= 0; i--) {
+                port.print(geometry[i].name + " " + address[i]);
                 if (i != 0) {
                     port.print(", ");
                 }
@@ -43,26 +43,14 @@ public class BlockedBinaryAnalyser extends Analyser.Leaf {
             Hex.dump(block, 0, decoding, port);
             int carry = 0;
             while (true) {
-                accounters[carry]++;
-                if (!(carry + 1 < accountingLevels.length && accounters[carry] - accountingLevels[carry].first >= accountingLevels[carry + 1].size)) {
+                address[carry]++;
+                if (!(carry + 1 < geometry.length && address[carry] - geometry[carry].first >= geometry[carry + 1].size)) {
                     break;
                 }
-                accounters[carry] = accountingLevels[carry].first;
+                address[carry] = geometry[carry].first;
                 carry++;
             }
         }
         return null;
-    }
-    
-    private static final class AccountingLevel {
-        public final String name;
-        public final int size;
-        public final int first;
-        
-        public AccountingLevel(String name, int size, int first) {
-            this.name = name;
-            this.size = size;
-            this.first = first;
-        }
     }
 }

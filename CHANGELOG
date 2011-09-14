@@ -18,6 +18,7 @@ Programmer-visible changes:
   resources so new decodings will be easier to add in the future
 * implemented the @ArgCountLimits annotation
 * introduced Hex.n() for nybbles
+* documented Format.EntryPoint
 
 == v0.1 2011-08-08
 
