@@ -273,19 +273,7 @@ public final class Format {
 
             @Override
             final Format.EntryPoint parse(String spec) throws OptionError {
-                int colon = spec.indexOf(':');
-                String addressPart;
-                String langPart;
-                if (colon != -1) {
-                    addressPart = spec.substring(0, colon);
-                    langPart = spec.substring(colon + 1);
-                } else {
-                    addressPart = spec;
-                    langPart = null;
-                }
-                int address = UNSIGNED_HEX_INTEGER.parse(addressPart).intValue();
-                Disassembler.Lang lang = langPart != null ? LANG.parse(langPart) : null;
-                return new Format.EntryPoint(address, lang, true);
+                return Format.EntryPoint.parse(spec);
             }
 
             @Override
@@ -940,7 +928,27 @@ public final class Format {
                 sb.append(lang.name);
             }
         }
-    }
+
+        /**
+         * Parses an entry point specification.
+         */
+        static final Format.EntryPoint parse(String spec) throws OptionError {
+            int colon = spec.indexOf(':');
+            String addressPart;
+            String langPart;
+            if (colon != -1) {
+                addressPart = spec.substring(0, colon);
+                langPart = spec.substring(colon + 1);
+            } else {
+                addressPart = spec;
+                langPart = null;
+            }
+            int address = Format.OptionType.UNSIGNED_HEX_INTEGER.parse(addressPart).intValue();
+            Disassembler.Lang lang = langPart != null ? Format.OptionType.LANG.parse(langPart) : null;
+            return new Format.EntryPoint(address, lang, true);
+        }
+
+}
 
     /**
      * Represents a hierarchy level for a geometry. Currently not used; will

@@ -21,6 +21,7 @@ Programmer-visible changes:
 * documented Format.EntryPoint
 * refactored Format.Option.EntryPointIterator into Format.Option.ArrayIterator
 * extracted Format.EntryPoint.stringify() from Format.OptionType.ENTRY.stringify()
+* extracted Format.EntryPoint.parse() from Format.OptionType.ENTRY.parse()
 
 == v0.1 2011-08-08
 
