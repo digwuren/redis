@@ -417,15 +417,15 @@ public final class Format {
             }
 
             public final Iterator<Format.EntryPoint> iterator() {
-                return new EntryPointIterator(values);
+                return new ArrayIterator<Format.EntryPoint>(values);
             }
         }
 
-        static final class EntryPointIterator implements Iterator<Format.EntryPoint> {
-            private final Format.EntryPoint[] values;
+        static final class ArrayIterator<T> implements Iterator<T> {
+            private final T[] values;
             private int currentIndex;
 
-            EntryPointIterator(Format.EntryPoint[] values) {
+            ArrayIterator(T[] values) {
                 this.values = values;
                 currentIndex = 0;
             }
@@ -434,7 +434,7 @@ public final class Format {
                 return currentIndex < values.length;
             }
 
-            public final Format.EntryPoint next() {
+            public final T next() {
                 return values[currentIndex++];
             }
 
@@ -769,13 +769,13 @@ public final class Format {
                 nextSlash = decl.length();
             }
             String optionDecl = decl.substring(slash + 1, nextSlash);
+            // The general format of an option is {@code name[!][:type][=value]}.
             int eq = optionDecl.indexOf('=');
             int colon = optionDecl.indexOf(':');
             if (eq != -1 && colon > eq) {
+                // the first colon appears after the first '=' Ñ it is not the
+                // type separator, it's a part of the value
                 colon = -1;
-            }
-            if (colon == -1) {
-                throw new OptionError("missing type: " + optionDecl);
             }
             boolean explicit;
             int endOfName;
@@ -792,7 +792,15 @@ public final class Format {
                 endOfName = colon;
             }
             String name = optionDecl.substring(0, endOfName);
-            String optionTypeName = eq != -1 ? optionDecl.substring(colon + 1, eq) : optionDecl.substring(colon + 1);
+            String optionTypeName;
+            if (colon >= 0) {
+                optionTypeName = eq != -1 ? optionDecl.substring(colon + 1, eq) : optionDecl.substring(colon + 1);
+            } else {
+                optionTypeName = null;
+            }
+            if (optionTypeName == null) {
+                throw new OptionError("missing type: " + optionDecl);
+            }
             String optionValue = eq != -1 ? optionDecl.substring(eq + 1) : null;
             if (seenOptions.containsKey(name)) {
                 throw new OptionError("duplicate format option declaration: " + optionDecl);
