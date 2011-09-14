@@ -101,10 +101,10 @@ public final class Format {
                     throw new OptionError("invalid integer: " + spec, e);
                 }
             }
-            
+
             abstract boolean suitable(int value);
         }
-        
+
         static final class RangedIntegerType extends SimpleIntegerBasedType {
             private final int floor;
             private final int ceiling;
@@ -114,7 +114,7 @@ public final class Format {
                 this.floor = floor;
                 this.ceiling = ceiling;
             }
-            
+
             @Override
             final boolean suitable(int value) {
                 return value >= floor && value <= ceiling;
@@ -528,9 +528,11 @@ public final class Format {
                     try {
                         providers.add(c.newInstance());
                     } catch (InstantiationException e) {
-                        throw new RuntimeException("unable to instantiate service " + service.getName() + " provider: " + c.getName(), e);
+                        throw new RuntimeException("unable to instantiate service " + service.getName() + " provider: "
+                                + c.getName(), e);
                     } catch (IllegalAccessException e) {
-                        throw new RuntimeException("unable to instantiate service " + service.getName() + " provider: " + c.getName(), e);
+                        throw new RuntimeException("unable to instantiate service " + service.getName() + " provider: "
+                                + c.getName(), e);
                     }
                 }
             }
@@ -554,13 +556,14 @@ public final class Format {
      * 
      * Note that merely annotating an analyser class is not sufficient for it to
      * be visible, it also needs to be declared as a provider of the
-     * {@link Analyser} service. See {@link #getProviders(Class)} for
-     * details of our provider detection mechanism.
+     * {@link Analyser} service. See {@link #getProviders(Class)} for details of
+     * our provider detection mechanism.
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
     public static @interface Options {
         String value();
+
         String[] aliases() default {};
     }
 
@@ -570,8 +573,7 @@ public final class Format {
      */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
-    public
-    static @interface Optionses {
+    public static @interface Optionses {
         Options[] value();
     }
 
@@ -750,7 +752,8 @@ public final class Format {
                 nextSlash = decl.length();
             }
             String optionDecl = decl.substring(slash + 1, nextSlash);
-            // The general format of an option is {@code name[!][:type][=value]}.
+            // The general format of an option is {@code
+            // name[!][:type][=value]}.
             int eq = optionDecl.indexOf('=');
             int colon = optionDecl.indexOf(':');
             if (eq != -1 && colon > eq) {
@@ -835,8 +838,7 @@ public final class Format {
     }
 
     private static final boolean isParenthesised(String s) {
-        if (s.length() >= 2 && s.charAt(0) == '('
-                && s.charAt(s.length() - 1) == ')') {
+        if (s.length() >= 2 && s.charAt(0) == '(' && s.charAt(s.length() - 1) == ')') {
             int level = 0;
             for (int i = 0; i < s.length(); i++) {
                 char c = s.charAt(i);
@@ -914,7 +916,8 @@ public final class Format {
         }
 
         /**
-         * Stringifies this entry point and appends it to the given {@link StringBuilder}.
+         * Stringifies this entry point and appends it to the given
+         * {@link StringBuilder}.
          */
         final void stringify(StringBuilder sb) {
             sb.append("0x");
@@ -932,7 +935,7 @@ public final class Format {
         /**
          * Parses an entry point specification.
          */
-        static final Format.EntryPoint parse(String spec) throws OptionError {
+        static final EntryPoint parse(String spec) throws OptionError {
             int colon = spec.indexOf(':');
             String addressPart;
             String langPart;
@@ -947,8 +950,7 @@ public final class Format {
             Disassembler.Lang lang = langPart != null ? Format.OptionType.LANG.parse(langPart) : null;
             return new Format.EntryPoint(address, lang, true);
         }
-
-}
+    }
 
     /**
      * Represents a hierarchy level for a geometry. Currently not used; will
@@ -967,11 +969,41 @@ public final class Format {
         public final String name;
         public final int size;
         public final int first;
-        
+
         public GeometryLevel(String name, int size, int first) {
             this.name = name;
             this.size = size;
             this.first = first;
+        }
+
+        /**
+         * Stringifies this geometry level and appends it to the given
+         * {@link StringBuilder}.
+         */
+        final void stringify(StringBuilder sb) {
+            sb.append(size);
+            sb.append(',');
+            sb.append(name);
+            sb.append(',');
+            sb.append(first);
+        }
+
+        /**
+         * Parses a geometry level specification.
+         */
+        static final GeometryLevel parse(String spec) throws OptionError {
+            int firstColon = spec.indexOf(':');
+            // Note that if firstColon is -1, so will be secondColon.
+            int secondColon = spec.indexOf(':', firstColon + 1);
+            if (secondColon == -1) {
+                throw new OptionError("geometry level parse error");
+            }
+            String sizeSpec = spec.substring(0, firstColon);
+            int size = Format.OptionType.UNSIGNED_DECIMAL_INTEGER.parse(sizeSpec).intValue();
+            String name = spec.substring(firstColon + 1, secondColon);
+            String firstSpec = spec.substring(secondColon + 1);
+            int first = Format.OptionType.UNSIGNED_DECIMAL_INTEGER.parse(firstSpec).intValue();
+            return new GeometryLevel(name, size, first);
         }
     }
 
