@@ -4,7 +4,8 @@ User-visible changes:
 * implemented the --dump-decoding and --show-decoding diagnostic command line
   options
 * don't show stacktrace for command line parse errors
-* added koi7.decoding
+* added the 'koi7' decoding
+* added the 'blocks' format
 
 Programmer-visible changes:
 * implemented a parser for decodings represented in text resources

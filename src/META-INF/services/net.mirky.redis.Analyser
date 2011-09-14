@@ -8,3 +8,4 @@ net.mirky.redis.analysers.TapAnalyser
 net.mirky.redis.analysers.TzxAnalyser
 net.mirky.redis.analysers.ZXSBasicProgramCodeAnalyser
 net.mirky.redis.analysers.ZXSBasicVariableDataAnalyser
+net.mirky.redis.analysers.BlockedBinaryAnalyser
