@@ -5,20 +5,19 @@ import java.io.PrintStream;
 import net.mirky.redis.Analyser;
 import net.mirky.redis.Decoding;
 import net.mirky.redis.Format;
+import net.mirky.redis.Format.GeometryLevel;
 import net.mirky.redis.Format.UnknownOption;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ReconstructionDataCollector;
 
-@Format.Options(value = "blocks/bs:positive-decimal=1024/decoding:decoding=ascii/origin:unsigned-hex=0")
+@Format.Options(value = "blocks/geometry:geometry=1024:block:0/decoding:decoding=ascii/origin:unsigned-hex=0")
 public class BlockedBinaryAnalyser extends Analyser.Leaf {
     @Override
     protected final ReconstructionDataCollector dis(Format format, byte[] data, PrintStream port) throws UnknownOption, RuntimeException {
         // Note that we're ignoring the origin here.
         Decoding decoding = format.getDecoding();
         // Note that the lowest level is given zeroth.
-        Format.GeometryLevel[] geometry = new Format.GeometryLevel[]{
-                new Format.GeometryLevel("block", format.getIntegerOption("bs"), 0)
-        };
+        GeometryLevel[] geometry = ((Format.GeometryLevel[]) ((Format.Option.SimpleOption) format.getOption("geometry")).value);
         int[] address = new int[geometry.length];
         for (int i = 0; i < address.length; i++) {
             address[i] = geometry[i].first;

@@ -235,6 +235,32 @@ public final class Format {
             }
         };
 
+        @SimpleTypeName("geometry")
+        static final Simple<GeometryLevel[]> GEOMETRY = new Simple<GeometryLevel[]>() {
+            @Override
+            final void stringify(GeometryLevel[] value, StringBuilder sb) {
+                for (int i = 0; i < value.length; i++) {
+                    if (i != 0) {
+                        sb.append('/');
+                    }
+                    value[i].stringify(sb);
+                }
+            }
+            
+            @Override
+            final GeometryLevel[] parse(String geometrySpec) throws OptionError {
+                String[] specParts = geometrySpec.split(",");
+                if (specParts.length < 1) {
+                    throw new OptionError("geometry parse error");
+                }
+                GeometryLevel[] parsedLevels = new GeometryLevel[specParts.length];
+                for (int i = 0; i < specParts.length; i++) {
+                    parsedLevels[i] = GeometryLevel.parse(specParts[i]);
+                }
+                return parsedLevels;
+            }
+        };
+        
         @SimpleTypeName("scanline-direction")
         static final Simple<CelledFontAnalyser.ScanlineDirection> SCANLINE_DIRECTION = new Simple<CelledFontAnalyser.ScanlineDirection>() {
             @Override

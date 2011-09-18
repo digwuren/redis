@@ -6,6 +6,7 @@ User-visible changes:
 * don't show stacktrace for command line parse errors
 * added the 'koi7' decoding
 * added the 'blocks' format
+* added the 'geometry' option type as single-valued
 
 Programmer-visible changes:
 * implemented a parser for decodings represented in text resources
