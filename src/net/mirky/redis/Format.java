@@ -979,17 +979,8 @@ public final class Format {
     }
 
     /**
-     * Represents a hierarchy level for a geometry. Currently not used; will
-     * probably only be used by {@link BlockedBinaryAnalyser}. Multiple nested
-     * levels are supported; the lowest level is specified first.
-     * 
-     * Each level specifies three aspects: the name of units at this level, the
-     * number of lower-level units this unit holds, and the number of the first
-     * unit. For an example, a format for floppy disk images having 512-byte
-     * sectors (counted from 1), 9-sector tracks (counted from 0), and 40-track
-     * sides (counted from 1) would be specified as
-     * {@code blocks/geom=512,block,1/geom=9,track,0/geom=40,side,1}.
-     * 
+     * Represents a hierarchy level for a geometry. Currently only be used by
+     * {@link BlockedBinaryAnalyser}.
      */
     public static final class GeometryLevel {
         public final String name;
