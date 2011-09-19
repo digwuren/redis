@@ -223,14 +223,10 @@ public final class Format {
             // Note that the APIs are currently hardcoded.
             @Override
             final Disassembler.API parse(String name) throws OptionError {
-                if (name.toLowerCase().equals("cpm")) {
-                    return Disassembler.API.CPM;
-                } else if (name.toLowerCase().equals("zxs")) {
-                    return Disassembler.API.ZXS;
-                } else if (name.toLowerCase().equals("none")) {
-                    return Disassembler.API.NONE;
-                } else {
-                    throw new OptionError("unknown API: " + name);
+                try {
+                    return Disassembler.API.get(name);
+                } catch (Disassembler.API.ResolutionError e) {
+                    throw new OptionError("API load failed: " + name, e);
                 }
             }
         };
@@ -246,7 +242,7 @@ public final class Format {
                     value[i].stringify(sb);
                 }
             }
-            
+
             @Override
             final GeometryLevel[] parse(String geometrySpec) throws OptionError {
                 String[] specParts = geometrySpec.split(",");
@@ -260,7 +256,7 @@ public final class Format {
                 return parsedLevels;
             }
         };
-        
+
         @SimpleTypeName("scanline-direction")
         static final Simple<CelledFontAnalyser.ScanlineDirection> SCANLINE_DIRECTION = new Simple<CelledFontAnalyser.ScanlineDirection>() {
             @Override

@@ -29,6 +29,7 @@ Programmer-visible changes:
 * extracted none.api, cpm.api, and zxs.api from Disassembler.API
 * renamed the 'dits' directory to 'resources'
 * moved *.decoding into the new 'resources' directory
+* use a Decoding-style resource caching mechanism for API:s, too
 
 == v0.1 2011-08-08
 
