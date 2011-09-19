@@ -37,6 +37,7 @@ Programmer-visible changes:
   * replaced the counted tempswitch tabular lang opcodes with the implicitly
     counted version followed by an appropriate set-countdown opcode
 * fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
+* show lang metdata in a tabular language dump
 
 == v0.1 2011-08-08
 

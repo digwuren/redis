@@ -833,6 +833,10 @@ public final class Disassembler {
             final void dumpLang(PrintStream port) {
                 port.println("# " + name + " is a tabular language");
                 port.println("Dispatch-suboffset: " + dispatchSuboffset);
+                port.println("Default-countdown: " + defaultCountdown);
+                if (trivial) {
+                    port.println("Trivial!");
+                }
                 for (int i = 0; i < minitables.length; i++) {
                     String[] minitable = minitables[i];
                     if (minitable != null) {
