@@ -743,7 +743,7 @@ public final class Disassembler {
     /**
      * A {@link Lang} roughly represents a particular bytecode/machine code
      * language such as {@code i8080} {@code m68000}. Most of the actual
-     * languages are stored in *.dit resource files, which are translated into
+     * languages are stored in *.lang resource files, which are translated into
      * an internal bytecode when the {@link Lang} instance is constructed. (See
      * {@link Lang.Tabular} for details.)
      * 
@@ -765,7 +765,7 @@ public final class Disassembler {
         public final int hashCode() {
             return name.hashCode();
         }
-        
+
         @Override
         public final boolean equals(Object that) {
             return this == that;
@@ -774,7 +774,7 @@ public final class Disassembler {
         public final int compareTo(Lang that) {
             return this.name.compareTo(that.name);
         }
-        
+
         /**
          * Checks triviality status of the language. Switches to a trivial
          * language and back are not explicitly marked in disassembler's output.
@@ -834,8 +834,7 @@ public final class Disassembler {
                     sb.append("0x");
                     sb.append(Hex.b(disassembler.getUnsignedByte(i)));
                 }
-                ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(
-                        bytes);
+                ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(bytes);
                 sb.append(" // ");
                 number.prepareForDisassemblyDisplay(sb);
             }
@@ -997,7 +996,7 @@ public final class Disassembler {
                 }
 
                 final void parse() throws RuntimeException {
-                    for (String line : new TextResource("resources/" + name + ".dit")) {
+                    for (String line : new TextResource("resources/" + name + ".lang")) {
                         if (line.length() == 0 || line.charAt(0) == '#') {
                             continue;
                         }
@@ -1015,19 +1014,19 @@ public final class Disassembler {
                     if (line.startsWith(dispatchSuboffsetDeclarator)) {
                         String parameter = line.substring(dispatchSuboffsetDeclarator.length()).trim();
                         if (dispatchSuboffsetDeclared) {
-                            throw new RuntimeException("duplicate Dispatch-suboffset: declaration in dit file");
+                            throw new RuntimeException("duplicate Dispatch-suboffset: declaration in lang file");
                         }
                         dispatchSuboffset = Integer.parseInt(parameter);
                         dispatchSuboffsetDeclared = true;
                     } else {
-                        // Besides the metadata, a dit file has lines of two
+                        // Besides the metadata, a lang file has lines of two
                         // types:
                         // [mask] decipherer
                         // minitable[] value, value, ...
                         int leftBracket = line.indexOf('[');
                         int rightBracket = line.indexOf(']', leftBracket + 1);
                         if (leftBracket == -1 || rightBracket == -1) {
-                            throw new RuntimeException("invalid dit line: " + line);
+                            throw new RuntimeException("invalid lang file line: " + line);
                         }
                         String tableName = line.substring(0, leftBracket).trim();
                         String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
@@ -1036,7 +1035,7 @@ public final class Disassembler {
                             if (tableName.length() != 0) {
                                 // minitable line
                                 if (setSpec.length() != 0) {
-                                    throw new RuntimeException("invalid dit line: " + line);
+                                    throw new RuntimeException("invalid lang file line: " + line);
                                 }
                                 parseMinitableLine(tableName, content);
                             } else {
@@ -1044,7 +1043,7 @@ public final class Disassembler {
                                 parseDeciphererLine(setSpec, content);
                             }
                         } catch (DisassemblyTableParseError e) {
-                            throw new RuntimeException("invalid dit line: " + line, e);
+                            throw new RuntimeException("invalid lang file line: " + line, e);
                         }
                     }
                 }
@@ -1064,11 +1063,11 @@ public final class Disassembler {
                 }
 
                 /**
-                 * Parse a decipherer from DIT (Disassembler's Instruction
-                 * Table) file into the internal bytecode.
+                 * Parse a decipherer from a lang file into the internal
+                 * bytecode.
                  * 
-                 * Note that the DIT syntax is currently not considered a public
-                 * interface, so we're not trying to be particularly
+                 * Note that the lang file syntax is currently not considered a
+                 * public interface, so we're not trying to be particularly
                  * user-friendly. We have a whitespace-sensitive syntax, opcodes
                  * with fixed and very particular parameters, and not very
                  * informative error messages.
@@ -1211,27 +1210,27 @@ public final class Disassembler {
                 }
             }
 
-            // An instance of this with a brief message is thrown internally
-            // when DIT parsing fails.
-            // Considering that all our DIT:s are considered internal to the
-            // project, this is not
-            // supposed to happen, so we call all our
-            // DisassemblyTableParseError:s and throw a
-            // RuntimeException to the caller instead (but we'll retain the
-            // DisassemblyTableParseError
-            // as a cause).
+            /*
+             * An instance of this with a brief message is thrown internally
+             * when lang file parsing fails. Considering that all our lang files
+             * are considered internal to the project, this is not supposed to
+             * happen, so we catch all our {@link DisassemblyTableParseError}:s
+             * and throw a RuntimeException to the caller instead (but we'll
+             * retain the {@link DisassemblyTableParseError} as a cause).
+             */
             static final class DisassemblyTableParseError extends Exception {
                 DisassemblyTableParseError(String msg) {
                     super(msg);
                 }
             }
 
-            // A CodeSet instance represents a particular set of integer codes,
-            // typically in the range of
-            // 0-255. We have two kinds of CodeSet:s, CodeSet.Masked, which work
-            // analogously to IPv4
-            // netaddr/netmask pairs, and CodeSet.Difference which works as a
-            // normal set difference operator.
+            /*
+             * A CodeSet instance represents a particular set of integer codes,
+             * typically in the range of 0-255. We have two kinds of CodeSet:s,
+             * CodeSet.Masked, which work analogously to IPv4 netaddr/netmask
+             * pairs, and CodeSet.Difference which works as a normal set
+             * difference operator.
+             */
             static abstract class CodeSet {
                 abstract boolean matches(int candidate);
 
@@ -1370,7 +1369,8 @@ public final class Disassembler {
         public static final Lang get(String name) throws UnknownLanguage {
             Disassembler.Lang lang = loadedLangs.get(name);
             if (lang == null) {
-                // Note that names of all supported tabular languages are hardcoded
+                // Note that names of all supported tabular languages are
+                // hardcoded
                 // here together with their {@code trivial} flag.
                 if (name.equals("z80") || name.equals("z80-xd") || name.equals("z80-xd-cb") || name.equals("z80-cb")
                         || name.equals("z80-ed") || name.equals("z180") || name.equals("z180-ed")
@@ -1411,41 +1411,41 @@ public final class Disassembler {
 
     static abstract class SequencerEffect {
         abstract void affectSequencer(LangSequencer sequencer);
-        
+
         static final class Terminate extends SequencerEffect {
             @Override
             final void affectSequencer(LangSequencer sequencer) {
                 sequencer.terminate();
             }
         }
-        
+
         static final class SwitchPermanently extends SequencerEffect {
             private final Lang lang;
 
             SwitchPermanently(Lang lang) {
                 this.lang = lang;
             }
-            
+
             @Override
             final void affectSequencer(LangSequencer sequencer) {
                 sequencer.switchPermanently(lang);
             }
         }
-        
+
         static final class SwitchTemporarily extends SequencerEffect {
             private final Lang lang;
 
             SwitchTemporarily(Lang lang) {
                 this.lang = lang;
             }
-            
+
             @Override
             final void affectSequencer(LangSequencer sequencer) {
                 sequencer.switchTemporarily(lang);
             }
         }
     }
-    
+
     static final class API {
         final String name;
         private final Map<Integer, SequencerEffect> vectors;
@@ -1496,8 +1496,8 @@ public final class Disassembler {
                     throw new RuntimeException("reference to unknown language in API vector declaration \"" + line
                             + "\"", e);
                 } catch (NumberFormatException e) {
-                    throw new RuntimeException("invalid hexadecimal address in API vector declaration \"" + line
-                            + "\"", e);
+                    throw new RuntimeException(
+                            "invalid hexadecimal address in API vector declaration \"" + line + "\"", e);
                 }
             }
         }
@@ -1505,7 +1505,7 @@ public final class Disassembler {
         final SequencerEffect getSequencerEffect(int vector) {
             return vectors.get(new Integer(vector));
         }
-        
+
         public static final ResourceManager<API> MANAGER = new ResourceManager<API>("api") {
             @Override
             public final API load(String name, BufferedReader reader) throws IOException, RuntimeException {

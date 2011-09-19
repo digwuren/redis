@@ -27,6 +27,7 @@ Programmer-visible changes:
     Decoding.MANAGER.get() will now throw ResourceManager.ResolutionFailure
   * renamed the 'dits' directory to 'resources'
   * moved *.decoding into the new 'resources' directory
+  * renamed *.dit into *.lang
 * fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
 
 == v0.1 2011-08-08
