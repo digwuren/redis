@@ -676,7 +676,7 @@ public final class Disassembler {
 
     /**
      * A {@link Lang} roughly represents a particular bytecode/machine code
-     * language such as {@code i8080} {@code m68000}. Most of the actual
+     * language such as {@code i8080} or {@code m68000}. Most of the actual
      * languages are stored in *.lang resource files, which are translated into
      * an internal bytecode when the {@link Lang} instance is constructed. (See
      * {@link Lang.Tabular} for details.)
