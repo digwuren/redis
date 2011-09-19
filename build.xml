@@ -21,6 +21,7 @@
             <fileset dir="src" includes="**/suffixen.txt" />
             <fileset dir="src" includes="**/*.dit" />
             <fileset dir="src" includes="**/*.decoding" />
+            <fileset dir="src" includes="**/*.api" />
             <fileset dir="src" includes="**/zxsbaskw.tab" />
             <fileset dir="src" includes="META-INF/services/*" />
         </jar>

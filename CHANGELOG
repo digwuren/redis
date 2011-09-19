@@ -25,6 +25,8 @@ Programmer-visible changes:
 * extracted Format.EntryPoint.parse() from Format.OptionType.ENTRY.parse()
 * introduced Disassembler.SequencerEffect and its implementations
 * replaced Disassembler.API.affectSequencer() by getSequencerEffect()
+* replaced the separate Disassembler.API implementations with a single Map-based one
+* extracted none.api, cpm.api, and zxs.api from Disassembler.API
 
 == v0.1 2011-08-08
 

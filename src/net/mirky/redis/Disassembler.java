@@ -1444,67 +1444,66 @@ public final class Disassembler {
         }
     }
     
-    static abstract class API {
+    static final class API {
         final String name;
+        private final Map<Integer, SequencerEffect> vectors;
 
         API(String name) {
             this.name = name;
+            vectors = new HashMap<Integer, SequencerEffect>();
+            for (String line : new TextResource(name + ".api")) {
+                line = line.trim();
+                if (line.length() == 0 || line.charAt(0) == '#') {
+                    continue;
+                }
+                String[] fields = line.trim().split("\\s+");
+                try {
+                    int address = Integer.parseInt(fields[0], 16);
+                    if (vectors.containsKey(new Integer(address))) {
+                        throw new RuntimeException("duplicate API vector declaration \"" + line + "\"");
+                    }
+                    if (fields.length < 2) {
+                        throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                    }
+                    SequencerEffect effect;
+                    if (fields[1].equals("terminate")) {
+                        if (fields.length > 2) {
+                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                        }
+                        effect = new SequencerEffect.Terminate();
+                    } else if (fields[1].equals("switch-temporarily")) {
+                        if (fields.length > 3) {
+                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                        }
+                        // this will throw exception if the lang is unknown
+                        Lang newLang = Lang.get(fields[2]);
+                        effect = new SequencerEffect.SwitchTemporarily(newLang);
+                    } else if (fields[1].equals("switch-permanently")) {
+                        if (fields.length > 3) {
+                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                        }
+                        // this will throw exception if the lang is unknown
+                        Lang newLang = Lang.get(fields[2]);
+                        effect = new SequencerEffect.SwitchPermanently(newLang);
+                    } else {
+                        throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                    }
+                    vectors.put(new Integer(address), effect);
+                } catch (Lang.UnknownLanguage e) {
+                    throw new RuntimeException("reference to unknown language in API vector declaration \"" + line + "\"", e);
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("invalid hexadecimal address in API vector declaration \"" + line + "\"", e);
+                }
+            }
         }
 
-        abstract SequencerEffect getSequencerEffect(int vector);
+        final SequencerEffect getSequencerEffect(int vector) {
+            return vectors.get(new Integer(vector));
+        }
         
-        /**
-         * A placeholder API with no special subroutines in it. Useful mainly
-         * for manually overriding an automatically guessed API, should that be
-         * necessary.
-         */
-        static final API NONE = new API("none") {
-            @Override
-            final SequencerEffect getSequencerEffect(int vector) {
-                return null;
-            }
-        };
-
-        /**
-         * The CP/M API. There's only one entry point that affects the flow,
-         * 0x0000. While normally, this would be JMPed to, some programs instead
-         * RST 0 to it, so we need to support it as a subroutine, too.
-         */
-        static final API CPM = new API("cpm") {
-            @Override
-            final SequencerEffect getSequencerEffect(int vector) {
-                if (vector == 0x0000) {
-                    return new SequencerEffect.Terminate();
-                } else {
-                    return null;
-                }
-            }
-        };
-
-        /**
-         * The ZX Spectrum API. Calling 0x0000 terminates flow, RST 1 is for
-         * reporting a BASIC error, RST 5 and two alternatives (used mainly by
-         * the ROM itself) are for the BASIC calculator bytecode.
-         */
-        static final API ZXS = new API("zxs") {
-            @Override
-            final SequencerEffect getSequencerEffect(int vector) throws RuntimeException {
-                try {
-                    if (vector == 0x0000) {
-                        return new SequencerEffect.Terminate();
-                    } else if (vector == 0x0008) {
-                        return new SequencerEffect.SwitchPermanently(Lang.get("zxsb-error"));
-                    } else if (vector == 0x0028 || vector == 0x335E || vector == 0x3362) {
-                        return new SequencerEffect.SwitchTemporarily(Lang.get("zxs-calc"));
-                    } else {
-                        return null;
-                    }
-                } catch (Lang.UnknownLanguage e) {
-                    // All the languages fetched above are included; failure indicates a serious bug.
-                    throw new RuntimeException("bug detected", e);
-                }
-            }
-        };
+        static final API NONE = new API("none");
+        static final API CPM = new API("cpm");
+        static final API ZXS = new API("zxs");
     }
 
     // Thrown when the decipherer attempts to access a byte beyond the end of
