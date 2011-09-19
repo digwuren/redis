@@ -865,10 +865,10 @@ public final class Disassembler {
                 this.dispatchSuboffset = parser.dispatchSuboffset;
             }
 
-            static final Tabular loadTabular(String name, boolean trivial) {
+            static final Tabular loadTabular(String name) {
                 DitParser parser = new DitParser(name);
                 parser.parse();
-                return new Tabular(name, parser.defaultCountdown, trivial, parser.decipherers, parser.minitables, parser);
+                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.minitables, parser);
             }
 
             @Override
@@ -983,6 +983,7 @@ public final class Disassembler {
                 private boolean dispatchSuboffsetDeclared;
                 int defaultCountdown;
                 private boolean defaultCountdownDeclared;
+                boolean trivial;
 
                 DitParser(String name) {
                     this.name = name;
@@ -997,6 +998,7 @@ public final class Disassembler {
                     dispatchSuboffsetDeclared = false;
                     defaultCountdown = 0; // by default, no default countdown
                     defaultCountdownDeclared = false;
+                    trivial = false; // by default, not trivial
                 }
 
                 final void parse() throws RuntimeException {
@@ -1030,6 +1032,9 @@ public final class Disassembler {
                         }
                         defaultCountdown = Integer.parseInt(parameter);
                         defaultCountdownDeclared = true;
+                    } else if (line.equals("Trivial!")) {
+                        trivial = true;
+                        // no duplicity check
                     } else {
                         // Besides the metadata, a lang file has lines of two
                         // types:
@@ -1382,16 +1387,14 @@ public final class Disassembler {
             Disassembler.Lang lang = loadedLangs.get(name);
             if (lang == null) {
                 // Note that names of all supported tabular languages are
-                // hardcoded
-                // here together with their {@code trivial} flag.
+                // hardcoded.
                 if (name.equals("z80") || name.equals("z80-xd") || name.equals("z80-xd-cb") || name.equals("z80-cb")
                         || name.equals("z80-ed") || name.equals("z180") || name.equals("z180-ed")
                         || name.equals("i8080") || name.equals("i8085") || name.equals("zxs-calc")
-                        || name.equals("mos6502")) {
-                    lang = Tabular.loadTabular(name, false);
-                } else if (name.equals("byte") || name.equals("lewyde") || name.equals("zxsb-error")
+                        || name.equals("mos6502")
+                        || name.equals("byte") || name.equals("lewyde") || name.equals("zxsb-error")
                         || name.equals("zxsb-error-text")) {
-                    lang = Tabular.loadTabular(name, true);
+                    lang = Tabular.loadTabular(name);
                 } else {
                     throw new UnknownLanguage("unknown disassembly language: " + name);
                 }
