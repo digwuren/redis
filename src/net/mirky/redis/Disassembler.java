@@ -457,7 +457,17 @@ public final class Disassembler {
 
                     case Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
                         noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
-                        api.affectSequencer(currentValue, sequencer);
+                        /*
+                         * XXX: Note that we don't care which language is used
+                         * to call the API entry point; all can cause the
+                         * switch. This can theoretically cause false positives.
+                         * In practice, they would be quite convoluted and
+                         * reasonably unlikely.
+                         */
+                        SequencerEffect effect = api.getSequencerEffect(currentValue);
+                        if (effect != null) {
+                            effect.affectSequencer(sequencer);
+                        }
                         break;
 
                     case Bytecode.BYTE_ENTRY_POINT_REFERENCE:
@@ -1397,6 +1407,43 @@ public final class Disassembler {
         }
     }
 
+    static abstract class SequencerEffect {
+        abstract void affectSequencer(LangSequencer sequencer);
+        
+        static final class Terminate extends SequencerEffect {
+            @Override
+            final void affectSequencer(LangSequencer sequencer) {
+                sequencer.terminate();
+            }
+        }
+        
+        static final class SwitchPermanently extends SequencerEffect {
+            private final Lang lang;
+
+            SwitchPermanently(Lang lang) {
+                this.lang = lang;
+            }
+            
+            @Override
+            final void affectSequencer(LangSequencer sequencer) {
+                sequencer.switchPermanently(lang);
+            }
+        }
+        
+        static final class SwitchTemporarily extends SequencerEffect {
+            private final Lang lang;
+
+            SwitchTemporarily(Lang lang) {
+                this.lang = lang;
+            }
+            
+            @Override
+            final void affectSequencer(LangSequencer sequencer) {
+                sequencer.switchTemporarily(lang);
+            }
+        }
+    }
+    
     static abstract class API {
         final String name;
 
@@ -1404,15 +1451,8 @@ public final class Disassembler {
             this.name = name;
         }
 
-        // Performs subroutine-specific manipulation of the disassembler's
-        // sequencer. For terminal subroutines, clears it.
-        // XXX: Note that we don't care which language is used to call the API
-        // entry point;
-        // all can cause the switch. This can theoretically cause false
-        // positives. In
-        // practice, they would be quite convoluted and reasonably unlikely.
-        abstract void affectSequencer(int vector, LangSequencer sequencer);
-
+        abstract SequencerEffect getSequencerEffect(int vector);
+        
         /**
          * A placeholder API with no special subroutines in it. Useful mainly
          * for manually overriding an automatically guessed API, should that be
@@ -1420,8 +1460,8 @@ public final class Disassembler {
          */
         static final API NONE = new API("none") {
             @Override
-            final void affectSequencer(int vector, LangSequencer sequencer) {
-                // nothing to do
+            final SequencerEffect getSequencerEffect(int vector) {
+                return null;
             }
         };
 
@@ -1432,9 +1472,11 @@ public final class Disassembler {
          */
         static final API CPM = new API("cpm") {
             @Override
-            final void affectSequencer(int vector, LangSequencer sequencer) {
+            final SequencerEffect getSequencerEffect(int vector) {
                 if (vector == 0x0000) {
-                    sequencer.terminate();
+                    return new SequencerEffect.Terminate();
+                } else {
+                    return null;
                 }
             }
         };
@@ -1446,17 +1488,19 @@ public final class Disassembler {
          */
         static final API ZXS = new API("zxs") {
             @Override
-            final void affectSequencer(int vector, LangSequencer sequencer) {
+            final SequencerEffect getSequencerEffect(int vector) throws RuntimeException {
                 try {
                     if (vector == 0x0000) {
-                        sequencer.terminate();
+                        return new SequencerEffect.Terminate();
                     } else if (vector == 0x0008) {
-                        sequencer.switchPermanently(Lang.get("zxsb-error"));
+                        return new SequencerEffect.SwitchPermanently(Lang.get("zxsb-error"));
                     } else if (vector == 0x0028 || vector == 0x335E || vector == 0x3362) {
-                        sequencer.switchTemporarily(Lang.get("zxs-calc"));
+                        return new SequencerEffect.SwitchTemporarily(Lang.get("zxs-calc"));
+                    } else {
+                        return null;
                     }
                 } catch (Lang.UnknownLanguage e) {
-                    // All the languages fetched above are builtin.
+                    // All the languages fetched above are included; failure indicates a serious bug.
                     throw new RuntimeException("bug detected", e);
                 }
             }

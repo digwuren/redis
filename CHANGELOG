@@ -23,6 +23,8 @@ Programmer-visible changes:
 * refactored Format.Option.EntryPointIterator into Format.Option.ArrayIterator
 * extracted Format.EntryPoint.stringify() from Format.OptionType.ENTRY.stringify()
 * extracted Format.EntryPoint.parse() from Format.OptionType.ENTRY.parse()
+* introduced Disassembler.SequencerEffect and its implementations
+* replaced Disassembler.API.affectSequencer() by getSequencerEffect()
 
 == v0.1 2011-08-08
 
