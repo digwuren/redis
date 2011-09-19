@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public final class Main extends AbstractMain {
 	public static final String VERSION_DATA = "redis 0.1";
 	
@@ -201,8 +202,8 @@ public final class Main extends AbstractMain {
     @ArgCountLimits(min = 1, max = 1)
     public final void dumpDecoding() {
         try {
-            Decoding.get(arguments[0]).dumpDecoding(System.out);
-        } catch (Decoding.ResolutionError e) {
+            Decoding.MANAGER.get(arguments[0]).dumpDecoding(System.out);
+        } catch (ResourceManager.ResolutionError e) {
             System.err.println("redis: " + e.getMessage());
             System.exit(1);
         }
@@ -212,8 +213,8 @@ public final class Main extends AbstractMain {
     @ArgCountLimits(min = 1, max = 1)
     public final void showDecoding() {
         try {
-            Decoding.get(arguments[0]).showDecoding(System.out);
-        } catch (Decoding.ResolutionError e) {
+            Decoding.MANAGER.get(arguments[0]).showDecoding(System.out);
+        } catch (ResourceManager.ResolutionError e) {
             System.err.println("redis: " + e.getMessage());
             System.exit(1);
         }

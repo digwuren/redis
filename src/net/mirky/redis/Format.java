@@ -187,8 +187,8 @@ public final class Format {
             @Override
             final Decoding parse(String name) throws OptionError {
                 try {
-                    return Decoding.get(name);
-                } catch (Decoding.ResolutionError e) {
+                    return Decoding.MANAGER.get(name);
+                } catch (ResourceManager.ResolutionError e) {
                     throw new OptionError("unknown decoding " + name, e);
                 }
             }
@@ -706,8 +706,8 @@ public final class Format {
             return (Decoding) ((Option.SimpleOption) getOption("decoding")).value;
         } catch (UnknownOption e) {
             try {
-                return Decoding.get("ascii");
-            } catch (Decoding.ResolutionError e1) {
+                return Decoding.MANAGER.get("ascii");
+            } catch (ResourceManager.ResolutionError e1) {
                 throw new RuntimeException("loading the ASCII decoding failed???", e1);
             }
         }

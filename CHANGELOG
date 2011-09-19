@@ -30,6 +30,8 @@ Programmer-visible changes:
 * renamed the 'dits' directory to 'resources'
 * moved *.decoding into the new 'resources' directory
 * use a Decoding-style resource caching mechanism for API:s, too
+* extracted ResourceManager from the decoding acquisition subsystem
+* introduced TextResource.getStream() and TextResource.getBufferedReader()
 
 == v0.1 2011-08-08
 

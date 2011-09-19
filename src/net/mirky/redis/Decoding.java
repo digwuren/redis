@@ -3,8 +3,6 @@ package net.mirky.redis;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -115,7 +113,7 @@ public final class Decoding {
             }
 	    }
 
-	    public static final Decoding parse(String name) throws Decoding.ResolutionError {
+	    public static final Decoding parse(String name) throws ResourceManager.ResolutionError {
             DecodingBuilder builder = new DecodingBuilder();
             try {
                 for (String line : new TextResource("resources/" + name + ".decoding")) {
@@ -155,7 +153,7 @@ public final class Decoding {
                 }
                 return new Decoding(name, builder.codes);
             } catch (TextResource.Missing e) {
-                throw new Decoding.ResolutionError(name, "decoding resource not found", e);
+                throw new ResourceManager.ResolutionError(name, "decoding", "resource not found", e);
             }
         }
 
@@ -236,55 +234,15 @@ public final class Decoding {
         }
         port.println();
     }
-	
-	private static final Map<String, String> aliases = new HashMap<String, String>();
-	static {
-		aliases.put("latin1", "latin-1");
-	}
-	
-	private static final Map<String, Decoding> decodingCache = new HashMap<String, Decoding>();
 
-	public static final boolean validDecodingName(String candidate) {
-	    if (candidate.length() == 0) {
-	        return false;
-	    }
-	    for (int i = 0; i < candidate.length(); i++) {
-	        char c = Character.toLowerCase(candidate.charAt(i));
-	        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-')) {
-	            return false;
-	        }
-	    }
-	    if (candidate.charAt(0) == '-' || candidate.charAt(candidate.length() - 1) == '-') {
-	        return false;
-	    }
-	    return true;
-	}
-
-	static final Decoding get(String rawName) throws Decoding.ResolutionError {
-	    String name = rawName.toLowerCase();
-	    if (!validDecodingName(name)) {
-	        throw new Decoding.ResolutionError(rawName, "invalid name for a decoding");
-	    }
-	    if (aliases.containsKey(name)) {
-			return get(aliases.get(name));
-		} else {
-			Decoding decoding = decodingCache.get(name);
-			if (decoding == null) {
-			    decoding = DecodingBuilder.parse(name);
-			    decodingCache.put(name, decoding);
-			    return decoding;
-			}
-            return decoding;
-		}
-	}
-	
-	public static final class ResolutionError extends Exception {
-	    public ResolutionError(String name, String comment) {
-	        super(name + ": " + comment);
-	    }
-
-        public ResolutionError(String name, String comment, Exception cause) {
-            super(name + ": " + comment, cause);
+    public static final ResourceManager<Decoding> MANAGER = new ResourceManager<Decoding>("decoding") {
+        @Override
+        protected final Decoding load(String name) throws ResourceManager.ResolutionError {
+            return Decoding.DecodingBuilder.parse(name);
         }
-	}
+    };
+    
+    static {
+        MANAGER.registerAlias("latin1", "latin-1");
+    }
 }

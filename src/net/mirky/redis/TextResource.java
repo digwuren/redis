@@ -17,19 +17,27 @@ public final class TextResource implements Iterable<String> {
 		return new TextResource.LineIterator(name);
 	}
 	
-	static final class LineIterator implements Iterator<String> {
+	public static final InputStream getStream(String name) throws TextResource.Missing {
+        InputStream stream = Main.class.getResourceAsStream(name);
+        if (stream == null) {
+            throw new TextResource.Missing(name + ": resource missing");
+        }
+        return stream;
+    }
+
+    public static final BufferedReader getBufferedReader(String name) throws TextResource.Missing {
+        return new BufferedReader(new InputStreamReader(getStream(name)));
+    }
+
+    static final class LineIterator implements Iterator<String> {
 		private final String name;
 		private final BufferedReader reader;
 		private String nextLine;
 
 		LineIterator(String name) throws TextResource.Missing {
 			this.name = name;
-			InputStream stream = Main.class.getResourceAsStream(name);
-			if (stream == null) {
-				throw new TextResource.Missing("resource " + name + " missing");
-			}
-			reader = new BufferedReader(new InputStreamReader(stream));
-			try {
+			reader = getBufferedReader(name);
+            try {
 				nextLine = reader.readLine();
 			} catch (IOException e) {
 				try {
@@ -41,7 +49,7 @@ public final class TextResource implements Iterable<String> {
 			}
 		}
 
-		public final boolean hasNext() {
+        public final boolean hasNext() {
 			return nextLine != null;
 		}
 
