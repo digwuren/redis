@@ -194,9 +194,7 @@ public final class Disassembler {
         static final int MAX_REFERRED_LANGUAGE_COUNT = 8;
         
         // Switches and temporary switches:
-
-        @DeciphererStep(name = "tempswitch condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
-        static final byte TEMPSWITCH_CONDENSED_ZXSNUM = (byte) 0x88;
+        static final byte TEMPSWITCH_0 = (byte) 0xA8;
 
         @DeciphererStep(name = "set-countdown 6", sizeRequirement = 0, sizeAfter = 0)
         static final byte SET_COUNTDOWN_6 = (byte) 0x89;
@@ -426,6 +424,15 @@ public final class Disassembler {
                 } catch (ResourceManager.ResolutionError e) {
                     throw new RuntimeException("referred language unknown", e);
                 }
+            } else if (step >= Bytecode.TEMPSWITCH_0
+                    && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                String newLangName = referredLanguages[step - Bytecode.TEMPSWITCH_0];
+                // note the late binding
+                try {
+                    sequencer.switchTemporarily(Lang.MANAGER.get(newLangName));
+                } catch (ResourceManager.ResolutionError e) {
+                    throw new RuntimeException("referred language unknown", e);
+                }
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
@@ -519,14 +526,6 @@ public final class Disassembler {
 
                     case Bytecode.TERMINATE:
                         sequencer.switchPermanently(Lang.NONE);
-                        break;
-
-                    case Bytecode.TEMPSWITCH_CONDENSED_ZXSNUM:
-                        try {
-                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
                         break;
 
                     case Bytecode.SET_COUNTDOWN_6:
@@ -1083,64 +1082,80 @@ public final class Disassembler {
                                 size = resolvedStep.sizeAfter;
                             }
                         } else {
-                            if (size == 0) {
-                                throw new DisassemblyTableParseError("attempt to process void value");
-                            }
-                            if (minitablesByName.containsKey(step)) {
-                                int minitableNumber = minitablesByName.get(step).intValue();
-                                assert minitableNumber < Bytecode.MAX_MINITABLE_COUNT;
-                                coll.add((byte) (Bytecode.MINITABLE_LOOKUP_0 | minitableNumber));
-                                size = 0;
-                            } else if (step.equals("unsigned")) {
-                                switch (size) {
-                                    case 1:
-                                        coll.add(Bytecode.UNSIGNED_BYTE);
-                                        break;
-                                    case 2:
-                                        coll.add(Bytecode.UNSIGNED_WYDE);
-                                        break;
-                                    default:
-                                        throw new RuntimeException("bug detected");
-                                }
-                                size = 0;
-                            } else if (step.equals("signed")) {
-                                switch (size) {
-                                    case 1:
-                                        coll.add(Bytecode.SIGNED_BYTE);
-                                        break;
-                                    case 2:
-                                        coll.add(Bytecode.SIGNED_WYDE);
-                                        break;
-                                    default:
-                                        throw new RuntimeException("bug detected");
-                                }
-                                size = 0;
-                            } else if (step.equals("and 0x38")) {
-                                coll.add(Bytecode.AND_0x38);
-                            } else if (step.equals("and 3")) {
-                                coll.add(Bytecode.AND_3);
-                            } else if (step.equals("and 7")) {
-                                coll.add(Bytecode.AND_7);
-                            } else if (step.equals("decimal")) {
-                                coll.add(Bytecode.DECIMAL);
-                                size = 0;
-                            } else if (step.startsWith("dispatch ")) {
-                                String newLangName = step.substring(9).trim();
-                                Integer index = referredLanguagesByName.get(newLangName);
-                                if (index == null) {
-                                    if (referredLanguageCounter >= Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                                        throw new RuntimeException("too many referred languages");
-                                    }
-                                    referredLanguages[referredLanguageCounter] = newLangName;
-                                    index = new Integer(referredLanguageCounter);
-                                    referredLanguagesByName.put(newLangName, index);
-                                    referredLanguageCounter++;
-                                }
-                                coll.add((byte) (Bytecode.DISPATCH_0 + index.intValue()));
+                            if (step.startsWith("tempswitch ")) {
+                                String newLangName = step.substring(11).trim();
+                                coll.add((byte) (Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(newLangName)));
                                 size = 0;
                             } else {
-                                throw new DisassemblyTableParseError("unknown processing step: " + step);
+                                if (size == 0) {
+                                    throw new DisassemblyTableParseError("attempt to process void value");
+                                }
+                                if (minitablesByName.containsKey(step)) {
+                                    int minitableNumber = minitablesByName.get(step).intValue();
+                                    assert minitableNumber < Bytecode.MAX_MINITABLE_COUNT;
+                                    coll.add((byte) (Bytecode.MINITABLE_LOOKUP_0 | minitableNumber));
+                                    size = 0;
+                                } else if (step.equals("unsigned")) {
+                                    switch (size) {
+                                        case 1:
+                                            coll.add(Bytecode.UNSIGNED_BYTE);
+                                            break;
+                                        case 2:
+                                            coll.add(Bytecode.UNSIGNED_WYDE);
+                                            break;
+                                        default:
+                                            throw new RuntimeException("bug detected");
+                                    }
+                                    size = 0;
+                                } else if (step.equals("signed")) {
+                                    switch (size) {
+                                        case 1:
+                                            coll.add(Bytecode.SIGNED_BYTE);
+                                            break;
+                                        case 2:
+                                            coll.add(Bytecode.SIGNED_WYDE);
+                                            break;
+                                        default:
+                                            throw new RuntimeException("bug detected");
+                                    }
+                                    size = 0;
+                                } else if (step.equals("and 0x38")) {
+                                    coll.add(Bytecode.AND_0x38);
+                                } else if (step.equals("and 3")) {
+                                    coll.add(Bytecode.AND_3);
+                                } else if (step.equals("and 7")) {
+                                    coll.add(Bytecode.AND_7);
+                                } else if (step.equals("decimal")) {
+                                    coll.add(Bytecode.DECIMAL);
+                                    size = 0;
+                                } else if (step.startsWith("dispatch ")) {
+                                    String newLangName = step.substring(9).trim();
+                                    coll.add((byte) (Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
+                                    size = 0;
+                                } else {
+                                    throw new DisassemblyTableParseError("unknown processing step: " + step);
+                                }
                             }
+                        }
+                    }
+
+                    /**
+                     * Determines the index of the given referred language. Adds
+                     * this language to the referred language list if it is not
+                     * already found. Throws an exception if the referred
+                     * language list is full.
+                     */
+                    private final int resolveReferredLanguage(String newLangName) {
+                        Integer index = referredLanguagesByName.get(newLangName);
+                        if (index == null) {
+                            if (referredLanguageCounter >= Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                                throw new RuntimeException("too many referred languages");
+                            }
+                            referredLanguages[referredLanguageCounter] = newLangName;
+                            referredLanguagesByName.put(newLangName, index);
+                            return referredLanguageCounter++;
+                        } else {
+                            return index.intValue();
                         }
                     }
 

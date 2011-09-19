@@ -18,6 +18,9 @@ Programmer-visible changes:
 * extracted Format.EntryPoint.stringify() from Format.OptionType.ENTRY.stringify()
 * extracted Format.EntryPoint.parse() from Format.OptionType.ENTRY.parse()
 * introduced TextResource.getStream() and TextResource.getBufferedReader()
+* introduced Disassembler.LangSequencer.setCountdown()
+* obsoleted the two-parameter form of Disassembler.LangSequencer.switchTemporarily()
+* introduced several forms of the set-countdown tabular lang opcode
 * constructed a basic text-backed resource management system as ResourceManager:
   * decodings, API:s, and languages are now in resources rather than hardcoded
     * introduced Disassembler.SequencerEffect and its implementations
@@ -29,14 +32,11 @@ Programmer-visible changes:
   * renamed *.dit into *.lang
   * implemented the Default-countdown: and Trivial! lang declaration to replace
     the previously hardcoded attributes
-  * the list of dispatchable referred languages of a tabular language is now
-    automatically managed, no longer hardcoded
+  * the list of referred languages of a tabular language (for dispatch or
+    tempswitch) is now automatically managed, no longer hardcoded
+  * replaced the counted tempswitch tabular lang opcodes with the implicitly
+    counted version followed by an appropriate set-countdown opcode
 * fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
-* introduced Disassembler.LangSequencer.setCountdown()
-* obsoleted the two-parameter form of Disassembler.LangSequencer.switchTemporarily()
-* introduced several forms of the set-countdown tabular lang opcode
-* replaced the counted tempswitch tabular lang opcodes with the implicitly
-  counted version followed by an appropriate set-countdown opcode
 
 == v0.1 2011-08-08
 
