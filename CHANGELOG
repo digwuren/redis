@@ -28,6 +28,8 @@ Programmer-visible changes:
   * renamed the 'dits' directory to 'resources'
   * moved *.decoding into the new 'resources' directory
   * renamed *.dit into *.lang
+  * implemented the Default-countdown: lang declaration to replace
+    the previously hardcoded values
 * fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
 
 == v0.1 2011-08-08

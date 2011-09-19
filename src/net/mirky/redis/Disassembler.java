@@ -865,10 +865,10 @@ public final class Disassembler {
                 this.dispatchSuboffset = parser.dispatchSuboffset;
             }
 
-            static final Tabular loadTabular(String name, int defaultCountdown, boolean trivial) {
+            static final Tabular loadTabular(String name, boolean trivial) {
                 DitParser parser = new DitParser(name);
                 parser.parse();
-                return new Tabular(name, defaultCountdown, trivial, parser.decipherers, parser.minitables, parser);
+                return new Tabular(name, parser.defaultCountdown, trivial, parser.decipherers, parser.minitables, parser);
             }
 
             @Override
@@ -981,6 +981,8 @@ public final class Disassembler {
                 private int minitableCounter;
                 int dispatchSuboffset;
                 private boolean dispatchSuboffsetDeclared;
+                int defaultCountdown;
+                private boolean defaultCountdownDeclared;
 
                 DitParser(String name) {
                     this.name = name;
@@ -993,6 +995,8 @@ public final class Disassembler {
                     minitableCounter = 0;
                     dispatchSuboffset = 0;
                     dispatchSuboffsetDeclared = false;
+                    defaultCountdown = 0; // by default, no default countdown
+                    defaultCountdownDeclared = false;
                 }
 
                 final void parse() throws RuntimeException {
@@ -1011,6 +1015,7 @@ public final class Disassembler {
                     // either implicitly zero or
                     // explicitly declared in the parent language.
                     String dispatchSuboffsetDeclarator = "Dispatch-suboffset:";
+                    String defaultCountdownDeclarator = "Default-countdown:";
                     if (line.startsWith(dispatchSuboffsetDeclarator)) {
                         String parameter = line.substring(dispatchSuboffsetDeclarator.length()).trim();
                         if (dispatchSuboffsetDeclared) {
@@ -1018,6 +1023,13 @@ public final class Disassembler {
                         }
                         dispatchSuboffset = Integer.parseInt(parameter);
                         dispatchSuboffsetDeclared = true;
+                    } else if (line.startsWith(defaultCountdownDeclarator)) {
+                        String parameter = line.substring(defaultCountdownDeclarator.length()).trim();
+                        if (defaultCountdownDeclared) {
+                            throw new RuntimeException("duplicate Default-countdown: declaration in lang file");
+                        }
+                        defaultCountdown = Integer.parseInt(parameter);
+                        defaultCountdownDeclared = true;
                     } else {
                         // Besides the metadata, a lang file has lines of two
                         // types:
@@ -1376,10 +1388,10 @@ public final class Disassembler {
                         || name.equals("z80-ed") || name.equals("z180") || name.equals("z180-ed")
                         || name.equals("i8080") || name.equals("i8085") || name.equals("zxs-calc")
                         || name.equals("mos6502")) {
-                    lang = Tabular.loadTabular(name, 0, false);
+                    lang = Tabular.loadTabular(name, false);
                 } else if (name.equals("byte") || name.equals("lewyde") || name.equals("zxsb-error")
                         || name.equals("zxsb-error-text")) {
-                    lang = Tabular.loadTabular(name, 1, true);
+                    lang = Tabular.loadTabular(name, true);
                 } else {
                     throw new UnknownLanguage("unknown disassembly language: " + name);
                 }
