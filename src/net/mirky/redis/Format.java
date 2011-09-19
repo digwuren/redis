@@ -204,8 +204,8 @@ public final class Format {
             @Override
             final Disassembler.Lang parse(String name) throws OptionError {
                 try {
-                    return Disassembler.Lang.get(name);
-                } catch (Disassembler.Lang.UnknownLanguage e) {
+                    return Disassembler.Lang.MANAGER.get(name);
+                } catch (ResourceManager.ResolutionError e) {
                     throw new OptionError("unknown CPU: " + name, e);
                 }
             }

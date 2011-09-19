@@ -474,16 +474,16 @@ public final class Disassembler {
 
                     case Bytecode.BYTE_ENTRY_POINT_REFERENCE:
                         try {
-                            noteAbsoluteEntryPoint(currentValue, Lang.get("byte"));
-                        } catch (Lang.UnknownLanguage e) {
+                            noteAbsoluteEntryPoint(currentValue, Lang.MANAGER.get("byte"));
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.LEWYDE_ENTRY_POINT_REFERENCE:
                         try {
-                            noteAbsoluteEntryPoint(currentValue, Lang.get("lewyde"));
-                        } catch (Lang.UnknownLanguage e) {
+                            noteAbsoluteEntryPoint(currentValue, Lang.MANAGER.get("lewyde"));
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
@@ -528,32 +528,32 @@ public final class Disassembler {
 
                     case Bytecode.TEMPSWITCH_1_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(1, Lang.get("condensed-zxsnum"));
-                        } catch (Lang.UnknownLanguage e) {
+                            sequencer.switchTemporarily(1, Lang.MANAGER.get("condensed-zxsnum"));
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.TEMPSWITCH_6_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(6, Lang.get("condensed-zxsnum"));
-                        } catch (Lang.UnknownLanguage e) {
+                            sequencer.switchTemporarily(6, Lang.MANAGER.get("condensed-zxsnum"));
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.TEMPSWITCH_8_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(8, Lang.get("condensed-zxsnum"));
-                        } catch (Lang.UnknownLanguage e) {
+                            sequencer.switchTemporarily(8, Lang.MANAGER.get("condensed-zxsnum"));
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.TEMPSWITCH_12_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(12, Lang.get("condensed-zxsnum"));
-                        } catch (Lang.UnknownLanguage e) {
+                            sequencer.switchTemporarily(12, Lang.MANAGER.get("condensed-zxsnum"));
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
@@ -582,48 +582,48 @@ public final class Disassembler {
 
                     case Bytecode.DISPATCH_Z80_CB:
                         try {
-                            Lang.get("z80-cb").decipher(this, currentValue, sb);
-                        } catch (Lang.UnknownLanguage e) {
+                            Lang.MANAGER.get("z80-cb").decipher(this, currentValue, sb);
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.DISPATCH_Z80_XD:
                         try {
-                            Lang.get("z80-xd").decipher(this, currentValue, sb);
-                        } catch (Lang.UnknownLanguage e) {
+                            Lang.MANAGER.get("z80-xd").decipher(this, currentValue, sb);
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.DISPATCH_Z80_XD_CB:
                         try {
-                            Lang.get("z80-xd-cb").decipher(this, currentValue, sb);
-                        } catch (Lang.UnknownLanguage e) {
+                            Lang.MANAGER.get("z80-xd-cb").decipher(this, currentValue, sb);
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.DISPATCH_Z80_ED:
                         try {
-                            Lang.get("z80-ed").decipher(this, currentValue, sb);
-                        } catch (Lang.UnknownLanguage e) {
+                            Lang.MANAGER.get("z80-ed").decipher(this, currentValue, sb);
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.DISPATCH_Z180_ED:
                         try {
-                            Lang.get("z180-ed").decipher(this, currentValue, sb);
-                        } catch (Lang.UnknownLanguage e) {
+                            Lang.MANAGER.get("z180-ed").decipher(this, currentValue, sb);
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
                     case Bytecode.DISPATCH_ZXSB_ERROR_TEXT:
                         try {
-                            Lang.get("zxsb-error-text").decipher(this, currentValue, sb);
-                        } catch (Lang.UnknownLanguage e) {
+                            Lang.MANAGER.get("zxsb-error-text").decipher(this, currentValue, sb);
+                        } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
@@ -678,11 +678,11 @@ public final class Disassembler {
                     lastOffset = offset;
                 }
                 try {
-                    if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !Lang.get(lang).isTrivial()) {
+                    if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !Lang.MANAGER.get(lang).isTrivial()) {
                         port.println("          .switch " + lang);
                         lastLang = lang;
                     }
-                } catch (Lang.UnknownLanguage e) {
+                } catch (ResourceManager.ResolutionError e) {
                     // We've already used this lang for disassembly. Why would
                     // retrieving it again fail?
                     throw new RuntimeException("bug detected", e);
@@ -865,9 +865,9 @@ public final class Disassembler {
                 this.dispatchSuboffset = parser.dispatchSuboffset;
             }
 
-            static final Tabular loadTabular(String name) {
-                DitParser parser = new DitParser(name);
-                parser.parse();
+            static final Tabular loadTabular(String name, BufferedReader reader) throws IOException {
+                DitParser parser = new DitParser();
+                parser.parse(reader);
                 return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.minitables, parser);
             }
 
@@ -974,7 +974,6 @@ public final class Disassembler {
             }
 
             static final class DitParser {
-                private final String name;
                 final byte[][] decipherers;
                 final String[][] minitables;
                 final Map<String, Integer> minitablesByName;
@@ -985,8 +984,7 @@ public final class Disassembler {
                 private boolean defaultCountdownDeclared;
                 boolean trivial;
 
-                DitParser(String name) {
-                    this.name = name;
+                DitParser() {
                     decipherers = new byte[256][];
                     for (int i = 0; i < 256; i++) {
                         decipherers[i] = null;
@@ -1001,8 +999,9 @@ public final class Disassembler {
                     trivial = false; // by default, not trivial
                 }
 
-                final void parse() throws RuntimeException {
-                    for (String line : new TextResource("resources/" + name + ".lang")) {
+                final void parse(BufferedReader reader) throws IOException {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
                         if (line.length() == 0 || line.charAt(0) == '#') {
                             continue;
                         }
@@ -1366,48 +1365,18 @@ public final class Disassembler {
             }
         }
 
-        // Cache for the already loaded Lang instances.
-        private static final HashMap<String, Lang> loadedLangs = new HashMap<String, Lang>();
+        public static final ResourceManager<Lang> MANAGER = new ResourceManager<Lang>("lang") {
+            @Override
+            public final Lang load(String name, BufferedReader reader) throws IOException {
+                return Tabular.loadTabular(name, reader);
+            }
+        };
+        
         static {
-            loadedLangs.put("none", Lang.NONE);
-            loadedLangs.put("condensed-zxsnum", Lang.CONDENSED_ZXSNUM);
+            MANAGER.registerSpecial("none", Lang.NONE);
+            MANAGER.registerSpecial("condensed-zxsnum", Lang.CONDENSED_ZXSNUM);
         }
-
-        /**
-         * Acquire a {@link Lang} instance by the language's name.
-         * 
-         * @param name
-         *            name or alias of the language
-         * @return {@link Lang} instance corresponding to this language;
-         *         possibly newly created, possibly from cache
-         * @throws UnknownLanguage
-         *             if {@code name} was not recognised
-         */
-        public static final Lang get(String name) throws UnknownLanguage {
-            Disassembler.Lang lang = loadedLangs.get(name);
-            if (lang == null) {
-                // Note that names of all supported tabular languages are
-                // hardcoded.
-                if (name.equals("z80") || name.equals("z80-xd") || name.equals("z80-xd-cb") || name.equals("z80-cb")
-                        || name.equals("z80-ed") || name.equals("z180") || name.equals("z180-ed")
-                        || name.equals("i8080") || name.equals("i8085") || name.equals("zxs-calc")
-                        || name.equals("mos6502")
-                        || name.equals("byte") || name.equals("lewyde") || name.equals("zxsb-error")
-                        || name.equals("zxsb-error-text")) {
-                    lang = Tabular.loadTabular(name);
-                } else {
-                    throw new UnknownLanguage("unknown disassembly language: " + name);
-                }
-                loadedLangs.put(name, lang);
-            }
-            return lang;
-        }
-
-        static final class UnknownLanguage extends Exception {
-            UnknownLanguage(String msg) {
-                super(msg);
-            }
-        }
+        
 
         /**
          * Thrown when a bytecode table lookup fails. {@link #run()} catches it,
@@ -1494,20 +1463,20 @@ public final class Disassembler {
                             throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
                         }
                         // this will throw exception if the lang is unknown
-                        Lang newLang = Lang.get(fields[2]);
+                        Lang newLang = Lang.MANAGER.get(fields[2]);
                         effect = new SequencerEffect.SwitchTemporarily(newLang);
                     } else if (fields[1].equals("switch-permanently")) {
                         if (fields.length > 3) {
                             throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
                         }
                         // this will throw exception if the lang is unknown
-                        Lang newLang = Lang.get(fields[2]);
+                        Lang newLang = Lang.MANAGER.get(fields[2]);
                         effect = new SequencerEffect.SwitchPermanently(newLang);
                     } else {
                         throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
                     }
                     vectors.put(new Integer(address), effect);
-                } catch (Lang.UnknownLanguage e) {
+                } catch (ResourceManager.ResolutionError e) {
                     throw new RuntimeException("reference to unknown language in API vector declaration \"" + line
                             + "\"", e);
                 } catch (NumberFormatException e) {

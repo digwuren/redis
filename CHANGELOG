@@ -19,9 +19,8 @@ Programmer-visible changes:
 * extracted Format.EntryPoint.parse() from Format.OptionType.ENTRY.parse()
 * introduced TextResource.getStream() and TextResource.getBufferedReader()
 * constructed a basic text-backed resource management system as ResourceManager:
-  * decodings are now in resources rather than hardcoded
+  * decodings, API:s, and languages are now in resources rather than hardcoded
     * introduced Disassembler.SequencerEffect and its implementations
-  * API:s are now in resources rather than hardcoded
     * replaced Disassembler.API.affectSequencer() by getSequencerEffect()
   * instead of Decoding.get() returning null for unknown decodings,
     Decoding.MANAGER.get() will now throw ResourceManager.ResolutionFailure

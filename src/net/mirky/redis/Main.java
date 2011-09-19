@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public final class Main extends AbstractMain {
 	public static final String VERSION_DATA = "redis 0.1";
 	
@@ -191,8 +190,8 @@ public final class Main extends AbstractMain {
             System.exit(1);
         }
         try {
-            Disassembler.Lang.get(arguments[0]).dumpLang(System.out);
-        } catch (Disassembler.Lang.UnknownLanguage e) {
+            Disassembler.Lang.MANAGER.get(arguments[0]).dumpLang(System.out);
+        } catch (ResourceManager.ResolutionError e) {
             System.err.println("redis: " + arguments[0] + ": unknown disassembly language");
             System.exit(1);
         }

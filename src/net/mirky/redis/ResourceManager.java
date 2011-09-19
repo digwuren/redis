@@ -67,6 +67,11 @@ abstract class ResourceManager<T> {
      */
     protected abstract T load(String name, BufferedReader reader) throws IOException;
 
+    public final void registerSpecial(String name, T value) {
+        assert !cache.containsKey(name);
+        cache.put(name, value);
+    }
+
     public final void registerAlias(String alias, String cname) {
         aliases.put(alias, cname);
     }
