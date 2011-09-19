@@ -50,7 +50,7 @@
 [0x31]  duplicate
 [0x32]  n-mod-m
 [0x33]  jump <byte 1, signedrel 1, entry, unsigned><terminate>
-[0x34]  stk-data<tempswitch 1*condensed-zxsnum>
+[0x34]  stk-data<tempswitch condensed-zxsnum>
 [0x35]  dec-jr-nz <byte 1, signedrel 1, entry, unsigned>
 
 [0x36]  less-0
@@ -64,9 +64,9 @@
 
 # There is some meaning to opcodes 0x3E .. 0x41, but they're supposed to be invoked through 0x86..0xE5.
 
-[0x86]  series-06<tempswitch 6*condensed-zxsnum>
-[0x88]  series-08<tempswitch 8*condensed-zxsnum>
-[0x8C]  series-0C<tempswitch 12*condensed-zxsnum>
+[0x86]  series-06<tempswitch condensed-zxsnum><set-countdown 6>
+[0x88]  series-08<tempswitch condensed-zxsnum><set-countdown 8>
+[0x8C]  series-0C<tempswitch condensed-zxsnum><set-countdown 12>
 
 [0xA0]  stk-zero
 [0xA1]  stk-one

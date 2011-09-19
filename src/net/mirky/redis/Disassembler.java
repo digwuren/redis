@@ -195,18 +195,18 @@ public final class Disassembler {
         
         // Switches and temporary switches:
 
-        @DeciphererStep(name = "tempswitch 1*condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
-        static final byte TEMPSWITCH_1_CONDENSED_ZXSNUM = (byte) 0x8E;
+        @DeciphererStep(name = "tempswitch condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
+        static final byte TEMPSWITCH_CONDENSED_ZXSNUM = (byte) 0x88;
 
-        @DeciphererStep(name = "tempswitch 6*condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
-        static final byte TEMPSWITCH_6_CONDENSED_ZXSNUM = (byte) 0x8F;
-
-        @DeciphererStep(name = "tempswitch 8*condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
-        static final byte TEMPSWITCH_8_CONDENSED_ZXSNUM = (byte) 0x90;
-
-        @DeciphererStep(name = "tempswitch 12*condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
-        static final byte TEMPSWITCH_12_CONDENSED_ZXSNUM = (byte) 0x91;
-
+        @DeciphererStep(name = "set-countdown 6", sizeRequirement = 0, sizeAfter = 0)
+        static final byte SET_COUNTDOWN_6 = (byte) 0x89;
+        
+        @DeciphererStep(name = "set-countdown 8", sizeRequirement = 0, sizeAfter = 0)
+        static final byte SET_COUNTDOWN_8 = (byte) 0x8A;
+        
+        @DeciphererStep(name = "set-countdown 12", sizeRequirement = 0, sizeAfter = 0)
+        static final byte SET_COUNTDOWN_12 = (byte) 0x8B;
+        
         @DeciphererStep(name = "switchback", sizeRequirement = 0, sizeAfter = 0)
         static final byte SWITCH_BACK = (byte) 0x92; // switch back to the last
                                                      // language
@@ -521,42 +521,26 @@ public final class Disassembler {
                         sequencer.switchPermanently(Lang.NONE);
                         break;
 
-                    case Bytecode.TEMPSWITCH_1_CONDENSED_ZXSNUM:
+                    case Bytecode.TEMPSWITCH_CONDENSED_ZXSNUM:
                         try {
                             sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
-                            sequencer.setCountdown(1);
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
                         break;
 
-                    case Bytecode.TEMPSWITCH_6_CONDENSED_ZXSNUM:
-                        try {
-                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
-                            sequencer.setCountdown(6);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
+                    case Bytecode.SET_COUNTDOWN_6:
+                        sequencer.setCountdown(6);
                         break;
-
-                    case Bytecode.TEMPSWITCH_8_CONDENSED_ZXSNUM:
-                        try {
-                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
-                            sequencer.setCountdown(8);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
+                        
+                    case Bytecode.SET_COUNTDOWN_8:
+                        sequencer.setCountdown(8);
                         break;
-
-                    case Bytecode.TEMPSWITCH_12_CONDENSED_ZXSNUM:
-                        try {
-                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
-                            sequencer.setCountdown(12);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
+                        
+                    case Bytecode.SET_COUNTDOWN_12:
+                        sequencer.setCountdown(12);
                         break;
-
+                        
                     case Bytecode.SWITCH_BACK:
                         sequencer.switchBack();
                         break;
