@@ -871,6 +871,10 @@ public final class Format {
                     if (level < 0) {
                         return false;
                     }
+                    if (level == 0 && i != s.length() - 1) {
+                        // the (foo)bar(baz) case
+                        return false;
+                    }
                 }
             }
             return level == 0;
