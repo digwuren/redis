@@ -523,7 +523,8 @@ public final class Disassembler {
 
                     case Bytecode.TEMPSWITCH_1_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(1, Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.setCountdown(1);
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
@@ -531,7 +532,8 @@ public final class Disassembler {
 
                     case Bytecode.TEMPSWITCH_6_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(6, Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.setCountdown(6);
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
@@ -539,7 +541,8 @@ public final class Disassembler {
 
                     case Bytecode.TEMPSWITCH_8_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(8, Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.setCountdown(8);
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
@@ -547,7 +550,8 @@ public final class Disassembler {
 
                     case Bytecode.TEMPSWITCH_12_CONDENSED_ZXSNUM:
                         try {
-                            sequencer.switchTemporarily(12, Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.switchTemporarily(Lang.MANAGER.get("condensed-zxsnum"));
+                            sequencer.setCountdown(12);
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
@@ -1531,16 +1535,8 @@ public final class Disassembler {
 
         final void switchTemporarily(Lang newLang) {
             assert newLang != null;
-            switchTemporarily(newLang.defaultCountdown, newLang);
-        }
-
-        // If countdown is nonzero, the switch will last for that many
-        // 'instructions'.
-        // If countdown is zero, the switch will last indefinitely.
-        final void switchTemporarily(int countdown, Lang newLang) {
-            assert countdown >= 0;
-            assert newLang != null;
-            stack.addLast(new Frame(countdown, newLang));
+            assert newLang.defaultCountdown >= 0;
+            stack.addLast(new Frame(newLang.defaultCountdown, newLang));
         }
 
         final void switchBack() {
@@ -1573,8 +1569,13 @@ public final class Disassembler {
             return copy;
         }
 
+        final void setCountdown(int newCountdown) {
+            assert newCountdown >= 0;
+            stack.getLast().countdown = newCountdown;
+        }
+
         static final class Frame {
-            private int countdown;
+            int countdown;
             final Lang lang;
 
             Frame(int countdown, Lang lang) {
@@ -1588,7 +1589,7 @@ public final class Disassembler {
              * optimisation, we won't allocate a new Frame instance for such.
              */
             final Frame dup() {
-                if (countdown != 0) {
+                if (countdown > 0) {
                     return new Frame(countdown, lang);
                 } else {
                     return this;
@@ -1601,7 +1602,7 @@ public final class Disassembler {
              * @return whether the frame has run out of repetitions.
              */
             final boolean takeOneDown() {
-                return countdown != 0 && --countdown == 0;
+                return countdown > 0 && --countdown == 0;
             }
         }
     }

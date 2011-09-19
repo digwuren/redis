@@ -32,6 +32,8 @@ Programmer-visible changes:
   * the list of dispatchable referred languages of a tabular language is now
     automatically managed, no longer hardcoded
 * fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
+* introduced Disassembler.LangSequencer.setCountdown()
+* obsoleted the two-parameter form of Disassembler.LangSequencer.switchTemporarily()
 
 == v0.1 2011-08-08
 
