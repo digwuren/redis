@@ -995,7 +995,7 @@ public final class Disassembler {
                 }
 
                 final void parse() throws RuntimeException {
-                    for (String line : new TextResource("dits/" + name + ".dit")) {
+                    for (String line : new TextResource("resources/" + name + ".dit")) {
                         if (line.length() == 0 || line.charAt(0) == '#') {
                             continue;
                         }
@@ -1451,7 +1451,7 @@ public final class Disassembler {
         API(String name) {
             this.name = name;
             vectors = new HashMap<Integer, SequencerEffect>();
-            for (String line : new TextResource(name + ".api")) {
+            for (String line : new TextResource("resources/" + name + ".api")) {
                 line = line.trim();
                 if (line.length() == 0 || line.charAt(0) == '#') {
                     continue;

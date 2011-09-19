@@ -118,7 +118,7 @@ public final class Decoding {
 	    public static final Decoding parse(String name) throws Decoding.ResolutionError {
             DecodingBuilder builder = new DecodingBuilder();
             try {
-                for (String line : new TextResource(name + ".decoding")) {
+                for (String line : new TextResource("resources/" + name + ".decoding")) {
                     int commentStart = line.indexOf('#');
                     if (commentStart >= 0) {
                         line = line.substring(0, commentStart);
