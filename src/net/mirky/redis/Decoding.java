@@ -1,5 +1,6 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -113,29 +114,31 @@ public final class Decoding {
             }
 	    }
 
-	    public static final Decoding parse(String name) throws ResourceManager.ResolutionError {
+	    public static final Decoding parse(String name, BufferedReader reader) throws IOException {
             DecodingBuilder builder = new DecodingBuilder();
-            try {
-                for (String line : new TextResource("resources/" + name + ".decoding")) {
-                    int commentStart = line.indexOf('#');
-                    if (commentStart >= 0) {
-                        line = line.substring(0, commentStart);
-                    }
-                    line = line.trim();
-                    if (line.length() != 0) {
-                        Matcher matcher;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int commentStart = line.indexOf('#');
+                if (commentStart >= 0) {
+                    line = line.substring(0, commentStart);
+                }
+                line = line.trim();
+                if (line.length() != 0) {
+                    Matcher matcher;
+                    try {
                         if ((matcher = DecodingBuilder.SINGLE_ENTRY_RE.matcher(line)).matches()) {
                             int local = Integer.parseInt(matcher.group(1), 16);
                             int unicode = Integer.parseInt(matcher.group(2), 16);
                             if (unicode == 0) {
-                                throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+                                throw new RuntimeException(
+                                        "decoding rules are not permitted to map local codes to U+0000");
                             }
                             builder.addSingleEntry(local, (char) unicode);
                         } else if ((matcher = DecodingBuilder.RANGE_ENTRY_RE.matcher(line)).matches()) {
                             int firstLocal = Integer.parseInt(matcher.group(1), 16);
                             int lastLocal = Integer.parseInt(matcher.group(2), 16);
                             int firstUnicode = Integer.parseInt(matcher.group(3), 16);
-                            int lastUnicode = Integer.parseInt(matcher.group(4) , 16);
+                            int lastUnicode = Integer.parseInt(matcher.group(4), 16);
                             if (firstLocal >= lastLocal || firstUnicode >= lastUnicode) {
                                 throw new RuntimeException("invalid range specification");
                             }
@@ -143,18 +146,19 @@ public final class Decoding {
                                 throw new RuntimeException("range size mismatch");
                             }
                             if (firstUnicode == 0) {
-                                throw new RuntimeException("decoding rules are not permitted to map local codes to U+0000");
+                                throw new RuntimeException(
+                                        "decoding rules are not permitted to map local codes to U+0000");
                             }
                             builder.addRange(firstLocal, firstUnicode, lastLocal - firstLocal + 1);
                         } else {
                             throw new RuntimeException("decoding parse error on line \"" + line + '"');
                         }
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException("number format error", e);
                     }
                 }
-                return new Decoding(name, builder.codes);
-            } catch (TextResource.Missing e) {
-                throw new ResourceManager.ResolutionError(name, "decoding", "resource not found", e);
             }
+            return new Decoding(name, builder.codes);
         }
 
         private static final Pattern SINGLE_ENTRY_RE = Pattern.compile("^\\$([\\da-f]{2})\\s*->\\s*U\\+([\\da-f]{4})$",
@@ -237,8 +241,8 @@ public final class Decoding {
 
     public static final ResourceManager<Decoding> MANAGER = new ResourceManager<Decoding>("decoding") {
         @Override
-        protected final Decoding load(String name) throws ResourceManager.ResolutionError {
-            return Decoding.DecodingBuilder.parse(name);
+        public final Decoding load(String name, BufferedReader reader) throws IOException, RuntimeException {
+            return Decoding.DecodingBuilder.parse(name, reader);
         }
     };
     

@@ -1,10 +1,12 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 abstract class ResourceManager<T> {
-    private final String type;
+    public final String type;
     private final Map<String, T> cache;
     private final Map<String, String> aliases;
 
@@ -31,8 +33,39 @@ abstract class ResourceManager<T> {
             return resource;
         }
     }
-    
-    protected abstract T load(String name) throws ResourceManager.ResolutionError;
+
+    private final T load(String name) throws ResourceManager.ResolutionError {
+        try {
+            BufferedReader reader = TextResource.getBufferedReader("resources/" + name + "." + type);
+            try {
+                return load(name, reader);
+            } catch (IOException e) {
+                throw new RuntimeException(name + " (" + type + "): I/O error reading resource stream", e);
+            } finally {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(name + " (" + type + "): I/O error closing resource stream", e);
+                }
+            }
+        } catch (TextResource.Missing e) {
+            throw new ResourceManager.ResolutionError(name, type, "resource not found", e);
+        }
+    }
+
+    /**
+     * Load a resource from an opened text stream.
+     * 
+     * @param name
+     *            resource's short name
+     * @param reader
+     *            text stream as a {@link BufferedReader} instance. Caller will
+     *            take care of closing it.
+     * @return the parsed resource
+     * @throws IOException
+     *             when an I/O problem hampers reading the stream
+     */
+    protected abstract T load(String name, BufferedReader reader) throws IOException;
 
     public final void registerAlias(String alias, String cname) {
         aliases.put(alias, cname);
@@ -58,7 +91,7 @@ abstract class ResourceManager<T> {
         public ResolutionError(String name, String type, String comment) {
             super(name + " (" + type + "): " + comment);
         }
-    
+
         public ResolutionError(String name, String type, String comment, Exception cause) {
             super(name + " (" + type + "): " + comment, cause);
         }

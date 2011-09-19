@@ -9,29 +9,25 @@ User-visible changes:
 * added the 'geometry' option type as single-valued
 
 Programmer-visible changes:
-* implemented a parser for decodings represented in text resources
-* converted the previously hardcoded decodings (ascii, folded-ascii,
-  latin-1, zx-spectrum, petscii) into text resources
-* Decoding.get() now throws Decoding.ResolutionError rather than returning null
 * TextResource.LineIterator() now throws TextResource.Missing, an unchecked
   exception, when opening the resource fails
-* replaced the fully hardcoded decoding map with a cache backed by decoding
-  resources so new decodings will be easier to add in the future
 * implemented the @ArgCountLimits annotation
 * introduced Hex.n() for nybbles
 * documented Format.EntryPoint
 * refactored Format.Option.EntryPointIterator into Format.Option.ArrayIterator
 * extracted Format.EntryPoint.stringify() from Format.OptionType.ENTRY.stringify()
 * extracted Format.EntryPoint.parse() from Format.OptionType.ENTRY.parse()
-* introduced Disassembler.SequencerEffect and its implementations
-* replaced Disassembler.API.affectSequencer() by getSequencerEffect()
-* replaced the separate Disassembler.API implementations with a single Map-based one
-* extracted none.api, cpm.api, and zxs.api from Disassembler.API
-* renamed the 'dits' directory to 'resources'
-* moved *.decoding into the new 'resources' directory
-* use a Decoding-style resource caching mechanism for API:s, too
-* extracted ResourceManager from the decoding acquisition subsystem
 * introduced TextResource.getStream() and TextResource.getBufferedReader()
+* constructed a basic text-backed resource management system as ResourceManager:
+  * decodings are now in resources rather than hardcoded
+    * introduced Disassembler.SequencerEffect and its implementations
+  * API:s are now in resources rather than hardcoded
+    * replaced Disassembler.API.affectSequencer() by getSequencerEffect()
+  * instead of Decoding.get() returning null for unknown decodings,
+    Decoding.MANAGER.get() will now throw ResourceManager.ResolutionFailure
+  * renamed the 'dits' directory to 'resources'
+  * moved *.decoding into the new 'resources' directory
+* fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
 
 == v0.1 2011-08-08
 
