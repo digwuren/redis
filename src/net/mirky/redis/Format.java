@@ -224,8 +224,8 @@ public final class Format {
             @Override
             final Disassembler.API parse(String name) throws OptionError {
                 try {
-                    return Disassembler.API.get(name);
-                } catch (Disassembler.API.ResolutionError e) {
+                    return Disassembler.API.MANAGER.get(name);
+                } catch (ResourceManager.ResolutionError e) {
                     throw new OptionError("API load failed: " + name, e);
                 }
             }

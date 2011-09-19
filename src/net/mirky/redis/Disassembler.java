@@ -1,5 +1,7 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -1448,58 +1450,55 @@ public final class Disassembler {
         final String name;
         private final Map<Integer, SequencerEffect> vectors;
 
-        private API(String name) throws API.ResolutionError {
+        public API(String name, BufferedReader reader) throws IOException {
             this.name = name;
             vectors = new HashMap<Integer, SequencerEffect>();
-            try {
-                for (String line : new TextResource("resources/" + name + ".api")) {
-                    line = line.trim();
-                    if (line.length() == 0 || line.charAt(0) == '#') {
-                        continue;
-                    }
-                    String[] fields = line.trim().split("\\s+");
-                    try {
-                        int address = Integer.parseInt(fields[0], 16);
-                        if (vectors.containsKey(new Integer(address))) {
-                            throw new RuntimeException("duplicate API vector declaration \"" + line + "\"");
-                        }
-                        if (fields.length < 2) {
-                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
-                        }
-                        SequencerEffect effect;
-                        if (fields[1].equals("terminate")) {
-                            if (fields.length > 2) {
-                                throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
-                            }
-                            effect = new SequencerEffect.Terminate();
-                        } else if (fields[1].equals("switch-temporarily")) {
-                            if (fields.length > 3) {
-                                throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
-                            }
-                            // this will throw exception if the lang is unknown
-                            Lang newLang = Lang.get(fields[2]);
-                            effect = new SequencerEffect.SwitchTemporarily(newLang);
-                        } else if (fields[1].equals("switch-permanently")) {
-                            if (fields.length > 3) {
-                                throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
-                            }
-                            // this will throw exception if the lang is unknown
-                            Lang newLang = Lang.get(fields[2]);
-                            effect = new SequencerEffect.SwitchPermanently(newLang);
-                        } else {
-                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
-                        }
-                        vectors.put(new Integer(address), effect);
-                    } catch (Lang.UnknownLanguage e) {
-                        throw new RuntimeException("reference to unknown language in API vector declaration \"" + line
-                                + "\"", e);
-                    } catch (NumberFormatException e) {
-                        throw new RuntimeException("invalid hexadecimal address in API vector declaration \"" + line
-                                + "\"", e);
-                    }
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.length() == 0 || line.charAt(0) == '#') {
+                    continue;
                 }
-            } catch (TextResource.Missing e) {
-                throw new API.ResolutionError(name, "API resource not found", e);
+                String[] fields = line.trim().split("\\s+");
+                try {
+                    int address = Integer.parseInt(fields[0], 16);
+                    if (vectors.containsKey(new Integer(address))) {
+                        throw new RuntimeException("duplicate API vector declaration \"" + line + "\"");
+                    }
+                    if (fields.length < 2) {
+                        throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                    }
+                    SequencerEffect effect;
+                    if (fields[1].equals("terminate")) {
+                        if (fields.length > 2) {
+                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                        }
+                        effect = new SequencerEffect.Terminate();
+                    } else if (fields[1].equals("switch-temporarily")) {
+                        if (fields.length > 3) {
+                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                        }
+                        // this will throw exception if the lang is unknown
+                        Lang newLang = Lang.get(fields[2]);
+                        effect = new SequencerEffect.SwitchTemporarily(newLang);
+                    } else if (fields[1].equals("switch-permanently")) {
+                        if (fields.length > 3) {
+                            throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                        }
+                        // this will throw exception if the lang is unknown
+                        Lang newLang = Lang.get(fields[2]);
+                        effect = new SequencerEffect.SwitchPermanently(newLang);
+                    } else {
+                        throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
+                    }
+                    vectors.put(new Integer(address), effect);
+                } catch (Lang.UnknownLanguage e) {
+                    throw new RuntimeException("reference to unknown language in API vector declaration \"" + line
+                            + "\"", e);
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("invalid hexadecimal address in API vector declaration \"" + line
+                            + "\"", e);
+                }
             }
         }
 
@@ -1507,47 +1506,12 @@ public final class Disassembler {
             return vectors.get(new Integer(vector));
         }
         
-        private static final Map<String, API> apiCache = new HashMap<String, API>();
-
-        public static final boolean validApiName(String candidate) {
-            if (candidate.length() == 0) {
-                return false;
+        public static final ResourceManager<API> MANAGER = new ResourceManager<API>("api") {
+            @Override
+            public final API load(String name, BufferedReader reader) throws IOException, RuntimeException {
+                return new API(name, reader);
             }
-            for (int i = 0; i < candidate.length(); i++) {
-                char c = Character.toLowerCase(candidate.charAt(i));
-                if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-')) {
-                    return false;
-                }
-            }
-            if (candidate.charAt(0) == '-' || candidate.charAt(candidate.length() - 1) == '-') {
-                return false;
-            }
-            return true;
-        }
-
-        static final API get(String rawName) throws API.ResolutionError {
-            String name = rawName.toLowerCase();
-            if (!validApiName(name)) {
-                throw new API.ResolutionError(rawName, "invalid name for an API");
-            }
-            API api = apiCache.get(name);
-            if (api == null) {
-                api = new API(name);
-                apiCache.put(name, api);
-                return api;
-            }
-            return api;
-        }
-
-        public static final class ResolutionError extends Exception {
-            public ResolutionError(String name, String comment) {
-                super(name + ": " + comment);
-            }
-
-            public ResolutionError(String name, String comment, Exception cause) {
-                super(name + ": " + comment, cause);
-            }
-        }
+        };
     }
 
     // Thrown when the decipherer attempts to access a byte beyond the end of
