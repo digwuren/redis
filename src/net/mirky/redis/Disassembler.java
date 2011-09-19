@@ -1224,12 +1224,12 @@ public final class Disassembler {
                 }
             }
 
-            /*
+            /**
              * A CodeSet instance represents a particular set of integer codes,
              * typically in the range of 0-255. We have two kinds of CodeSet:s,
-             * CodeSet.Masked, which work analogously to IPv4 netaddr/netmask
-             * pairs, and CodeSet.Difference which works as a normal set
-             * difference operator.
+             * {@link CodeSet.Masked}, which work analogously to IPv4
+             * netaddr/netmask pairs, and {@link CodeSet.Difference} which works
+             * as a normal set difference operator.
              */
             static abstract class CodeSet {
                 abstract boolean matches(int candidate);
