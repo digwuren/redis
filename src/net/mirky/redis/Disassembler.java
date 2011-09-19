@@ -46,11 +46,12 @@ public final class Disassembler {
     private int currentInstructionSize;
     private int currentValue;
 
-    // Bytecode values for the internal bytecode. Note that the bytecode is
-    // currently
-    // not considered a medium for data storage or external communication; it
-    // *will* change significantly and is not suitable for external
-    // data storage yet.
+    /*
+     * Bytecode values for the internal bytecode. Note that the bytecode is
+     * currently not considered a medium for data storage or external
+     * communication; it *will* change significantly and is not suitable for
+     * external data storage yet.
+     */
 
     static final class Bytecode {
         private Bytecode() {
@@ -188,25 +189,10 @@ public final class Disassembler {
 
         static final int MAX_SUBOFFSET = 3;
 
-        // Re-dispatch according to a subtable:
-        @DeciphererStep(name = "dispatch z80-cb", sizeRequirement = 1, sizeAfter = 0)
-        static final byte DISPATCH_Z80_CB = (byte) 0x88;
-
-        @DeciphererStep(name = "dispatch z80-xd", sizeRequirement = 1, sizeAfter = 0)
-        static final byte DISPATCH_Z80_XD = (byte) 0x89;
-
-        @DeciphererStep(name = "dispatch z80-xd-cb", sizeRequirement = 1, sizeAfter = 0)
-        static final byte DISPATCH_Z80_XD_CB = (byte) 0x8A;
-
-        @DeciphererStep(name = "dispatch z80-ed", sizeRequirement = 1, sizeAfter = 0)
-        static final byte DISPATCH_Z80_ED = (byte) 0x8B;
-
-        @DeciphererStep(name = "dispatch z180-ed", sizeRequirement = 1, sizeAfter = 0)
-        static final byte DISPATCH_Z180_ED = (byte) 0x8C;
-
-        @DeciphererStep(name = "dispatch zxsb-error-text", sizeRequirement = 1, sizeAfter = 0)
-        static final byte DISPATCH_ZXSB_ERROR_TEXT = (byte) 0x8D;
-
+        // Re-dispatch according to a sublanguage:
+        static final byte DISPATCH_0 = (byte) 0xA0;
+        static final int MAX_REFERRED_LANGUAGE_COUNT = 8;
+        
         // Switches and temporary switches:
 
         @DeciphererStep(name = "tempswitch 1*condensed-zxsnum", sizeRequirement = 0, sizeAfter = 0)
@@ -416,7 +402,7 @@ public final class Disassembler {
     // necessarily dispatch by the first byte in this instruction; some
     // languages have instructions
     // with multiple dispatches).
-    final void decipher(byte[] code, String[][] minitables, StringBuilder sb) throws RuntimeException,
+    final void decipher(byte[] code, String[][] minitables, String[] referredLanguages, StringBuilder sb) throws RuntimeException,
             IncompleteInstruction, Lang.UnknownOpcode {
         currentValue = 0; // just in case
         for (int i = 0;; i++) {
@@ -431,6 +417,15 @@ public final class Disassembler {
                 assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
                 // mask off excess bits, then fetch a string from the minitable
                 sb.append(minitable[currentValue & (minitable.length - 1)]);
+            } else if (step >= Bytecode.DISPATCH_0
+                    && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                String newLangName = referredLanguages[step - Bytecode.DISPATCH_0];
+                // note the late binding
+                try {
+                    Lang.MANAGER.get(newLangName).decipher(this, currentValue, sb);
+                } catch (ResourceManager.ResolutionError e) {
+                    throw new RuntimeException("referred language unknown", e);
+                }
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
@@ -578,54 +573,6 @@ public final class Disassembler {
                             currentValue |= ~0x7F;
                         }
                         currentValue += format.getOrigin() + currentOffset + 2;
-                        break;
-
-                    case Bytecode.DISPATCH_Z80_CB:
-                        try {
-                            Lang.MANAGER.get("z80-cb").decipher(this, currentValue, sb);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
-                        break;
-
-                    case Bytecode.DISPATCH_Z80_XD:
-                        try {
-                            Lang.MANAGER.get("z80-xd").decipher(this, currentValue, sb);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
-                        break;
-
-                    case Bytecode.DISPATCH_Z80_XD_CB:
-                        try {
-                            Lang.MANAGER.get("z80-xd-cb").decipher(this, currentValue, sb);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
-                        break;
-
-                    case Bytecode.DISPATCH_Z80_ED:
-                        try {
-                            Lang.MANAGER.get("z80-ed").decipher(this, currentValue, sb);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
-                        break;
-
-                    case Bytecode.DISPATCH_Z180_ED:
-                        try {
-                            Lang.MANAGER.get("z180-ed").decipher(this, currentValue, sb);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
-                        break;
-
-                    case Bytecode.DISPATCH_ZXSB_ERROR_TEXT:
-                        try {
-                            Lang.MANAGER.get("zxsb-error-text").decipher(this, currentValue, sb);
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
                         break;
 
                     case Bytecode.AND_3:
@@ -851,24 +798,26 @@ public final class Disassembler {
             private final boolean trivial;
             private final byte[][] decipherers;
             final String[][] minitables;
+            final String[] referredLanguages;
             private final int dispatchSuboffset;
 
             @SuppressWarnings("synthetic-access")
             private Tabular(String name, int defaultCountdown, boolean trivial, byte[][] decipherers,
-                    String[][] minitables, LangParser parser) {
+                    String[][] minitables, String[] referredLanguages, LangParser parser) {
                 super(name, defaultCountdown);
                 assert decipherers.length == 256;
                 assert minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
                 this.trivial = trivial;
                 this.decipherers = decipherers;
                 this.minitables = minitables;
+                this.referredLanguages = referredLanguages;
                 this.dispatchSuboffset = parser.dispatchSuboffset;
             }
 
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException {
                 LangParser parser = new LangParser();
                 parser.parse(reader);
-                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.minitables, parser);
+                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.minitables, parser.referredLanguages, parser);
             }
 
             @Override
@@ -878,7 +827,7 @@ public final class Disassembler {
                 if (bytecode == null) {
                     throw new Lang.UnknownOpcode(this);
                 }
-                disassembler.decipher(bytecode, minitables, sb);
+                disassembler.decipher(bytecode, minitables, referredLanguages, sb);
             }
 
             @Override
@@ -888,7 +837,7 @@ public final class Disassembler {
 
             @Override
             final void dumpLang(PrintStream port) {
-                port.println(name + " is a tabular language");
+                port.println("# " + name + " is a tabular language");
                 for (int i = 0; i < minitables.length; i++) {
                     String[] minitable = minitables[i];
                     if (minitable != null) {
@@ -900,6 +849,11 @@ public final class Disassembler {
                             port.print(minitable[j]);
                         }
                         port.println();
+                    }
+                }
+                for (int i = 0; i < referredLanguages.length; i++) {
+                    if (referredLanguages[i] != null) {
+                        port.println("# referred lang " + i + " is " + referredLanguages[i]);
                     }
                 }
                 port.println("assuming dispatch is done by suboffset " + dispatchSuboffset);
@@ -978,6 +932,9 @@ public final class Disassembler {
                 final String[][] minitables;
                 final Map<String, Integer> minitablesByName;
                 private int minitableCounter;
+                final String[] referredLanguages; // note the late binding
+                final Map<String, Integer> referredLanguagesByName;
+                int referredLanguageCounter;
                 int dispatchSuboffset;
                 private boolean dispatchSuboffsetDeclared;
                 int defaultCountdown;
@@ -992,6 +949,9 @@ public final class Disassembler {
                     minitables = new String[Bytecode.MAX_MINITABLE_COUNT][];
                     minitablesByName = new HashMap<String, Integer>();
                     minitableCounter = 0;
+                    referredLanguages = new String[Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
+                    referredLanguagesByName = new HashMap<String, Integer>();
+                    referredLanguageCounter = 0;
                     dispatchSuboffset = 0;
                     dispatchSuboffsetDeclared = false;
                     defaultCountdown = 0; // by default, no default countdown
@@ -1175,6 +1135,20 @@ public final class Disassembler {
                                 coll.add(Bytecode.AND_7);
                             } else if (step.equals("decimal")) {
                                 coll.add(Bytecode.DECIMAL);
+                                size = 0;
+                            } else if (step.startsWith("dispatch ")) {
+                                String newLangName = step.substring(9).trim();
+                                Integer index = referredLanguagesByName.get(newLangName);
+                                if (index == null) {
+                                    if (referredLanguageCounter >= Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                                        throw new RuntimeException("too many referred languages");
+                                    }
+                                    referredLanguages[referredLanguageCounter] = newLangName;
+                                    index = new Integer(referredLanguageCounter);
+                                    referredLanguagesByName.put(newLangName, index);
+                                    referredLanguageCounter++;
+                                }
+                                coll.add((byte) (Bytecode.DISPATCH_0 + index.intValue()));
                                 size = 0;
                             } else {
                                 throw new DisassemblyTableParseError("unknown processing step: " + step);
