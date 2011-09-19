@@ -28,6 +28,7 @@ Programmer-visible changes:
 * replaced the separate Disassembler.API implementations with a single Map-based one
 * extracted none.api, cpm.api, and zxs.api from Disassembler.API
 * renamed the 'dits' directory to 'resources'
+* moved *.decoding into the new 'resources' directory
 
 == v0.1 2011-08-08
 
