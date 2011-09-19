@@ -786,6 +786,13 @@ public final class Disassembler {
             private final byte[][] decipherers;
             final String[][] minitables;
             final String[] referredLanguages;
+            /*
+             * Note that the dispatch suboffset declaration is only used for
+             * dumping the parsed language table. The actual dispatch key is
+             * either implicitly fetched from suboffset zero, or explicitly
+             * declared by the parent language -- possibly without any reference
+             * to a fixed suboffset at all.
+             */
             private final int dispatchSuboffset;
 
             @SuppressWarnings("synthetic-access")
@@ -957,11 +964,6 @@ public final class Disassembler {
                 }
 
                 final void parseDitLine(String line) throws RuntimeException {
-                    // Note that the dispatch suboffset declaration is only used
-                    // for dumping
-                    // the parsed language table; actual dispatch suboffset is
-                    // either implicitly zero or
-                    // explicitly declared in the parent language.
                     String dispatchSuboffsetDeclarator = "Dispatch-suboffset:";
                     String defaultCountdownDeclarator = "Default-countdown:";
                     if (line.startsWith(dispatchSuboffsetDeclarator)) {
