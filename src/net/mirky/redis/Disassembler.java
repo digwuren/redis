@@ -832,6 +832,7 @@ public final class Disassembler {
             @Override
             final void dumpLang(PrintStream port) {
                 port.println("# " + name + " is a tabular language");
+                port.println("Dispatch-suboffset: " + dispatchSuboffset);
                 for (int i = 0; i < minitables.length; i++) {
                     String[] minitable = minitables[i];
                     if (minitable != null) {
@@ -850,7 +851,6 @@ public final class Disassembler {
                         port.println("# referred lang " + i + " is " + referredLanguages[i]);
                     }
                 }
-                port.println("assuming dispatch is done by suboffset " + dispatchSuboffset);
                 for (int i = 0; i < 256; i++) {
                     if ((i & 0x0F) == 0) {
                         port.println();
