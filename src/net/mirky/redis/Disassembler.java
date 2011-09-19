@@ -855,7 +855,7 @@ public final class Disassembler {
 
             @SuppressWarnings("synthetic-access")
             private Tabular(String name, int defaultCountdown, boolean trivial, byte[][] decipherers,
-                    String[][] minitables, DitParser parser) {
+                    String[][] minitables, LangParser parser) {
                 super(name, defaultCountdown);
                 assert decipherers.length == 256;
                 assert minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
@@ -866,7 +866,7 @@ public final class Disassembler {
             }
 
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException {
-                DitParser parser = new DitParser();
+                LangParser parser = new LangParser();
                 parser.parse(reader);
                 return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.minitables, parser);
             }
@@ -973,7 +973,7 @@ public final class Disassembler {
                 }
             }
 
-            static final class DitParser {
+            static final class LangParser {
                 final byte[][] decipherers;
                 final String[][] minitables;
                 final Map<String, Integer> minitablesByName;
@@ -984,7 +984,7 @@ public final class Disassembler {
                 private boolean defaultCountdownDeclared;
                 boolean trivial;
 
-                DitParser() {
+                LangParser() {
                     decipherers = new byte[256][];
                     for (int i = 0; i < 256; i++) {
                         decipherers[i] = null;
