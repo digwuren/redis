@@ -1,5 +1,6 @@
 Redis is a tool for analysing and extracting files contained within ancient
-disk, tape and other images.
+disk, tape and other images.  It helps to answer the question "What is in this
+old binary file?".
 
 
 Modes of operation
