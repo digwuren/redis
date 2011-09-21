@@ -7,6 +7,7 @@ User-visible changes:
 * added the 'koi7' decoding
 * added the 'blocks' format
 * added the 'geometry' option type as single-valued
+* the 'd64-directory' display is now more streamlined
 
 Programmer-visible changes:
 * TextResource.LineIterator() now throws TextResource.Missing, an unchecked
@@ -38,6 +39,9 @@ Programmer-visible changes:
     counted version followed by an appropriate set-countdown opcode
 * fixed a bug in Format.deparen()'s handling of the "(foo)bar(baz)" case.
 * show lang metdata in a tabular language dump
+* restructured D64DirectoryAnalyser to serve as basis for the new customisable
+  data structure dumper
+* introduced Struct and StructFieldType together with several implementations
 
 == v0.1 2011-08-08
 
