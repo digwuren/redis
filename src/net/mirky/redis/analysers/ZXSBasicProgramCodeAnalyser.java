@@ -174,6 +174,82 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
 
     private static final String[] KEYWORDS = ZXSBasicProgramCodeAnalyser.loadStringTable("zxsbaskw.tab");
 
+    private static final class SaguaroLineLexer {
+        private final String line;
+        private int pos;
+
+        public SaguaroLineLexer(String line) {
+            this.line = line;
+            pos = 0;
+        }
+        
+        public final void skipSpaces() {
+            while (pos < line.length() && line.charAt(pos) == ' ') {
+                pos++;
+            }
+        }
+        
+        public final void skipChar() {
+            if (pos < line.length()) {
+                pos++;
+            }
+        }
+        
+        public final boolean atUnsignedInteger() {
+            if (pos >= line.length()) {
+                return false;
+            }
+            char c = line.charAt(pos);
+            return c >= '0' && c <= '9';
+        }
+        
+        public final boolean atString() {
+            return at('"');
+        }
+
+        public final String parseString() {
+            assert atString();
+            int begin = pos + 1;
+            for (int cur = begin; cur < line.length(); cur++) {
+                if (line.charAt(cur) == '"') {
+                    pos = cur + 1;
+                    return line.substring(begin, cur);
+                }
+            }
+            throw new RuntimeException("string not terminated");
+        }
+        
+        public final boolean at(char etalon) {
+            return pos < line.length() && line.charAt(pos) == etalon;
+        }
+        
+        public final boolean atEnd() {
+            return pos >= line.length();
+        }
+
+        private final String parseWord() {
+            int begin = pos;
+            while (pos < line.length() && isWordChar(line.charAt(pos))) {
+                pos++;
+            }
+            return line.substring(begin, pos);
+        }
+
+        public final int parseUnsignedInteger() throws NumberFormatException {
+            assert atUnsignedInteger();
+            String word = parseWord().toLowerCase();
+            if (word.length() >= 3 && word.startsWith("0x")) {
+                return Integer.parseInt(word.substring(2), 16);
+            } else {
+                return Integer.parseInt(word);
+            }
+        }
+
+        private static final boolean isWordChar(char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+        }
+    }
+
     private static final String[] loadStringTable(String filename)
     throws RuntimeException {
         String[] keywords = new String[256];
@@ -181,14 +257,33 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
             keywords[i] = null;
         }
         for (String line : new TextResource(filename)) {
-            if (line.length() < 5 || line.charAt(2) != ' ') {
+            SaguaroLineLexer lexer = new SaguaroLineLexer(line);
+            lexer.skipSpaces();
+            if (!lexer.atUnsignedInteger()) {
                 throw new RuntimeException("invalid " + filename + " line: " + line);
             }
-            int number = Hex.pb(line.substring(0, 2)) & 0xFF;
-            if (keywords[number] != null) {
-                throw new RuntimeException("duplicate " + filename + " entry for 0x" + Hex.b(number));
+            int key = lexer.parseUnsignedInteger();
+            lexer.skipSpaces();
+            if (!lexer.at(':')) {
+                throw new RuntimeException("invalid " + filename + " line: " + line);
             }
-            keywords[number] = line.substring(3);
+            lexer.skipChar();
+            lexer.skipSpaces();
+            if (!lexer.atString()) {
+                throw new RuntimeException("invalid " + filename + " line: " + line);
+            }
+            String value = lexer.parseString();
+            lexer.skipSpaces();
+            if (!lexer.atEnd()) {
+                throw new RuntimeException("invalid " + filename + " line: " + line);
+            }
+            if (key >= keywords.length) {
+                throw new RuntimeException("invalid " + filename + " line: " + line);
+            }
+            if (keywords[key] != null) {
+                throw new RuntimeException("duplicate " + filename + " entry for 0x" + Hex.b(key));
+            }
+            keywords[key] = value;
         }
         return keywords;
     }
