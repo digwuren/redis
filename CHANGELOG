@@ -45,6 +45,7 @@ Programmer-visible changes:
   several implementations
 * converted zxsbaskw.tab into a Saguaro-inspired format and updated ZXSBasicProgrmaCodeAnalyser.loadStringTable() accordingly
 * converted suffixen.txt into a Saguaro-inspired format and replaced Main.loadMultiAssocResource() by Saguaro.loadStringMultimap()
+* refactored usage() to read a BufferedReader directly rather than through TextResource.LineIterator
 
 == v0.1 2011-08-08
 

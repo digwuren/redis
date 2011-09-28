@@ -1,5 +1,6 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,8 +41,18 @@ public final class Main extends AbstractMain {
 
     @Mode("help") @SupremeMode
     public final void usage() {
-        for (String line : new TextResource("usage.txt")) {
-        	System.out.println(line);
+        BufferedReader reader = TextResource.getBufferedReader("usage.txt");
+        String line;
+        try {
+            try {
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            } finally {
+                reader.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error reading resource usage.txt");
         }
         System.exit(0);
     }
