@@ -171,5 +171,5 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
         }
     }
 
-    private static final String[] KEYWORDS = Saguaro.loadStringTableAsArray("zxsbaskw.tab", 256);
+    private static final String[] KEYWORDS = Saguaro.loadStringArray("zxsbaskw.tab", 256);
 }

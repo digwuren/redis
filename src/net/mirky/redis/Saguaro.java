@@ -83,7 +83,7 @@ public final class Saguaro {
 
     // XXX: we're currently fully ignoring any possible indentation
     // XXX: and we're not ignoring empty lines and comments, either
-    public static final String[] loadStringTableAsArray(String filename, int arraySize) throws NumberFormatException {
+    public static final String[] loadStringArray(String filename, int arraySize) throws NumberFormatException {
         String[] keywords = new String[arraySize];
         for (int i = 0; i < keywords.length; i++) {
             keywords[i] = null;
