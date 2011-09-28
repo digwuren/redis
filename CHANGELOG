@@ -44,6 +44,7 @@ Programmer-visible changes:
 * introduced Struct, StructFieldType, and IntegerSliceType together with
   several implementations
 * converted zxsbaskw.tab into a Saguaro-inspired format and updated ZXSBasicProgrmaCodeAnalyser.loadStringTable() accordingly
+* converted suffixen.txt into a Saguaro-inspired format and replaced Main.loadMultiAssocResource() by Saguaro.loadStringMultimap()
 
 == v0.1 2011-08-08
 

@@ -333,32 +333,9 @@ public final class Main extends AbstractMain {
 
 	private static final void loadSuffixen() {
 		assert SUFFIXEN == null;
-		SUFFIXEN = loadMultiAssocResource("suffixen.txt");
+		SUFFIXEN = Saguaro.loadStringMultimap("suffixen.txt");
 	}
 
-	private static final Map<String, ArrayList<String>> loadMultiAssocResource(
-			String resourceName) throws RuntimeException {
-		Map<String, ArrayList<String>> map = new HashMap<String, ArrayList<String>>();
-		for (String line : new TextResource(resourceName)) {
-			int sep = line.indexOf(':');
-			String key = line.substring(0, sep);
-			do {
-				sep++;
-				if (sep == line.length()) {
-					throw new RuntimeException("error parsing resource " + resourceName);
-				}
-			} while (sep < line.length() && line.charAt(sep) == ' ');
-			String value = line.substring(sep);
-			ArrayList<String> list = map.get(key);
-			if (list == null) {
-				list = new ArrayList<String>();
-				map.put(key, list);
-			}
-			list.add(value);
-		}
-		return map;
-	}
-	
 	final void identify(String filename, TaggedData object, String linePrefix) {
 		System.out.println(linePrefix + "Filename: " + filename);
 		int lastDot = filename.lastIndexOf('.');

@@ -1,27 +1,27 @@
-.arc: ARC archive
-.arj: ARJ archive
-.class: Java class file
-.com: CP/M or MS-DOS headerless executable
-.d64: Commodore 1541 disk image
-.dsk: disk image of some sort
-.exe: MS-DOS executable
-.gz: gzip compression
-.hex: Intel HEX armour of a binary object
-.img: image (of a disk?)
-.jar: ZIP archive, could be compressed
-.prg: Commodore 64 program file
-.rar: RAR archive, could be compressed
-.raw: raw image (of a disk?)
-.rom: ROM image of some sort
-.sct: disk sector of some sort
-.seq: Commodore 64 sequential data file
-.tap: ZX Spectrum tape image
-.tar: TAR archive
-.txt: text file of some sort
-.tzx: ZX Spectrum tape image
-.zip: ZIP archive, could be compressed
-.zx0: ZX Spectrum BASIC code
-.zx1: ZX Spectrum number array
-.zx2: ZX Spectrum character array
-.zx3: ZX Spectrum binary file
-.zx4: ill-formatted ZX Spectrum tape data block
+".arc": "ARC archive"
+".arj": "ARJ archive"
+".class": "Java class file"
+".com": "CP/M or MS-DOS headerless executable"
+".d64": "Commodore 1541 disk image"
+".dsk": "disk image of some sort"
+".exe": "MS-DOS executable"
+".gz": "gzip compression"
+".hex": "Intel HEX armour of a binary object"
+".img": "image (of a disk?)"
+".jar": "ZIP archive, could be compressed"
+".prg": "Commodore 64 program file"
+".rar": "RAR archive, could be compressed"
+".raw": "raw image (of a disk?)"
+".rom": "ROM image of some sort"
+".sct": "disk sector of some sort"
+".seq": "Commodore 64 sequential data file"
+".tap": "ZX Spectrum tape image"
+".tar": "TAR archive"
+".txt": "text file of some sort"
+".tzx": "ZX Spectrum tape image"
+".zip": "ZIP archive, could be compressed"
+".zx0": "ZX Spectrum BASIC code"
+".zx1": "ZX Spectrum number array"
+".zx2": "ZX Spectrum character array"
+".zx3": "ZX Spectrum binary file"
+".zx4": "ill-formatted ZX Spectrum tape data block"
