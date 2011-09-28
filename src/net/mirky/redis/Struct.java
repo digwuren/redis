@@ -34,7 +34,11 @@ public abstract class Struct {
 
     static final Struct.Basic D64DIRENTRY_REGULAR = new Struct.Basic("d64direntry.regular", 
             new Field(5, "filename", new StructFieldType.PaddedString(16, ((byte) 0xA0))),
-            new Field(2, "file type", StructFieldType.D64_FILE_TYPE_BYTE),
+            new Field(2, "file type", new StructFieldType.SlicedByteField(
+                    new IntegerSliceType.Basic(0, 4, "DEL", "SEQ", "PRG", "USR", "REL"),
+                    new IntegerSliceType.Flag(6, " (locked)", ""),
+                    new IntegerSliceType.Flag(7, " (unclosed)", "")
+            )),
             new Field(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
             new Field(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START),
             new Field(30, "sector count", StructFieldType.UNSIGNED_LEWYDE)

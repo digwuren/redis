@@ -41,7 +41,8 @@ Programmer-visible changes:
 * show lang metdata in a tabular language dump
 * restructured D64DirectoryAnalyser to serve as basis for the new customisable
   data structure dumper
-* introduced Struct and StructFieldType together with several implementations
+* introduced Struct, StructFieldType, and IntegerSliceType together with
+  several implementations
 
 == v0.1 2011-08-08
 
