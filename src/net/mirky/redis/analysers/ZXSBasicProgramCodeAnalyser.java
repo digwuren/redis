@@ -172,7 +172,7 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
         }
     }
 
-    private static final String[] KEYWORDS = ZXSBasicProgramCodeAnalyser.loadStringTable("zxsbaskw.tab");
+    private static final String[] KEYWORDS = ZXSBasicProgramCodeAnalyser.loadStringTableAsArray("zxsbaskw.tab", 256);
 
     private static final class SaguaroLineLexer {
         private final String line;
@@ -223,7 +223,7 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
             return pos < line.length() && line.charAt(pos) == etalon;
         }
         
-        public final boolean atEnd() {
+        public final boolean atEndOfLine() {
             return pos >= line.length();
         }
 
@@ -250,9 +250,8 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
         }
     }
 
-    private static final String[] loadStringTable(String filename)
-    throws RuntimeException {
-        String[] keywords = new String[256];
+    private static final String[] loadStringTableAsArray(String filename, int arraySize) throws NumberFormatException {
+        String[] keywords = new String[arraySize];
         for (int i = 0; i < keywords.length; i++) {
             keywords[i] = null;
         }
@@ -274,14 +273,14 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
             }
             String value = lexer.parseString();
             lexer.skipSpaces();
-            if (!lexer.atEnd()) {
+            if (!lexer.atEndOfLine()) {
                 throw new RuntimeException("invalid " + filename + " line: " + line);
             }
-            if (key >= keywords.length) {
-                throw new RuntimeException("invalid " + filename + " line: " + line);
+            if (key < 0 || key >= arraySize) {
+                throw new RuntimeException("key " + key + " out of bounds in " + filename);
             }
             if (keywords[key] != null) {
-                throw new RuntimeException("duplicate " + filename + " entry for 0x" + Hex.b(key));
+                throw new RuntimeException("duplicate " + filename + " entry for " + key);
             }
             keywords[key] = value;
         }
