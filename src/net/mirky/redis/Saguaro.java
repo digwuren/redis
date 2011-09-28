@@ -1,5 +1,8 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+
 public final class Saguaro {
     private Saguaro() {
         // not a real constructor
@@ -99,34 +102,44 @@ public final class Saguaro {
         for (int i = 0; i < keywords.length; i++) {
             keywords[i] = null;
         }
-        for (String line : new TextResource(filename)) {
-            Saguaro.LineLexer lexer = new LineLexer(line);
-            lexer.skipSpaces();
-            if (!lexer.atUnsignedInteger()) {
-                throw new RuntimeException("invalid " + filename + " line: " + line);
+        BufferedReader reader = TextResource.getBufferedReader(filename);
+        String line;
+        try {
+            try {
+                while ((line = reader.readLine()) != null) {
+                    Saguaro.LineLexer lexer = new LineLexer(line);
+                    lexer.skipSpaces();
+                    if (!lexer.atUnsignedInteger()) {
+                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                    }
+                    int key = lexer.parseUnsignedInteger();
+                    lexer.skipSpaces();
+                    if (!lexer.at(':')) {
+                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                    }
+                    lexer.skipChar();
+                    lexer.skipSpaces();
+                    if (!lexer.atString()) {
+                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                    }
+                    String value = lexer.parseString();
+                    lexer.skipSpaces();
+                    if (!lexer.atEndOfLine()) {
+                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                    }
+                    if (key < 0 || key >= arraySize) {
+                        throw new RuntimeException("key " + key + " out of bounds in " + filename);
+                    }
+                    if (keywords[key] != null) {
+                        throw new RuntimeException("duplicate " + filename + " entry for " + key);
+                    }
+                    keywords[key] = value;
+                }
+            } finally {
+                reader.close();
             }
-            int key = lexer.parseUnsignedInteger();
-            lexer.skipSpaces();
-            if (!lexer.at(':')) {
-                throw new RuntimeException("invalid " + filename + " line: " + line);
-            }
-            lexer.skipChar();
-            lexer.skipSpaces();
-            if (!lexer.atString()) {
-                throw new RuntimeException("invalid " + filename + " line: " + line);
-            }
-            String value = lexer.parseString();
-            lexer.skipSpaces();
-            if (!lexer.atEndOfLine()) {
-                throw new RuntimeException("invalid " + filename + " line: " + line);
-            }
-            if (key < 0 || key >= arraySize) {
-                throw new RuntimeException("key " + key + " out of bounds in " + filename);
-            }
-            if (keywords[key] != null) {
-                throw new RuntimeException("duplicate " + filename + " entry for " + key);
-            }
-            keywords[key] = value;
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error reading resource " + filename, e);
         }
         return keywords;
     }
