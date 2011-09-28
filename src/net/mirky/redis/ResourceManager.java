@@ -1,7 +1,10 @@
 package net.mirky.redis;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +39,19 @@ abstract class ResourceManager<T> {
 
     private final T load(String name) throws ResourceManager.ResolutionError {
         try {
-            BufferedReader reader = TextResource.getBufferedReader("resources/" + name + "." + type);
+            BufferedReader reader;
+            // If the given resource name contains a period ...
+            if (name.indexOf('.') != -1) {
+                // ... it will be treated as a filename.
+                try {
+                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(name)));
+                } catch (FileNotFoundException e) {
+                    throw new ResourceManager.ResolutionError(name, type, "file not found", e);
+                }
+            } else {
+                // Otherwise, it will be treated as a resource name without explicit path and suffix.
+                reader = TextResource.getBufferedReader("resources/" + name + "." + type);
+            }
             try {
                 return load(name, reader);
             } catch (IOException e) {
@@ -82,7 +97,7 @@ abstract class ResourceManager<T> {
         }
         for (int i = 0; i < candidate.length(); i++) {
             char c = Character.toLowerCase(candidate.charAt(i));
-            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-')) {
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || c == '-' || c == '.')) {
                 return false;
             }
         }
