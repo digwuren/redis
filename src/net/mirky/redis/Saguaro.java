@@ -40,11 +40,22 @@ public final class Saguaro {
     
         public final String parseString() {
             assert atString();
-            int begin = pos + 1;
-            for (int cur = begin; cur < line.length(); cur++) {
+            StringBuilder sb = new StringBuilder();
+            for (int cur = pos + 1; cur < line.length(); cur++) {
                 if (line.charAt(cur) == '"') {
                     pos = cur + 1;
-                    return line.substring(begin, cur);
+                    return sb.toString();
+                }
+                if (line.charAt(cur) == '\\') {
+                    cur++;
+                    if (cur >= line.length()) {
+                        break; // and complain about termination
+                    }
+                    char c = line.charAt(cur);
+                    // XXX: currently, \ is a pure escape character; there are no specials
+                    sb.append(c);
+                } else {
+                    sb.append(line.charAt(cur));
                 }
             }
             throw new RuntimeException("string not terminated");
