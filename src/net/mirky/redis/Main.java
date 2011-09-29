@@ -312,33 +312,43 @@ public final class Main extends AbstractMain {
 
     private static Map<Integer, String> FILESIZES = null;
 	
-	private static final void loadFilesizes() {
-		assert FILESIZES == null;
-		FILESIZES = new HashMap<Integer, String>();
-		for (String line : new TextResource("filesizes.txt")) {
-			int sep = line.indexOf(':');
-			if (sep == -1) {
-				throw new RuntimeException("error parsing known filesize list");
-			}
-			Integer size;
-			try {
-				size = new Integer(Integer.parseInt(line.substring(0, sep)));
-			} catch (NumberFormatException e) {
-				throw new RuntimeException("error parsing known filesize list", e);
-			}
-			do {
-				sep++;
-				if (sep == line.length()) {
-					throw new RuntimeException("error parsing known filesize list");
-				}
-			} while (sep < line.length() && line.charAt(sep) == ' ');
-			String name = line.substring(sep);
-			if (size.intValue() < 0 || FILESIZES.containsKey(size)) {
-				throw new RuntimeException("error parsing known filesize list");
-			}
-			FILESIZES.put(size, name);
-		}
-	}
+    private static final void loadFilesizes() {
+        assert FILESIZES == null;
+        FILESIZES = new HashMap<Integer, String>();
+        BufferedReader reader = TextResource.getBufferedReader("filesizes.txt");
+        try {
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    int sep = line.indexOf(':');
+                    if (sep == -1) {
+                        throw new RuntimeException("error parsing known filesize list");
+                    }
+                    Integer size;
+                    try {
+                        size = new Integer(Integer.parseInt(line.substring(0, sep)));
+                    } catch (NumberFormatException e) {
+                        throw new RuntimeException("error parsing known filesize list", e);
+                    }
+                    do {
+                        sep++;
+                        if (sep == line.length()) {
+                            throw new RuntimeException("error parsing known filesize list");
+                        }
+                    } while (sep < line.length() && line.charAt(sep) == ' ');
+                    String name = line.substring(sep);
+                    if (size.intValue() < 0 || FILESIZES.containsKey(size)) {
+                        throw new RuntimeException("error parsing known filesize list");
+                    }
+                    FILESIZES.put(size, name);
+                }
+            } finally {
+                reader.close();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error reading known filesize list");
+        }
+    }
 
 	private static Map<String, ArrayList<String>> SUFFIXEN = null;
 
