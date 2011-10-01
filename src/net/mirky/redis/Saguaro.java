@@ -85,14 +85,9 @@ public final class Saguaro {
     
         public final int parseUnsignedInteger() throws NumberFormatException {
             assert atUnsignedInteger();
-            String word = parseWord().toLowerCase();
-            if (word.length() >= 3 && word.startsWith("0x")) {
-                return Integer.parseInt(word.substring(2), 16);
-            } else {
-                return Integer.parseInt(word);
-            }
+            return ParseUtil.parseUnsignedInteger(parseWord());
         }
-    
+
         public static final boolean isWordChar(char c) {
             return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
         }
