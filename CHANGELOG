@@ -48,6 +48,8 @@ Programmer-visible changes:
 * refactored usage() and loadFilesizes() to read a BufferedReader directly rather than through TextResource.LineIterator
 * removed now-obsolete TextResource.LineIterator and converted TextResource from class into a module
 * introduced ParseUtil
+* entry vectors in *.api are now parsed as ordinary numbers and thus require 0x
+  prefix when in hex
 
 == v0.1 2011-08-08
 

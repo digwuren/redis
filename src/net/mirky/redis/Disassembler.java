@@ -1428,7 +1428,7 @@ public final class Disassembler {
                 }
                 String[] fields = line.trim().split("\\s+");
                 try {
-                    int address = Integer.parseInt(fields[0], 16);
+                    int address = ParseUtil.parseUnsignedInteger(fields[0]);
                     if (vectors.containsKey(new Integer(address))) {
                         throw new RuntimeException("duplicate API vector declaration \"" + line + "\"");
                     }

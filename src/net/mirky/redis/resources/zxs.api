@@ -2,8 +2,8 @@
 # reporting a BASIC error, RST 5 and two alternatives (used mainly by
 # the ROM itself) are for the BASIC calculator bytecode.
 
-0000 terminate
-0008 switch-permanently zxsb-error
-0028 switch-temporarily zxs-calc
-335E switch-temporarily zxs-calc
-3362 switch-temporarily zxs-calc
+0x0000 terminate
+0x0008 switch-permanently zxsb-error
+0x0028 switch-temporarily zxs-calc
+0x335E switch-temporarily zxs-calc
+0x3362 switch-temporarily zxs-calc

@@ -2,4 +2,4 @@
 # 0x0000. While normally, this would be JMPed to, some programs instead
 # RST 0 to it, so we need to support it as a subroutine, too.
 
-0000 terminate
+0x0000 terminate
