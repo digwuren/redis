@@ -17,20 +17,82 @@ public abstract class Struct {
 
     static final Struct.Basic BLANK = new Struct.Basic("blank");
     
-    public static final Struct D64DIRENTRY = new Struct("d64direntry") {
+    public static final class Conditional extends Struct {
+        private final Rule[] rules;
+
+        public Conditional(String name, Rule... rules) {
+            super(name);
+            if (rules.length == 0 || !(rules[rules.length - 1] instanceof Rule.Always)) {
+                throw new RuntimeException("the last rule in a Struct.Conditional must be a Rule.Always");
+            }
+            this.rules = rules;
+        }
+        
         @Override
         public final void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
-            Struct struct;
-            if (cursor.regionBlank(2, 30)) {
-                struct = BLANK;
-            } else if (cursor.getUnsignedByte(2) != 0) {
-                struct = D64DIRENTRY_REGULAR;
-            } else {
-                struct = new Void("d64direntry.unused", 32);
+            for (Rule rule : rules) {
+                if (rule.matches(cursor)) {
+                    rule.struct.show(cursor, path, port, decoding);
+                    return;
+                }
             }
-            struct.show(cursor, path, port, decoding);
+            // No rule matched.  This must not happen.
+            throw new RuntimeException("bug detected");
         }
-    };
+
+        public static abstract class Rule {
+            public final Struct struct;
+
+            public Rule(Struct struct) {
+                this.struct = struct;
+            }
+            
+            public abstract boolean matches(Cursor cursor);
+
+            public static final class RegionBlank extends Rule {
+                public final int offset;
+                public final int size;
+                
+                public RegionBlank(int offset, int size, Struct struct) {
+                    super(struct);
+                    this.offset = offset;
+                    this.size = size;
+                }
+                
+                @Override
+                public final boolean matches(Cursor cursor) {
+                    return cursor.regionBlank(offset, size);
+                }
+            }
+            
+            public static final class ByteEquals extends Rule {
+                public final int offset;
+                public final byte etalon;
+                
+                public ByteEquals(int offset, byte etalon, Struct struct) {
+                    super(struct);
+                    this.offset = offset;
+                    this.etalon = etalon;
+                }
+                
+                @Override
+                public final boolean matches(Cursor cursor) {
+                    return ((byte) cursor.getUnsignedByte(offset)) == etalon;
+                }
+            }
+            
+            public static final class Always extends Rule {
+                public Always(Struct struct) {
+                    super(struct);
+                }
+
+                @Override
+                public final boolean matches(Cursor cursor) {
+                    return true;
+                }
+            }
+        }
+    }
 
     static final Struct.Basic D64DIRENTRY_REGULAR = new Struct.Basic("d64direntry.regular", 
             new Field(5, "filename", new StructFieldType.PaddedString(16, ((byte) 0xA0))),
@@ -42,6 +104,12 @@ public abstract class Struct {
             new Field(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
             new Field(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START),
             new Field(30, "sector count", StructFieldType.UNSIGNED_LEWYDE)
+    );
+
+    public static final Struct D64DIRENTRY = new Struct.Conditional("d64direntry",
+            new Conditional.Rule.RegionBlank(2, 30, BLANK),
+            new Conditional.Rule.ByteEquals(2, (byte) 0, new Void("d64direntry.unused", 32)),
+            new Conditional.Rule.Always(D64DIRENTRY_REGULAR)
     );
 
     static final class Basic extends Struct {
