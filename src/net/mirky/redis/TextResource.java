@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public final class TextResource{
+public final class TextResource {
 	private TextResource() {
 	    // not a real constructor
 	}
