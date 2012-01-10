@@ -61,9 +61,10 @@ public final class Format {
 
             @Override
             Integer parse(String spec) throws OptionError {
-                // We'll use Integer.parseInt() eventually but it doesn't handle
-                // signs or
-                // radix prefixen, so some preparation is needed.
+                /*
+                 * We'll use Integer.parseInt() eventually but it doesn't handle
+                 * signs or radix prefixen, so some preparation is needed.
+                 */
                 try {
                     boolean negate = false;
                     int i = 0;
