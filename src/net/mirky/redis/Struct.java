@@ -99,7 +99,7 @@ public abstract class Struct {
             new Field(2, "file type", new StructFieldType.SlicedByteField(
                     new IntegerSliceType.Basic(0, 4, "DEL", "SEQ", "PRG", "USR", "REL"),
                     new IntegerSliceType.Flag(6, " (locked)", ""),
-                    new IntegerSliceType.Flag(7, " (unclosed)", "")
+                    new IntegerSliceType.Flag(7, "", " (unclosed)")
             )),
             new Field(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
             new Field(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START),
