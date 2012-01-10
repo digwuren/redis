@@ -1,5 +1,6 @@
 0: null file
 512: raw IBM PC disk sector image
+766: basic Windows ICO file
 768: raw ZX Spectrum bitmap font
 6912: raw ZX Spectrum screen dump
 174848: raw Commodore 1541 disk image, 35 tracks
