@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-abstract class ResourceManager<T> {
+public abstract class ResourceManager<T> {
     public final String type;
     protected final Map<String, T> cache;
     private final Map<String, String> aliases;
@@ -19,7 +19,7 @@ abstract class ResourceManager<T> {
         aliases = new HashMap<String, String>();
     }
 
-    final T get(String rawName) throws ResourceManager.ResolutionError {
+    public final T get(String rawName) throws ResourceManager.ResolutionError {
         String name = rawName.toLowerCase();
         if (!validName(name)) {
             throw new ResourceManager.ResolutionError(rawName, type, "invalid name");
