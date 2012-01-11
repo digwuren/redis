@@ -9,6 +9,7 @@ User-visible changes:
 * added the 'geometry' option type as single-valued
 * added the 'struct' option type
 * the 'd64-directory' display is now more streamlined and has the /step option
+* introduced a resource format for data structures
 
 Programmer-visible changes:
 * introduced TextResource.Missing, an unchecked exception, thrown when opening

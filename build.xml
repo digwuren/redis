@@ -22,6 +22,7 @@
             <fileset dir="src" includes="**/*.lang" />
             <fileset dir="src" includes="**/*.decoding" />
             <fileset dir="src" includes="**/*.api" />
+            <fileset dir="src" includes="**/*.struct" />
             <fileset dir="src" includes="**/zxsbaskw.tab" />
             <fileset dir="src" includes="META-INF/services/*" />
         </jar>

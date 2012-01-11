@@ -1,0 +1,5 @@
+# A dummy structure containing a single unsigned byte field.  Used as a
+# semi-reasonable default element struct by the array format family.
+
+struct "unsigned-byte"
+    @0 "value": unsigned-byte
