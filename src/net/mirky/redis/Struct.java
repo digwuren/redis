@@ -1,5 +1,6 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
 import java.io.PrintStream;
 
 public abstract class Struct {
@@ -176,11 +177,15 @@ public abstract class Struct {
         }
     }
     
-    public static final Struct get(String name) {
-        if (name.equals("d64direntry")) {
-            return D64DIRENTRY;
-        } else {
-            throw new RuntimeException("Unknown structure name \"" + name + '"');
+    public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("api") {
+        @Override
+        public final Struct load(String name, BufferedReader reader) {
+            // FIXME: implement struct parsing
+            throw new RuntimeException("structure parsing has not yet been implemented");
         }
+    };
+
+    static {
+        MANAGER.cache.put("d64direntry", D64DIRENTRY);
     }
 }
