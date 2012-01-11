@@ -10,7 +10,7 @@ import java.util.Map;
 
 abstract class ResourceManager<T> {
     public final String type;
-    private final Map<String, T> cache;
+    protected final Map<String, T> cache;
     private final Map<String, String> aliases;
 
     ResourceManager(String type) {
@@ -49,7 +49,8 @@ abstract class ResourceManager<T> {
                     throw new ResourceManager.ResolutionError(name, type, "file not found", e);
                 }
             } else {
-                // Otherwise, it will be treated as a resource name without explicit path and suffix.
+                // Otherwise, it will be treated as a resource name without
+                // explicit path and suffix.
                 reader = TextResource.getBufferedReader("resources/" + name + "." + type);
             }
             try {
