@@ -51,9 +51,12 @@ public final class Format {
                 if (outputHex) {
                     if (value.intValue() < 0) {
                         sb.append('-');
+                        sb.append("0x");
+                        sb.append(Long.toString(-(long) value.intValue(), 16).toUpperCase());
+                    } else {
+                        sb.append("0x");
+                        sb.append(Integer.toString(value.intValue(), 16).toUpperCase());
                     }
-                    sb.append("0x");
-                    sb.append(Long.toString(-(long) value.intValue(), 16).toUpperCase());
                 } else {
                     sb.append(value.intValue());
                 }
