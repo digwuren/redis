@@ -7,7 +7,7 @@ User-visible changes:
 * added the 'koi7' decoding
 * added the 'blocks' format
 * added the 'geometry' option type as single-valued
-* the 'd64-directory' display is now more streamlined
+* the 'd64-directory' display is now more streamlined and has the /step option
 
 Programmer-visible changes:
 * introduced TextResource.Missing, an unchecked exception, thrown when opening

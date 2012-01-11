@@ -9,13 +9,14 @@ import net.mirky.redis.Format;
 import net.mirky.redis.ImageError;
 import net.mirky.redis.Struct;
 
-@Format.Options("d64-directory/decoding:decoding=petscii")
+@Format.Options("d64-directory/decoding:decoding=petscii/step:unsigned-hex=0x20")
 public final class D64DirectoryAnalyser extends Analyser.Leaf.PossiblyPartial {
     @Override
     protected final int disPartially(Format format, byte[] data, PrintStream port) throws RuntimeException {
+        int step = format.getIntegerOption("step");
         try {
             Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
-            walkArray(cursor, Struct.D64DIRENTRY, 0x20, format.getDecoding(), port);
+            walkArray(cursor, Struct.D64DIRENTRY, step, format.getDecoding(), port);
             return cursor.tell();
         } catch (ImageError e) {
             // not supposed to happen, we probed first
