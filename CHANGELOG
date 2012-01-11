@@ -56,6 +56,7 @@ Programmer-visible changes:
 * introduced ParseUtil
 * entry vectors in *.api are now parsed as ordinary numbers and thus require 0x
   prefix when in hex
+* introduced the d64direntry and unsigned-byte builtin struct:s
 
 == v0.1 2011-08-08
 

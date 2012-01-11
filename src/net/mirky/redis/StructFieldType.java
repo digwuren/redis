@@ -66,4 +66,12 @@ abstract class StructFieldType {
             port.print("[" + Hex.w(value) + "] " + value);
         }
     };
+
+    static final StructFieldType UNSIGNED_BYTE = new StructFieldType() {
+        @Override
+        final void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) {
+            int value = cursor.getUnsignedByte(offset);
+            port.print("[" + Hex.b(value) + "] " + value);
+        }
+    };
 }

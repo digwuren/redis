@@ -113,6 +113,10 @@ public abstract class Struct {
             new Conditional.Rule.Always(D64DIRENTRY_REGULAR)
     );
 
+    public static final Struct UNSIGNED_BYTE = new Struct.Basic("unsigned-byte",
+            new OldField(0, "value", StructFieldType.UNSIGNED_BYTE)
+    );
+    
     static final class Basic extends Struct {
         private final Struct.AbstractField[] fields;
     
@@ -187,5 +191,6 @@ public abstract class Struct {
 
     static {
         MANAGER.cache.put("d64direntry", D64DIRENTRY);
+        MANAGER.cache.put("unsigned-byte", UNSIGNED_BYTE);
     }
 }
