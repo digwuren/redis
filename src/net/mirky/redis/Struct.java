@@ -175,4 +175,12 @@ public abstract class Struct {
             type.showContent(cursor, offset, port, decoding);
         }
     }
+    
+    public static final Struct get(String name) {
+        if (name.equals("d64direntry")) {
+            return D64DIRENTRY;
+        } else {
+            throw new RuntimeException("Unknown structure name \"" + name + '"');
+        }
+    }
 }

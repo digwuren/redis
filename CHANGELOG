@@ -43,6 +43,7 @@ Programmer-visible changes:
   data structure dumper
 * introduced Struct, StructFieldType, and IntegerSliceType together with
   several implementations
+* introduced Struct.get()
 * converted zxsbaskw.tab into a Saguaro-inspired format and updated
   ZXSBasicProgrmaCodeAnalyser.loadStringTable() accordingly
 * converted suffixen.txt into a Saguaro-inspired format and replaced
