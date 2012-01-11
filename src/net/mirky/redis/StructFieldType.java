@@ -7,7 +7,7 @@ abstract class StructFieldType {
         // nothing to be done here
     }
 
-    abstract void show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) throws ImageError;
+    abstract void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) throws ImageError;
 
     protected static final void displayFieldPrefix(Cursor cursor, int offset, String fieldName, PrintStream port) {
         port.print(Hex.t(cursor.tell() + offset) + ": " + fieldName + ": ");
@@ -23,10 +23,8 @@ abstract class StructFieldType {
         }
 
         @Override
-        final void show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) throws ImageError {
-            displayFieldPrefix(cursor, offset, name, port);
+        final void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) throws ImageError {
             decoding.displayForeignString(cursor.getPaddedBytes(offset, size, padding), port);
-            port.println();
         }
     }
 
@@ -38,21 +36,18 @@ abstract class StructFieldType {
         }
 
         @Override
-        final void show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) {
-            displayFieldPrefix(cursor, offset, name, port);
+        final void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) {
             int fileTypeByte = cursor.getUnsignedByte(offset);
             port.print("[" + Hex.b(fileTypeByte) + "]");
             for (IntegerSliceType slice : slices) {
                 port.print(slice.decode(fileTypeByte));
             }
-            port.println();
         }
     }
 
     static final StructFieldType D64_SECTOR_CHAIN_START = new StructFieldType() {
         @Override
-        final void show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) {
-            displayFieldPrefix(cursor, offset, name, port);
+        final void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) {
             int track = cursor.getUnsignedByte(offset);
             int sector = cursor.getUnsignedByte(offset + 1);
             port.print('[' + Hex.b(track) + ' ' + Hex.b(sector) + "] ");
@@ -61,16 +56,14 @@ abstract class StructFieldType {
             } else {
                 port.print("track " + track + ", sector " + sector);
             }
-            port.println();
         }
     };
 
     static final StructFieldType UNSIGNED_LEWYDE = new StructFieldType() {
         @Override
-        final void show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) throws ImageError {
-            displayFieldPrefix(cursor, offset, name, port);
+        final void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) throws ImageError {
             int value = cursor.getUnsignedLewyde(offset);
-            port.println("[" + Hex.w(value) + "] " + value);
+            port.print("[" + Hex.w(value) + "] " + value);
         }
     };
 }

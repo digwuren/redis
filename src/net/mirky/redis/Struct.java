@@ -95,15 +95,15 @@ public abstract class Struct {
     }
 
     static final Struct.Basic D64DIRENTRY_REGULAR = new Struct.Basic("d64direntry.regular", 
-            new Field(5, "filename", new StructFieldType.PaddedString(16, ((byte) 0xA0))),
-            new Field(2, "file type", new StructFieldType.SlicedByteField(
+            new OldField(5, "filename", new StructFieldType.PaddedString(16, ((byte) 0xA0))),
+            new OldField(2, "file type", new StructFieldType.SlicedByteField(
                     new IntegerSliceType.Basic(0, 4, "DEL", "SEQ", "PRG", "USR", "REL"),
                     new IntegerSliceType.Flag(6, " (locked)", ""),
                     new IntegerSliceType.Flag(7, "", " (unclosed)")
             )),
-            new Field(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
-            new Field(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START),
-            new Field(30, "sector count", StructFieldType.UNSIGNED_LEWYDE)
+            new OldField(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
+            new OldField(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START),
+            new OldField(30, "sector count", StructFieldType.UNSIGNED_LEWYDE)
     );
 
     public static final Struct D64DIRENTRY = new Struct.Conditional("d64direntry",
@@ -113,9 +113,9 @@ public abstract class Struct {
     );
 
     static final class Basic extends Struct {
-        private final Struct.Field[] fields;
+        private final Struct.AbstractField[] fields;
     
-        public Basic(String name, Struct.Field... fields) {
+        public Basic(String name, AbstractField... fields) {
             super(name);
             this.fields = fields;
         }
@@ -123,8 +123,8 @@ public abstract class Struct {
         @Override
         public final void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
             showBreadcrumbs(cursor, path, port);
-            for (Struct.Field field : fields) {
-                field.type.show(cursor, field.offset, field.name, port, decoding);
+            for (AbstractField field : fields) {
+                field.show(cursor, port, decoding);
             }
         }
     }
@@ -144,15 +144,35 @@ public abstract class Struct {
         }
     }
 
-    static final class Field {
+    static abstract class AbstractField {
         public final int offset;
         public final String name;
-        public final StructFieldType type;
         
-        public Field(int offset, String name, StructFieldType type) {
+        public AbstractField(int offset, String name) {
             this.offset = offset;
             this.name = name;
+        }
+
+        public final void show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+            StructFieldType.displayFieldPrefix(cursor, offset, name, port);
+            showContent(cursor, port, decoding);
+            port.println();
+        }
+        
+        public abstract void showContent(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError;
+    }
+
+    static final class OldField extends AbstractField {
+        public final StructFieldType type;
+        
+        public OldField(int offset, String name, StructFieldType type) {
+            super(offset, name);
             this.type = type;
+        }
+
+        @Override
+        public final void showContent(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+            type.showContent(cursor, offset, port, decoding);
         }
     }
 }
