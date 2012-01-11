@@ -8,12 +8,14 @@ import java.util.Set;
 import net.mirky.redis.Analyser;
 import net.mirky.redis.BinaryUtil;
 import net.mirky.redis.Cursor;
+import net.mirky.redis.Decoding;
 import net.mirky.redis.DisplayUtil;
 import net.mirky.redis.Format;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ImageError;
 import net.mirky.redis.ReconstructionDataCollector;
 import net.mirky.redis.ReconstructionFailure;
+import net.mirky.redis.ResourceManager;
 
 @Format.Options(".d64/decoding:decoding=petscii")
 public final class D64ImageAnalyser extends Analyser.Container {
@@ -334,8 +336,12 @@ public final class D64ImageAnalyser extends Analyser.Container {
                     cursor.seek(dsn * 256);
                     cursor.getBytes(0, 256, dataInChain, i * blockSize);
                 }
-                Format dirFormat = Format.getGuaranteedFormat("d64-directory");
-                dirFormat = format.imposeDecodingIfExplicit(dirFormat);
+                Format dirFormat = Format.getGuaranteedFormat("array/struct=d64direntry/step=0x20");
+                try {
+                    dirFormat = format.imposeDecodingIfExplicit(dirFormat, Decoding.MANAGER.get("petscii"));
+                } catch (ResourceManager.ResolutionError e) {
+                    throw new RuntimeException("bug detected", e);
+                }
                 rcn.fileBlocks(filename, dataInChain, dirFormat, blockSize, blockOffsets);
             } else {
                 try {
