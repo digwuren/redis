@@ -43,10 +43,14 @@ Programmer-visible changes:
   data structure dumper
 * introduced Struct, StructFieldType, and IntegerSliceType together with
   several implementations
-* converted zxsbaskw.tab into a Saguaro-inspired format and updated ZXSBasicProgrmaCodeAnalyser.loadStringTable() accordingly
-* converted suffixen.txt into a Saguaro-inspired format and replaced Main.loadMultiAssocResource() by Saguaro.loadStringMultimap()
-* refactored usage() and loadFilesizes() to read a BufferedReader directly rather than through TextResource.LineIterator
-* removed now-obsolete TextResource.LineIterator and converted TextResource from class into a module
+* converted zxsbaskw.tab into a Saguaro-inspired format and updated
+  ZXSBasicProgrmaCodeAnalyser.loadStringTable() accordingly
+* converted suffixen.txt into a Saguaro-inspired format and replaced
+  Main.loadMultiAssocResource() by Saguaro.loadStringMultimap()
+* refactored usage() and loadFilesizes() to read a BufferedReader directly
+  rather than through TextResource.LineIterator
+* removed now-obsolete TextResource.LineIterator and converted TextResource
+  from class into a module
 * introduced ParseUtil
 * entry vectors in *.api are now parsed as ordinary numbers and thus require 0x
   prefix when in hex
