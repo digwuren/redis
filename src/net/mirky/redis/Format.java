@@ -232,6 +232,23 @@ public final class Format {
             }
         };
 
+        @SimpleTypeName("struct")
+        static final Simple<Struct> STRUCT = new Simple<Struct>() {
+            @Override
+            final void stringify(Struct value, StringBuilder sb) {
+                sb.append(value.name);
+            }
+
+            @Override
+            final Struct parse(String name) throws OptionError {
+                try {
+                    return Struct.MANAGER.get(name);
+                } catch (ResourceManager.ResolutionError e) {
+                    throw new OptionError("unknown structure: " + name, e);
+                }
+            }
+        };
+
         @SimpleTypeName("geometry")
         static final Simple<GeometryLevel[]> GEOMETRY = new Simple<GeometryLevel[]>() {
             @Override

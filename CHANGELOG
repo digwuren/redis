@@ -7,6 +7,7 @@ User-visible changes:
 * added the 'koi7' decoding
 * added the 'blocks' format
 * added the 'geometry' option type as single-valued
+* added the 'struct' option type
 * the 'd64-directory' display is now more streamlined and has the /step option
 
 Programmer-visible changes:
