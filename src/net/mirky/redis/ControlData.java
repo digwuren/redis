@@ -22,35 +22,39 @@ public final class ControlData {
 
     // XXX: we're currently fully ignoring any possible indentation
     // XXX: and we're not ignoring empty lines and comments, either
-    public static final String[] loadStringArray(String filename, int arraySize) throws NumberFormatException {
+    public static final String[] loadStringArray(final String filename, int arraySize) throws NumberFormatException {
         String[] keywords = new String[arraySize];
         for (int i = 0; i < keywords.length; i++) {
             keywords[i] = null;
         }
-        BufferedReader reader = TextResource.getBufferedReader(filename);
+        final BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    ParseUtil.LineLexer lexer = new ParseUtil.LineLexer(line);
-                    lexer.skipSpaces();
+                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, filename, '#');
+                while (!lexer.atEndOfLine()) {
+                    if (lexer.atIndent()) {
+                        lexer.complain("unexpected indentation");
+                    }
+                    if (lexer.atDedent()) {
+                        lexer.complain("unexpected dedentation");
+                    }
                     if (!lexer.atUnsignedInteger()) {
-                        throw new LineParseError("wrong key type", line);
+                        lexer.complain("key expected here");
                     }
                     int key = lexer.parseUnsignedInteger();
                     lexer.skipSpaces();
                     if (!lexer.at(':')) {
-                        throw new LineParseError("missing colon after key", line);
+                        lexer.complain("missing colon after key");
                     }
                     lexer.skipChar();
                     lexer.skipSpaces();
                     if (!lexer.atString()) {
-                        throw new LineParseError("wrong value type", line);
+                        lexer.complain("wrong value type");
                     }
                     String value = lexer.parseString();
                     lexer.skipSpaces();
-                    if (!lexer.atEndOfLine()) {
-                        throw new LineParseError("missing end of line", line);
+                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                        lexer.complain("missing end of line");
                     }
                     if (key < 0 || key >= arraySize) {
                         throw new RuntimeException("key " + key + " out of bounds in " + filename);
@@ -59,6 +63,7 @@ public final class ControlData {
                         throw new RuntimeException("duplicate " + filename + " entry for " + key);
                     }
                     keywords[key] = value;
+                    lexer.advanceVertically();
                 }
             } finally {
                 reader.close();

@@ -1,3 +1,4 @@
+# The ZX Spectrum BASIC's bytecode.
 0xA5: "RND"
 0xA6: "INKEY$"
 0xA7: "PI"
