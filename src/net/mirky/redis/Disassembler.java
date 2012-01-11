@@ -40,7 +40,7 @@ public final class Disassembler {
     /** The breadth-first traversal queue */
     private final LinkedList<PendingEntryPoint> queue;
 
-    // // Disassembler's internal state
+    // Disassembler's internal state
     private int currentOffset;
     private final LangSequencer sequencer;
     private int currentInstructionSize;
