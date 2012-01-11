@@ -95,9 +95,23 @@ public final class ParseUtil {
             return pos >= line.length();
         }
 
+        public final boolean atWord() {
+            return pos < line.length() && isWordChar(line.charAt(pos));
+        }
+
         public final String parseWord() {
+            assert atWord();
             int begin = pos;
-            while (pos < line.length() && isWordChar(line.charAt(pos))) {
+            while (atWord()) {
+                pos++;
+            }
+            return line.substring(begin, pos);
+        }
+
+        public final String parseDashedWord() {
+            assert atWord();
+            int begin = pos;
+            while (atWord() || (pos != begin && at('-') && pos + 1 < line.length() && isWordChar(line.charAt(pos + 1)))) {
                 pos++;
             }
             return line.substring(begin, pos);
@@ -225,7 +239,7 @@ public final class ParseUtil {
             assert dent == 0 && !eof;
             return lineLexer.parseUnsignedInteger();
         }
-
+        
         /**
          * Skip horizontal whitespace. If there's any unprocessing indent or
          * dedent, it will be cleared.
@@ -250,6 +264,23 @@ public final class ParseUtil {
             ensureCurrentLine();
             assert dent == 0 && !eof;
             return lineLexer.parseString();
+        }
+
+        public final boolean atWord() throws LineParseError, IOException {
+            ensureCurrentLine();
+            return dent == 0 && !eof && lineLexer.atWord();
+        }
+        
+        public final String parseWord() throws LineParseError, IOException {
+            ensureCurrentLine();
+            assert dent == 0 && !eof;
+            return lineLexer.parseWord();
+        }
+        
+        public final String parseDashedWord() throws LineParseError, IOException {
+            ensureCurrentLine();
+            assert dent == 0 && !eof;
+            return lineLexer.parseDashedWord();
         }
 
         public final boolean atCommentChar() throws LineParseError, IOException {
