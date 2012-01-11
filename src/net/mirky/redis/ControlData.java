@@ -20,8 +20,6 @@ public final class ControlData {
         }
     }
 
-    // XXX: we're currently fully ignoring any possible indentation
-    // XXX: and we're not ignoring empty lines and comments, either
     public static final String[] loadStringArray(final String filename, int arraySize) throws NumberFormatException {
         String[] keywords = new String[arraySize];
         for (int i = 0; i < keywords.length; i++) {
@@ -31,7 +29,7 @@ public final class ControlData {
         try {
             try {
                 ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, filename, '#');
-                while (!lexer.atEndOfLine()) {
+                while (!lexer.atEndOfFile()) {
                     if (lexer.atIndent()) {
                         lexer.complain("unexpected indentation");
                     }
@@ -39,7 +37,7 @@ public final class ControlData {
                         lexer.complain("unexpected dedentation");
                     }
                     if (!lexer.atUnsignedInteger()) {
-                        lexer.complain("key expected here");
+                        lexer.complain("key expected");
                     }
                     int key = lexer.parseUnsignedInteger();
                     lexer.skipSpaces();
@@ -76,34 +74,36 @@ public final class ControlData {
         return keywords;
     }
 
-    // XXX: we're currently fully ignoring any possible indentation
-    // XXX: and we're not ignoring empty lines and comments, either
-    public static final Map<String, ArrayList<String>> loadStringMultimap(String filename) throws NumberFormatException {
+    public static final Map<String, ArrayList<String>> loadStringMultimap(String filename) {
         Map<String, ArrayList<String>> map = new HashMap<String, ArrayList<String>>();
         BufferedReader reader = TextResource.getBufferedReader(filename);
-        String line;
         try {
             try {
-                while ((line = reader.readLine()) != null) {
-                    ParseUtil.LineLexer lexer = new ParseUtil.LineLexer(line);
-                    lexer.skipSpaces();
+                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, filename, '#');
+                while (!lexer.atEndOfFile()) {
+                    if (lexer.atIndent()) {
+                        lexer.complain("unexpected indentation");
+                    }
+                    if (lexer.atDedent()) {
+                        lexer.complain("unexpected dedentation");
+                    }
                     if (!lexer.atString()) {
-                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                        lexer.complain("key expected");
                     }
                     String key = lexer.parseString();
                     lexer.skipSpaces();
                     if (!lexer.at(':')) {
-                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                        lexer.complain("missing colon after key");
                     }
                     lexer.skipChar();
                     lexer.skipSpaces();
                     if (!lexer.atString()) {
-                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                        lexer.complain("missing value");
                     }
                     String value = lexer.parseString();
                     lexer.skipSpaces();
-                    if (!lexer.atEndOfLine()) {
-                        throw new RuntimeException("invalid " + filename + " line: " + line);
+                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                        lexer.complain("missing end of line");
                     }
                     ArrayList<String> list = map.get(key);
                     if (list == null) {
@@ -111,12 +111,15 @@ public final class ControlData {
                         map.put(key, list);
                     }
                     list.add(value);
+                    lexer.advanceVertically();
                 }
             } finally {
                 reader.close();
             }
         } catch (IOException e) {
             throw new RuntimeException("I/O error reading resource " + filename, e);
+        } catch (ControlData.LineParseError e) {
+            throw new RuntimeException("parse error reading resource " + filename, e);
         }
         return map;
     }
