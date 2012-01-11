@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class Saguaro {
-    private Saguaro() {
+public final class ControlData {
+    private ControlData() {
         // not a real constructor
     }
 

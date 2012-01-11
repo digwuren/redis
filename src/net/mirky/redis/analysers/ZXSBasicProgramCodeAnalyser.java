@@ -10,7 +10,7 @@ import net.mirky.redis.Cursor;
 import net.mirky.redis.Format;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ImageError;
-import net.mirky.redis.Saguaro;
+import net.mirky.redis.ControlData;
 
 @Format.Options("zxs-basic-code/decoding:decoding=zx-spectrum/autostart:unsigned-decimal=0")
 public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPartial {
@@ -171,5 +171,5 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
         }
     }
 
-    private static final String[] KEYWORDS = Saguaro.loadStringArray("zxsbaskw.tab", 256);
+    private static final String[] KEYWORDS = ControlData.loadStringArray("zxsbaskw.tab", 256);
 }

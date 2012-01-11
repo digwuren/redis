@@ -354,7 +354,7 @@ public final class Main extends AbstractMain {
 
 	private static final void loadSuffixen() {
 		assert SUFFIXEN == null;
-		SUFFIXEN = Saguaro.loadStringMultimap("suffixen.txt");
+		SUFFIXEN = ControlData.loadStringMultimap("suffixen.txt");
 	}
 
 	final void identify(String filename, TaggedData object, String linePrefix) {
