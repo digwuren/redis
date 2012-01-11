@@ -681,15 +681,34 @@ public final class Format {
     }
 
     public final Format imposeDecodingIfExplicit(Format child) {
+        return imposeDecodingIfExplicit(child, null);
+    }
+
+    /**
+     * If this format has an explicit decoding, impose that on the given child;
+     * otherwise, impose the given default decoding on it.
+     * 
+     * @param child
+     *            format to be processed; note that processing entails creating
+     *            a new {@link Format} instance rather than modifying the given
+     *            one
+     * @param defaultDecoding
+     *            the {@link Decoding} instance to be imposed or {@code null} if
+     *            no imposition is to be done if this format's decoding is
+     *            implicit
+     * @return the modified format
+     */
+    public final Format imposeDecodingIfExplicit(Format child, Decoding defaultDecoding) {
         Option.SimpleOption decodingOption;
         try {
             decodingOption = (Option.SimpleOption) getOption("decoding");
         } catch (UnknownOption e) {
             return child;
         }
-        if (decodingOption.explicit) {
+        Decoding newDecoding = decodingOption.explicit ? (Decoding) decodingOption.value : defaultDecoding;
+        if (newDecoding != null) {
             try {
-                return new Format(child, "decoding", ((Decoding) decodingOption.value).name);
+                return new Format(child, "decoding", newDecoding.name);
             } catch (OptionError e) {
                 // there's a format which does not support the /decoding option?
                 throw new RuntimeException("bug detected", e);
