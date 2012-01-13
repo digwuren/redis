@@ -22,10 +22,10 @@ public abstract class Struct {
 
     static final Struct.Basic BLANK = new Struct.Basic("blank");
 
-    public static final class Conditional extends Struct {
+    public static final class Union extends Struct {
         private final Rule[] rules;
 
-        public Conditional(String name, Rule... rules) {
+        public Union(String name, Rule... rules) {
             super(name);
             if (rules.length == 0 || !(rules[rules.length - 1] instanceof Rule.Always)) {
                 throw new RuntimeException("the last rule in a Struct.Conditional must be a Rule.Always");
@@ -112,10 +112,10 @@ public abstract class Struct {
             new OldField(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START), 
             new OldField(30, "sector count", StructFieldType.UNSIGNED_LEWYDE));
 
-    public static final Struct D64DIRENTRY = new Struct.Conditional("d64direntry",
-            new Conditional.Rule.RegionBlank(2, 30, BLANK),
-            new Conditional.Rule.ByteEquals(2, (byte) 0, new Void("d64direntry.unused", 32)),
-            new Conditional.Rule.Always(D64DIRENTRY_REGULAR));
+    public static final Struct D64DIRENTRY = new Struct.Union("d64direntry",
+            new Union.Rule.RegionBlank(2, 30, BLANK),
+            new Union.Rule.ByteEquals(2, (byte) 0, new Void("d64direntry.unused", 32)),
+            new Union.Rule.Always(D64DIRENTRY_REGULAR));
 
     static final class Basic extends Struct {
         private final Struct.AbstractField[] fields;
