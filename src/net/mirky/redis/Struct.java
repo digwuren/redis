@@ -112,8 +112,9 @@ public abstract class Struct {
             new OldField(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START), 
             new OldField(30, "sector count", StructFieldType.UNSIGNED_LEWYDE));
 
-    public static final Struct D64DIRENTRY = new Struct.Conditional("d64direntry", new Conditional.Rule.RegionBlank(2,
-            30, BLANK), new Conditional.Rule.ByteEquals(2, (byte) 0, new Void("d64direntry.unused", 32)),
+    public static final Struct D64DIRENTRY = new Struct.Conditional("d64direntry",
+            new Conditional.Rule.RegionBlank(2, 30, BLANK),
+            new Conditional.Rule.ByteEquals(2, (byte) 0, new Void("d64direntry.unused", 32)),
             new Conditional.Rule.Always(D64DIRENTRY_REGULAR));
 
     static final class Basic extends Struct {
