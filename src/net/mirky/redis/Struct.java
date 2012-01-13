@@ -99,12 +99,15 @@ public abstract class Struct {
         }
     }
 
+    static final StructFieldType.SlicedByteField D64_FILE_TYPE_BYTE = new StructFieldType.SlicedByteField(
+            new IntegerSliceType.Basic(0, 4, "DEL", "SEQ", "PRG", "USR", "REL"),
+            new IntegerSliceType.Flag(6, " (locked)", ""),
+            new IntegerSliceType.Flag(7, "", " (unclosed)")
+    );
+    
     static final Struct.Basic D64DIRENTRY_REGULAR = new Struct.Basic("d64direntry.regular",
             new OldField(5, "filename", new StructFieldType.PaddedString(16, ((byte) 0xA0))),
-            new OldField(2, "file type",
-            new StructFieldType.SlicedByteField(new IntegerSliceType.Basic(0, 4, "DEL", "SEQ", "PRG", "USR", "REL"),
-                    new IntegerSliceType.Flag(6, " (locked)", ""),
-                    new IntegerSliceType.Flag(7, "", " (unclosed)"))),
+            new OldField(2, "file type", D64_FILE_TYPE_BYTE),
             new OldField(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
             new OldField(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START), 
             new OldField(30, "sector count", StructFieldType.UNSIGNED_LEWYDE));
