@@ -273,6 +273,18 @@ public abstract class Struct {
                 }
                 lexer.advanceVertically();
                 return StructFieldType.UNSIGNED_LEWYDE;
+            } else if (fieldType.equals("d64-sector-chain-start")) {
+                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                    lexer.complain("expected end of line");
+                }
+                lexer.advanceVertically();
+                return StructFieldType.D64_SECTOR_CHAIN_START;
+            } else if (fieldType.equals("d64-file-type-byte")) {
+                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                    lexer.complain("expected end of line");
+                }
+                lexer.advanceVertically();
+                return D64_FILE_TYPE_BYTE;
             } else if (fieldType.equals("padded-string")) {
                 lexer.skipSpaces();
                 if (!lexer.atUnsignedInteger()) {
