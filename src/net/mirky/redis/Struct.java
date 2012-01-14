@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import net.mirky.redis.ControlData.LineParseError;
+import net.mirky.redis.ResourceManager.ResolutionError;
 
 public abstract class Struct {
     public final String name;
@@ -111,11 +112,6 @@ public abstract class Struct {
             new OldField(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
             new OldField(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START), 
             new OldField(30, "sector count", StructFieldType.UNSIGNED_LEWYDE));
-
-    public static final Struct D64DIRENTRY = new Struct.Union("d64direntry",
-            new Union.Rule.RegionBlank(2, 30, BLANK),
-            new Union.Rule.ByteEquals(2, (byte) 0, new Void("d64direntry.unused", 32)),
-            new Union.Rule.Always(D64DIRENTRY_REGULAR));
 
     static final class Basic extends Struct {
         private final Struct.AbstractField[] fields;
@@ -261,7 +257,7 @@ public abstract class Struct {
             if (!lexer.atWord()) {
                 lexer.complain("expected field type");
             }
-            String fieldType = lexer.parseWord();
+            String fieldType = lexer.parseDashedWord();
             if (fieldType.equals("unsigned-byte")) {
                 if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
                     lexer.complain("expected end of line");
@@ -315,7 +311,17 @@ public abstract class Struct {
         }
     };
 
+    public static final Struct D64_DIRENT_UNION;
+
     static {
-        MANAGER.cache.put("d64direntry", D64DIRENTRY);
+        try {
+            D64_DIRENT_UNION = new Struct.Union("d64-dirent-union",
+                    new Union.Rule.RegionBlank(2, 30, BLANK),
+                    new Union.Rule.ByteEquals(2, (byte) 0, new Void("d64-dirent-blank", 32)),
+                    new Union.Rule.Always(Struct.MANAGER.get("d64-dirent")));
+        } catch (ResolutionError e) {
+            throw new RuntimeException("Bug detected", e);
+        }
+        MANAGER.cache.put("d64-dirent-union", D64_DIRENT_UNION);
     }
 }

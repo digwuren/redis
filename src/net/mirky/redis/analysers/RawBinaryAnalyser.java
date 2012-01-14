@@ -19,7 +19,7 @@ import net.mirky.redis.ReconstructionDataCollector;
         @Format.Options(".zx4/decoding!:decoding=zx-spectrum/origin:unsigned-hex=0/cpu!:lang=z80/api:api=none/entry:entry"),
 
         /* D64 header block. */
-        @Format.Options("d64-header/decoding:decoding=petscii/api:api=none/cpu:lang=none/entry:entry"),
+        @Format.Options("d64-disk-header/decoding:decoding=petscii/api:api=none/cpu:lang=none/entry:entry"),
 
         /*
          * Headerless executable. Originally developed for CP/M; also used in

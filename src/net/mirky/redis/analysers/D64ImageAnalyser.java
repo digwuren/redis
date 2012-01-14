@@ -11,6 +11,7 @@ import net.mirky.redis.Cursor;
 import net.mirky.redis.Decoding;
 import net.mirky.redis.DisplayUtil;
 import net.mirky.redis.Format;
+import net.mirky.redis.Format.OptionError;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ImageError;
 import net.mirky.redis.ReconstructionDataCollector;
@@ -155,7 +156,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
             checkDiskSectorGoodness(headerDiskSectorNumber);
             checkAndMarkDiskSectorTraversed(headerDiskSectorNumber);
             byte[] header = cursor.getBytes(0, 256);
-            Format headerFormat = Format.getGuaranteedFormat("d64-header");
+            Format headerFormat = Format.getGuaranteedFormat("d64-disk-header");
             headerFormat = format.imposeDecodingIfExplicit(headerFormat);
             rcn.contiguousFile("header.sct", header, headerFormat, headerDiskSectorNumber * 256);
             // The first two bytes of header link to the next sector -- start of the directory.
@@ -336,7 +337,12 @@ public final class D64ImageAnalyser extends Analyser.Container {
                     cursor.seek(dsn * 256);
                     cursor.getBytes(0, 256, dataInChain, i * blockSize);
                 }
-                Format dirFormat = Format.getGuaranteedFormat("array/struct=d64direntry/step=0x20");
+                Format dirFormat = Format.getGuaranteedFormat("array");
+                try {
+                    dirFormat = dirFormat.parseChange("/struct=d64-dirent-union/step=0x20");
+                } catch (OptionError e) {
+                    throw new RuntimeException("bug detected", e);
+                }
                 try {
                     dirFormat = format.imposeDecodingIfExplicit(dirFormat, Decoding.MANAGER.get("petscii"));
                 } catch (ResourceManager.ResolutionError e) {
