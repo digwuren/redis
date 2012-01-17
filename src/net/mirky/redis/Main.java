@@ -10,28 +10,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class Main extends AbstractMain {
-	public static final String VERSION_DATA = "redis 0.1";
-	
-	@Valued("format")
-	@Letter('f')
-	public String formatOverride;
+    public static final String VERSION_DATA = "redis 0.1";
+    
+    @Valued("format")
+    @Letter('f')
+    public String formatOverride;
 
-	public Main(String... args) throws CommandLineParseError {
-	    super(args);
+    public Main(String... args) throws CommandLineParseError {
+        super(args);
     }
 
     public static final void main(String... args) {
-		try {
-	        new Main(args).run();
+        try {
+            new Main(args).run();
         } catch (CommandLineParseError e) {
             System.err.println("redis: "  + e.getMessage());
             System.exit(1);
-		} catch (Throwable e) {
-			System.err.println("redis: "  + e.getMessage());
-			e.printStackTrace(System.err);
-			System.exit(1);
+        } catch (Throwable e) {
+            System.err.println("redis: "  + e.getMessage());
+            e.printStackTrace(System.err);
+            System.exit(1);
         }
-	}
+    }
 
     @Mode("version") @SupremeMode
     public final void version() {
@@ -101,15 +101,15 @@ public final class Main extends AbstractMain {
         }
         rcn.verifyReconstruction(object.data);
         if (!extract) {
-        	rcn.listExternalFiles();
+            rcn.listExternalFiles();
         } else {
-        	try {
-        		rcn.writeExternalFilesOut(filename + ".rcn");
-        	} catch (IOException e) {
-        		System.err.println("redis: I/O error");
-        		e.printStackTrace(System.err);
-        		System.exit(1);
-        	}
+            try {
+                rcn.writeExternalFilesOut(filename + ".rcn");
+            } catch (IOException e) {
+                System.err.println("redis: I/O error");
+                e.printStackTrace(System.err);
+                System.exit(1);
+            }
         }
     }
 
@@ -129,36 +129,36 @@ public final class Main extends AbstractMain {
 
     private final void reconstructOrTest(boolean testOnly) {
         if (formatOverride != null && formatOverride.length() != 0) {
-        	System.err.println("redis: the --format command line option is not applicable in this mode");
-        	System.exit(1);
+            System.err.println("redis: the --format command line option is not applicable in this mode");
+            System.exit(1);
         }
         String filename = arguments[0];
         if (!filename.toLowerCase().endsWith(".rcn")) {
-        	System.err.println("redis: " + filename + ": no .rcn suffix detected");
-        	System.exit(1);
+            System.err.println("redis: " + filename + ": no .rcn suffix detected");
+            System.exit(1);
         }
         String originalFilename = filename.substring(0, filename.length() - 4);
         byte[] image = null;
         try {
-        	image = ReconstructionItem.Collector.parse(filename).reconstruct(new ExternalFileLoader.Real());
+            image = ReconstructionItem.Collector.parse(filename).reconstruct(new ExternalFileLoader.Real());
         } catch (ReconstructionFailure e) {
-        	System.err.println("redis: " + e.getMessage());
-        	System.exit(1);
+            System.err.println("redis: " + e.getMessage());
+            System.exit(1);
         }
         if (testOnly) {
-        	System.out.println(originalFilename + " can be successfully reconstructed");
+            System.out.println(originalFilename + " can be successfully reconstructed");
         } else {
-        	try {
-        		FileOutputStream stream = new FileOutputStream(originalFilename);
-        		stream.write(image);
-        		stream.close();
-        	} catch (IOException e) {
-        		System.err.println("redis: I/O error");
-        		e.printStackTrace(System.err);
-        		System.exit(1);
-        	}
-        	assert image != null;
-        	System.out.println(originalFilename + " " + image.length);
+            try {
+                FileOutputStream stream = new FileOutputStream(originalFilename);
+                stream.write(image);
+                stream.close();
+            } catch (IOException e) {
+                System.err.println("redis: I/O error");
+                e.printStackTrace(System.err);
+                System.exit(1);
+            }
+            assert image != null;
+            System.out.println(originalFilename + " " + image.length);
         }
     }
 
@@ -249,7 +249,7 @@ public final class Main extends AbstractMain {
 
     private final void hexdump(String filename, TaggedData object) {
         System.out.println("Filename: " + filename);
-		System.out.println("Format: " + object.format.toString());
+        System.out.println("Format: " + object.format.toString());
         Analyser analyser = object.format.analyser;
         ReconstructionDataCollector rcn = null;
         try {
@@ -261,13 +261,13 @@ public final class Main extends AbstractMain {
         }
         analyser.hexdump(object.format, object.data, System.out);
         if (rcn == null || rcn.externalFileOrder.isEmpty()) {
-        	System.out.println("(no children)");
+            System.out.println("(no children)");
         } else {
-        	System.out.println("(" + rcn.externalFileOrder.size() + " extractables found)");
-        	for (String childName : rcn.externalFileOrder) {
-        		TaggedData child = rcn.getFile(childName);
-        		hexdump(filename + "//" + childName, child);
-        	}
+            System.out.println("(" + rcn.externalFileOrder.size() + " extractables found)");
+            for (String childName : rcn.externalFileOrder) {
+                TaggedData child = rcn.getFile(childName);
+                hexdump(filename + "//" + childName, child);
+            }
         }
         System.out.println();
     }
@@ -275,12 +275,12 @@ public final class Main extends AbstractMain {
     private final void dis(String filename, Format format, byte[] data) {
         System.out.println("Filename: " + filename);
         System.out.println("Format: " + format.toString());
-		System.out.println();
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        System.out.println();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
         PrintStream port = new PrintStream(stream);
         ReconstructionDataCollector rcn;
         String error;
-		try {
+        try {
             rcn = format.analyser.dis(format, data, port);
             error = null;
         } catch (ImageError e) {
@@ -311,7 +311,7 @@ public final class Main extends AbstractMain {
     }
 
     private static Map<Integer, String> FILESIZES = null;
-	
+    
     private static final void loadFilesizes() {
         assert FILESIZES == null;
         FILESIZES = new HashMap<Integer, String>();
@@ -350,54 +350,54 @@ public final class Main extends AbstractMain {
         }
     }
 
-	private static Map<String, ArrayList<String>> SUFFIXEN = null;
+    private static Map<String, ArrayList<String>> SUFFIXEN = null;
 
-	private static final void loadSuffixen() {
-		assert SUFFIXEN == null;
-		SUFFIXEN = ControlData.loadStringMultimap("suffixen.txt");
-	}
+    private static final void loadSuffixen() {
+        assert SUFFIXEN == null;
+        SUFFIXEN = ControlData.loadStringMultimap("suffixen.txt");
+    }
 
-	final void identify(String filename, TaggedData object, String linePrefix) {
-		System.out.println(linePrefix + "Filename: " + filename);
-		int lastDot = filename.lastIndexOf('.');
-		if (lastDot != -1) {
-			String suffix = filename.substring(lastDot).toLowerCase();
-			ArrayList<String> indications = SUFFIXEN.get(suffix);
-			if (indications != null) {
-				for (String i : indications) {
-					System.out.println(linePrefix + "    consistent with " + i);
-				}
-			}
-		}
-		System.out.println(linePrefix + "File size: " + object.data.length + " (0x" + Hex.t(object.data.length) + ") bytes");
-		String indication = FILESIZES.get(new Integer(object.data.length));
-		if (indication != null) {
-			System.out.println(linePrefix + "    consistent with " + indication);
-		}
-		int crc32 = BinaryUtil.crc32(object.data);
-		System.out.println(linePrefix + "CRC32: " + Hex.t(crc32));
-		System.out.println(linePrefix + "MD5: " + BinaryUtil.md5(object.data));
-		System.out.println(linePrefix + "SHA1: " + BinaryUtil.sha1(object.data));
-		System.out.println(linePrefix + "Format: " + object.format.toString());
-		new ByteVectorStatistics(object.data).printOut(linePrefix);
-		System.out.println();
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		PrintStream port = new PrintStream(stream);
-		ReconstructionDataCollector rcn;
-		try {
+    final void identify(String filename, TaggedData object, String linePrefix) {
+        System.out.println(linePrefix + "Filename: " + filename);
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot != -1) {
+            String suffix = filename.substring(lastDot).toLowerCase();
+            ArrayList<String> indications = SUFFIXEN.get(suffix);
+            if (indications != null) {
+                for (String i : indications) {
+                    System.out.println(linePrefix + "    consistent with " + i);
+                }
+            }
+        }
+        System.out.println(linePrefix + "File size: " + object.data.length + " (0x" + Hex.t(object.data.length) + ") bytes");
+        String indication = FILESIZES.get(new Integer(object.data.length));
+        if (indication != null) {
+            System.out.println(linePrefix + "    consistent with " + indication);
+        }
+        int crc32 = BinaryUtil.crc32(object.data);
+        System.out.println(linePrefix + "CRC32: " + Hex.t(crc32));
+        System.out.println(linePrefix + "MD5: " + BinaryUtil.md5(object.data));
+        System.out.println(linePrefix + "SHA1: " + BinaryUtil.sha1(object.data));
+        System.out.println(linePrefix + "Format: " + object.format.toString());
+        new ByteVectorStatistics(object.data).printOut(linePrefix);
+        System.out.println();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        PrintStream port = new PrintStream(stream);
+        ReconstructionDataCollector rcn;
+        try {
             rcn = object.format.analyser.dis(object.format, object.data, port);
         } catch (ImageError e) {
-        	System.out.println(linePrefix + "    parsing failed, \"" + e.getMessage() + "\")");
-        	return;
+            System.out.println(linePrefix + "    parsing failed, \"" + e.getMessage() + "\")");
+            return;
         }
         if (rcn == null || rcn.externalFileOrder.isEmpty()) {
-        	System.out.println("(no children)");
+            System.out.println("(no children)");
         } else {
-        	System.out.println("(" + rcn.externalFileOrder.size() + " child(ren) found)");
-        	for (String childName : rcn.externalFileOrder) {
-        		TaggedData child = rcn.getFile(childName);
-        		identify(filename + "//" + childName, child, linePrefix + "    ");
-        	}
+            System.out.println("(" + rcn.externalFileOrder.size() + " child(ren) found)");
+            for (String childName : rcn.externalFileOrder) {
+                TaggedData child = rcn.getFile(childName);
+                identify(filename + "//" + childName, child, linePrefix + "    ");
+            }
         }
-	}
+    }
 }
