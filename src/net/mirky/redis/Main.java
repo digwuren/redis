@@ -357,7 +357,7 @@ public final class Main extends AbstractMain {
         SUFFIXEN = ControlData.loadStringMultimap("suffixen.txt");
     }
 
-    final void identify(String filename, TaggedData object, String linePrefix) {
+    private final void identify(String filename, TaggedData object, String linePrefix) {
         System.out.println(linePrefix + "Filename: " + filename);
         int lastDot = filename.lastIndexOf('.');
         if (lastDot != -1) {
