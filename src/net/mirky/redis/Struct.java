@@ -106,13 +106,6 @@ public abstract class Struct {
             new IntegerSliceType.Flag(7, "", " (unclosed)")
     );
     
-    static final Struct.Basic D64DIRENTRY_REGULAR = new Struct.Basic("d64direntry.regular",
-            new OldField(5, "filename", new StructFieldType.PaddedString(16, ((byte) 0xA0))),
-            new OldField(2, "file type", D64_FILE_TYPE_BYTE),
-            new OldField(3, "data start", StructFieldType.D64_SECTOR_CHAIN_START),
-            new OldField(21, "side chain", StructFieldType.D64_SECTOR_CHAIN_START), 
-            new OldField(30, "sector count", StructFieldType.UNSIGNED_LEWYDE));
-
     static final class Basic extends Struct {
         private final Struct.AbstractField[] fields;
 
