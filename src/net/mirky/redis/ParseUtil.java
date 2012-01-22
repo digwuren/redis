@@ -286,13 +286,13 @@ public final class ParseUtil {
             return dent == 0 && !eof && lineLexer.atWord();
         }
         
-        public final String parseWord() throws LineParseError, IOException {
+        public final String parseThisWord() throws LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
             return lineLexer.parseThisWord();
         }
         
-        public final String parseDashedWord() throws LineParseError, IOException {
+        public final String parseThisDashedWord() throws LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
             return lineLexer.parseThisDashedWord();

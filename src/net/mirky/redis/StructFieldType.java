@@ -29,9 +29,9 @@ abstract class StructFieldType {
     }
 
     static class SlicedByteField extends StructFieldType {
-        private final IntegerSliceType[] slices;
+        private final IntegerSlice[] slices;
 
-        public SlicedByteField(IntegerSliceType... slices) {
+        public SlicedByteField(IntegerSlice[] slices) {
             this.slices = slices;
         }
 
@@ -39,7 +39,7 @@ abstract class StructFieldType {
         final void showContent(Cursor cursor, int offset, PrintStream port, Decoding decoding) {
             int fileTypeByte = cursor.getUnsignedByte(offset);
             port.print("[" + Hex.b(fileTypeByte) + "]");
-            for (IntegerSliceType slice : slices) {
+            for (IntegerSlice slice : slices) {
                 port.print(slice.decode(fileTypeByte));
             }
         }
