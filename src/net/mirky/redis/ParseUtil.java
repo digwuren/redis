@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Vector;
 
 import net.mirky.redis.ControlData.LineParseError;
+import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 
 public final class ParseUtil {
     private ParseUtil() {
@@ -63,7 +64,7 @@ public final class ParseUtil {
             return at('"');
         }
 
-        public final String parseString() {
+        public final String parseThisString() {
             assert atString();
             StringBuilder sb = new StringBuilder();
             for (int cur = pos + 1; cur < line.length(); cur++) {
@@ -99,7 +100,7 @@ public final class ParseUtil {
             return pos < line.length() && isWordChar(line.charAt(pos));
         }
 
-        public final String parseWord() {
+        public final String parseThisWord() {
             assert atWord();
             int begin = pos;
             while (atWord()) {
@@ -108,7 +109,7 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
-        public final String parseDashedWord() {
+        public final String parseThisDashedWord() {
             assert atWord();
             int begin = pos;
             while (atWord() || (pos != begin && at('-') && pos + 1 < line.length() && isWordChar(line.charAt(pos + 1)))) {
@@ -117,9 +118,16 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
-        public final int parseUnsignedInteger() throws NumberFormatException {
+        /**
+         * Parse the unsigned integer starting from the cursor. Programming
+         * error if the cursor is not at an unsigned integer.
+         * 
+         * @throws LineParseError
+         * @throws IOException
+         */
+        public final int parseThisUnsignedInteger() throws NumberFormatException {
             assert atUnsignedInteger();
-            return ParseUtil.parseUnsignedInteger(parseWord());
+            return ParseUtil.parseUnsignedInteger(parseThisWord());
         }
 
         public final int getPos() {
@@ -213,12 +221,12 @@ public final class ParseUtil {
             return dent == 0 && !eof && lineLexer.at(c);
         }
 
-        public final void skipIndent() {
+        public final void skipThisIndent() {
             assert atIndent();
             dent--;
         }
 
-        public final void skipDedent() {
+        public final void skipThisDedent() {
             assert atDedent();
             dent++;
         }
@@ -234,10 +242,17 @@ public final class ParseUtil {
             return dent == 0 && !eof && lineLexer.atUnsignedInteger();
         }
 
-        public final int parseUnsignedInteger() throws LineParseError, IOException {
+        /**
+         * Parse the unsigned integer starting from the cursor. Programming
+         * error if the cursor is not at an unsigned integer.
+         * 
+         * @throws LineParseError
+         * @throws IOException
+         */
+        public final int parseThisUnsignedInteger() throws LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
-            return lineLexer.parseUnsignedInteger();
+            return lineLexer.parseThisUnsignedInteger();
         }
         
         /**
@@ -260,10 +275,10 @@ public final class ParseUtil {
             return dent == 0 && !eof && lineLexer.atString();
         }
 
-        public final String parseString() throws LineParseError, IOException {
+        public final String parseThisString() throws LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
-            return lineLexer.parseString();
+            return lineLexer.parseThisString();
         }
 
         public final boolean atWord() throws LineParseError, IOException {
@@ -274,13 +289,13 @@ public final class ParseUtil {
         public final String parseWord() throws LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
-            return lineLexer.parseWord();
+            return lineLexer.parseThisWord();
         }
         
         public final String parseDashedWord() throws LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
-            return lineLexer.parseDashedWord();
+            return lineLexer.parseThisDashedWord();
         }
 
         public final boolean atCommentChar() throws LineParseError, IOException {
@@ -314,6 +329,57 @@ public final class ParseUtil {
             } else {
                 throw new LineParseError(getLineLoc() + ": " + message, "");
             }
+        }
+
+        public final void noIndent() throws LineParseError {
+            if (atIndent()) {
+                complain("unexpected indent");
+            }
+        }
+
+        public final void pass(char c) throws LineParseError, IOException {
+            if (!at(c)) {
+                complain("expected '" + c + "'");
+            }
+            skipChar();
+        }
+
+        /**
+         * Parse an unsigned integer from the cursor onwards. If there isn't one
+         * at the cursor, report an error and state the significance of the
+         * missing unsined integer.
+         * 
+         * @throws LineParseError
+         * @throws IOException
+         */
+        public final int parseUnsignedInteger(String significance) throws LineParseError,
+                IOException {
+            if (!atUnsignedInteger()) {
+                complain("expected " + significance + ", an unsigned integer");
+            }
+            return parseThisUnsignedInteger();
+        }
+
+        public final String parseString(String significance) throws LineParseError,
+                IOException {
+            if (!atString()) {
+                complain("expected " + significance + ", a string");
+            }
+            return parseThisString();
+        }
+
+        public final void passNewline() throws LineParseError, IOException {
+            if (!(atEndOfLine() || atCommentChar())) {
+                complain("expected end of line");
+            }
+            advanceVertically();
+        }
+
+        public final void passIndent() throws LineParseError {
+            if (!atIndent()) {
+                complain("expected indent");
+            }
+            skipThisIndent();
         }
     }
 

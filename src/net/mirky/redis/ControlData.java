@@ -39,7 +39,7 @@ public final class ControlData {
                     if (!lexer.atUnsignedInteger()) {
                         lexer.complain("key expected");
                     }
-                    int key = lexer.parseUnsignedInteger();
+                    int key = lexer.parseThisUnsignedInteger();
                     lexer.skipSpaces();
                     if (!lexer.at(':')) {
                         lexer.complain("missing colon after key");
@@ -49,7 +49,7 @@ public final class ControlData {
                     if (!lexer.atString()) {
                         lexer.complain("wrong value type");
                     }
-                    String value = lexer.parseString();
+                    String value = lexer.parseThisString();
                     lexer.skipSpaces();
                     if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
                         lexer.complain("missing end of line");
@@ -90,7 +90,7 @@ public final class ControlData {
                     if (!lexer.atString()) {
                         lexer.complain("key expected");
                     }
-                    String key = lexer.parseString();
+                    String key = lexer.parseThisString();
                     lexer.skipSpaces();
                     if (!lexer.at(':')) {
                         lexer.complain("missing colon after key");
@@ -100,7 +100,7 @@ public final class ControlData {
                     if (!lexer.atString()) {
                         lexer.complain("missing value");
                     }
-                    String value = lexer.parseString();
+                    String value = lexer.parseThisString();
                     lexer.skipSpaces();
                     if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
                         lexer.complain("missing end of line");

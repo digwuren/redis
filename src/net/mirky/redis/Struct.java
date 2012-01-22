@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import net.mirky.redis.ControlData.LineParseError;
+import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 import net.mirky.redis.ResourceManager.ResolutionError;
 
 public abstract class Struct {
@@ -173,7 +174,7 @@ public abstract class Struct {
     public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("struct") {
         @Override
         public final Struct load(String name, BufferedReader reader) {
-            ParseUtil.IndentationSensitiveFileLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
+            IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
                     '#');
             try {
                 if (!lexer.atWord()) {
@@ -187,44 +188,24 @@ public abstract class Struct {
                 if (!lexer.atString()) {
                     lexer.complain("expected string");
                 }
-                String structName = lexer.parseString();
+                String structName = lexer.parseThisString();
                 lexer.skipSpaces();
-                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                    lexer.complain("expected end of line");
-                }
-                lexer.advanceVertically();
-                if (!lexer.atIndent()) {
-                    lexer.complain("expected indent");
-                }
-                lexer.skipIndent();
+                lexer.passNewline();
+                lexer.passIndent();
                 ArrayList<AbstractField> fields = new ArrayList<AbstractField>();
                 while (!lexer.atDedent()) {
-                    if (lexer.atIndent()) {
-                        lexer.complain("unexpected indent");
-                    }
-                    if (!lexer.at('@')) {
-                        lexer.complain("expected '@'");
-                    }
-                    lexer.skipChar();
-                    if (!lexer.atUnsignedInteger()) {
-                        lexer.complain("expected offset");
-                    }
-                    int fieldOffset = lexer.parseUnsignedInteger();
+                    lexer.noIndent();
+                    lexer.pass('@');
+                    int fieldOffset = lexer.parseUnsignedInteger("offset");
                     lexer.skipSpaces();
-                    if (!lexer.atString()) {
-                        lexer.complain("expected field name");
-                    }
-                    String fieldName = lexer.parseString();
+                    String fieldName = lexer.parseString("field name");
                     lexer.skipSpaces();
-                    if (!lexer.at(':')) {
-                        lexer.complain("expected ':'");
-                    }
-                    lexer.skipChar();
+                    lexer.pass(':');
                     lexer.skipSpaces();
                     StructFieldType fieldType = parseFieldType(lexer);
                     fields.add(new OldField(fieldOffset, fieldName, fieldType));
                 }
-                lexer.skipDedent();
+                lexer.skipThisDedent();
                 if (!lexer.atEndOfFile()) {
                     lexer.complain("expected end of file");
                 }
@@ -245,54 +226,33 @@ public abstract class Struct {
          * @throws LineParseError
          * @throws IOException
          */
-        private final StructFieldType parseFieldType(ParseUtil.IndentationSensitiveFileLexer lexer)
+        private final StructFieldType parseFieldType(IndentationSensitiveLexer lexer)
                 throws LineParseError, IOException {
             if (!lexer.atWord()) {
                 lexer.complain("expected field type");
             }
             String fieldType = lexer.parseDashedWord();
             if (fieldType.equals("unsigned-byte")) {
-                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                    lexer.complain("expected end of line");
-                }
-                lexer.advanceVertically();
+                lexer.passNewline();
                 return StructFieldType.UNSIGNED_BYTE;
             } else if (fieldType.equals("unsigned-lewyde")) {
-                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                    lexer.complain("expected end of line");
-                }
-                lexer.advanceVertically();
+                lexer.passNewline();
                 return StructFieldType.UNSIGNED_LEWYDE;
             } else if (fieldType.equals("d64-sector-chain-start")) {
-                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                    lexer.complain("expected end of line");
-                }
-                lexer.advanceVertically();
+                lexer.passNewline();
                 return StructFieldType.D64_SECTOR_CHAIN_START;
             } else if (fieldType.equals("d64-file-type-byte")) {
-                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                    lexer.complain("expected end of line");
-                }
-                lexer.advanceVertically();
+                lexer.passNewline();
                 return D64_FILE_TYPE_BYTE;
             } else if (fieldType.equals("padded-string")) {
                 lexer.skipSpaces();
-                if (!lexer.atUnsignedInteger()) {
-                    lexer.complain("expected string length");
-                }
-                int size = lexer.parseUnsignedInteger();
+                int size = lexer.parseUnsignedInteger("string length");
                 lexer.skipSpaces();
-                if (!lexer.atUnsignedInteger()) {
-                    lexer.complain("expected char code");
-                }
-                int padding = lexer.parseUnsignedInteger();
+                int padding = lexer.parseUnsignedInteger("char code");
                 if (padding >= 0x100) {
                     lexer.complain("value too high to be a char code");
                 }
-                if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                    lexer.complain("expected end of line");
-                }
-                lexer.advanceVertically();
+                lexer.passNewline();
                 return new StructFieldType.PaddedString(size, (byte) padding);
             } else {
                 lexer.complain("unknown field type");
