@@ -3,11 +3,10 @@ package net.mirky.redis.analysers;
 import java.io.PrintStream;
 
 import net.mirky.redis.Analyser;
-import net.mirky.redis.BichromaticStringBuilder;
+import net.mirky.redis.ChromaticTextGenerator;
 import net.mirky.redis.Decoding;
 import net.mirky.redis.Format;
 import net.mirky.redis.Format.UnknownOption;
-import net.mirky.redis.Hex;
 import net.mirky.redis.ReconstructionDataCollector;
 
 @Format.Options("lines/decoding:decoding=ascii/width!:positive-decimal=64")
@@ -24,30 +23,20 @@ public final class LinedTextAnalyser extends Analyser.Leaf {
         }
         int pos = 0;
         int lineNumber = 1;
-        BichromaticStringBuilder bsb = new BichromaticStringBuilder("34"); // the secondary colour is blue
-        BichromaticStringBuilder.DelimitedMode del = new BichromaticStringBuilder.DelimitedMode(bsb, '<', '=', '>');
+        ChromaticTextGenerator ctg = new ChromaticTextGenerator('<', '>', port);
         while (pos < data.length) {
-            bsb.clear();
-            bsb.sb.append(lineNumber);
-            while (bsb.sb.length() < lineNumberWidth) {
-                bsb.sb.insert(0, '0');
-            }
-            bsb.sb.append(' ');
+            ctg.appendLeftPadded(Integer.toString(lineNumber), '0', lineNumberWidth);
+            ctg.appendChar(' ');
             for (int i = pos; i < pos + width && i < data.length; i++) {
                 byte b = data[i];
                 char c = decoding.decode(b);
                 if (c != 0) {
-                    del.delimitForPlain();
-                    bsb.sb.append(c);
+                    ctg.appendChar(c);
                 } else {
-                    del.delimitForColour();
-                    bsb.sb.append(Hex.b(b));
+                    ctg.appendHexByteToken(b);
                 }
             }
-            if (bsb.inColouredMode()) {
-                del.delimitForPlain();
-            }
-            bsb.printLine(port);
+            ctg.terpri();
             pos += width;
             lineNumber++;
         }
