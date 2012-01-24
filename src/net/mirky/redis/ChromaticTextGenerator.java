@@ -8,7 +8,7 @@ public final class ChromaticTextGenerator {
     private final PrintStream port;
     
     public ChromaticTextGenerator(char tokenListStart, char tokenListEnd, PrintStream port) {
-        bsb = new BichromaticStringBuilder("34;1"); // blue
+        bsb = new BichromaticStringBuilder("34;1"); // light blue
         del = new BichromaticStringBuilder.DelimitedMode(bsb, tokenListStart, ' ', tokenListEnd);
         this.port = port;
     }
