@@ -147,7 +147,7 @@ public final class Hex {
                 if (offset >= 0 && offset < data.length) {
                     boolean masked = getMaskBit(mask, offset);
                     if (masked) {
-                        clb.changeMode(ChromaticLineBuilder.EXTRACTED);
+                        clb.changeMode(ChromaticLineBuilder.MASKED);
                     }
                     clb.append(b(data[offset]));
                     if (masked && (col == 15 || !getMaskBit(mask, offset  +1))) {
@@ -166,7 +166,7 @@ public final class Hex {
                     } else if (offset < data.length) {
                         boolean masked = getMaskBit(mask, offset);
                         if (masked) {
-                            clb.changeMode(ChromaticLineBuilder.EXTRACTED);
+                            clb.changeMode(ChromaticLineBuilder.MASKED);
                         } else {
                             clb.changeMode(ChromaticLineBuilder.PLAIN);
                         }

@@ -9,7 +9,7 @@ public final class ChromaticLineBuilder {
     public static final int CONTROL = 1; // broketed light blue, for invisible/unprintable
     public static final int BRIGHT = 2; // non-delim yellow, for /high-bit=bright
     public static final int ZXSB_TOKEN = 3; // backticked yellow for ZXS BASIC tokens
-    public static final int EXTRACTED = 4; // dark blue, for extracted parts of a hexdump
+    public static final int MASKED = 4; // dark blue, for masked parts of a hexdump
     
     private final StringBuilder sb;
     private int currentMode; // 0 being plain
