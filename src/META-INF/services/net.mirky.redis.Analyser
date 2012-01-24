@@ -1,9 +1,10 @@
 net.mirky.redis.analysers.BlockedBinaryAnalyser
 net.mirky.redis.analysers.CelledFontAnalyser
-net.mirky.redis.analysers.StructArrayAnalyser
 net.mirky.redis.analysers.D64ImageAnalyser
 net.mirky.redis.analysers.LinedTextAnalyser
+net.mirky.redis.analysers.PlainTextAnalyser
 net.mirky.redis.analysers.RawBinaryAnalyser
+net.mirky.redis.analysers.StructArrayAnalyser
 net.mirky.redis.analysers.TapAnalyser
 net.mirky.redis.analysers.TzxAnalyser
 net.mirky.redis.analysers.ZXSBasicProgramAnalyser
