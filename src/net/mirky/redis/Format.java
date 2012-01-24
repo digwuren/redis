@@ -358,6 +358,34 @@ public final class Format {
             }
         };
 
+        @SimpleTypeName("newline-style")
+        static final Simple<NewlineStyle> NEWLINE_STYLE = new Simple<NewlineStyle>() {
+            @Override
+            final void stringify(NewlineStyle value, StringBuilder sb) {
+                switch (value) {
+                    case LF:
+                        sb.append("LF");
+                        break;
+                    case CR:
+                        sb.append("CR");
+                        break;
+                    default:
+                        throw new RuntimeException("bug detected");
+                }
+            }
+
+            @Override
+            final NewlineStyle parse(String name) throws OptionError {
+                if (name.toLowerCase().equals("lf")) {
+                    return NewlineStyle.LF;
+                } else if (name.toLowerCase().equals("cr")) {
+                    return NewlineStyle.CR;
+                } else {
+                    throw new OptionError("unknown newline style: " + name);
+                }
+            }
+        };
+
         private static final Map<String, Simple> simpleTypes = new TreeMap<String, Simple>();
         static {
             for (Field field : OptionType.class.getDeclaredFields()) {

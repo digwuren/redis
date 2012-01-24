@@ -7,27 +7,30 @@ import net.mirky.redis.Decoding;
 import net.mirky.redis.Format;
 import net.mirky.redis.HighBitInterpretation;
 import net.mirky.redis.ChromaticLineBuilder;
+import net.mirky.redis.NewlineStyle;
 import net.mirky.redis.ReconstructionDataCollector;
 
-@Format.Options("plain/decoding:decoding=ascii/high-bit:high-bit=keep")
+@Format.Options("plain/decoding:decoding=ascii/high-bit:high-bit=keep/nl:newline-style=lf")
 public final class PlainTextAnalyser extends Analyser.Leaf {
     @Override
     protected final ReconstructionDataCollector dis(Format format, byte[] data, PrintStream port) throws Format.UnknownOption {
         Decoding decoding = format.getDecoding();
         HighBitInterpretation hbi = (HighBitInterpretation) ((Format.Option.SimpleOption) format.getOption("high-bit")).value;
+        NewlineStyle nl = (NewlineStyle) ((Format.Option.SimpleOption) format.getOption("nl")).value;
 
         ChromaticLineBuilder clb = new ChromaticLineBuilder();
-        // FIXME: the delimiter should be configurable, not hardcoded as CR
-        byte lineDelimiter = 0x0D;
         boolean inMiddleOfLine = false;
-        for (int pos = 0; pos < data.length; pos++) {
-            byte b = data[pos];
-            if (b != lineDelimiter) {
+        for (int pos = 0; pos < data.length;) {
+            int newlineSize = nl.checkForNewline(data, pos);
+            if (newlineSize == 0) {
+                byte b = data[pos];
                 clb.processInputByte(b, hbi, decoding);
                 inMiddleOfLine = true;
+                pos++;
             } else {
                 clb.terpri(port);
                 inMiddleOfLine = false;
+                pos += newlineSize;
             }
         }
         if (inMiddleOfLine) {
