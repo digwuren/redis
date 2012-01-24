@@ -28,7 +28,7 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
                 /*
                  * We'll use backticks to delimit raw text from decoded text. ZX
                  * Spectrum's charset does not contains backticks, so there's no
-                 * confusiont that might raise if we used, say, ASCII brokets.
+                 * confusion that might raise if we used, say, ASCII brokets.
                  */
                 BichromaticStringBuilder bsb = new BichromaticStringBuilder("33;1");
                 BichromaticStringBuilder.DelimitedMode del = new BichromaticStringBuilder.DelimitedMode(bsb, '`', ' ', '`');
