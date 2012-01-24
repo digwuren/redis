@@ -172,23 +172,8 @@ public abstract class Struct {
             IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
                     '#');
             try {
-                if (!lexer.atWord()) {
-                    lexer.complain("expected 'struct'");
-                }
-                String structCat = lexer.parseThisWord();
-                if (!structCat.equals("struct")) {
-                    lexer.complain("expected 'struct'");
-                }
-                lexer.skipSpaces();
-                if (!lexer.atString()) {
-                    lexer.complain("expected string");
-                }
-                String structName = lexer.parseThisString();
-                lexer.skipSpaces();
-                lexer.passNewline();
-                lexer.passIndent();
                 ArrayList<AbstractField> fields = new ArrayList<AbstractField>();
-                while (!lexer.atDedent()) {
+                while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     lexer.pass('@');
                     int fieldOffset = lexer.parseUnsignedInteger("offset");
@@ -200,12 +185,8 @@ public abstract class Struct {
                     StructFieldType fieldType = parseFieldType(lexer);
                     fields.add(new OldField(fieldOffset, fieldName, fieldType));
                 }
-                lexer.skipThisDedent();
-                if (!lexer.atEndOfFile()) {
-                    lexer.complain("expected end of file");
-                }
                 reader.close();
-                return new Struct.Basic(structName, fields.toArray(new AbstractField[0]));
+                return new Struct.Basic(name, fields.toArray(new AbstractField[0]));
             } catch (IOException e) {
                 throw new RuntimeException("I/O error reading resource " + name, e);
             } catch (ControlData.LineParseError e) {
