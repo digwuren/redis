@@ -10,8 +10,10 @@ User-visible changes:
 * added the 'struct' option type
 * the 'd64-directory' display is now more streamlined and has the /step option
 * introduced a resource format for data structures
-* the zxs-basic-code format now colours control characters light blue but keeps
+* the 'zxs-basic-code' format now colours control characters light blue but keeps
   tokens yellow
+* added the 'plain' format
+* added the /high-bit option to both the 'plain' and 'lines' formats
 
 Programmer-visible changes:
 * introduced TextResource.Missing, an unchecked exception, thrown when opening

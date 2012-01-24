@@ -15,6 +15,7 @@ public final class PlainTextAnalyser extends Analyser.Leaf {
     protected final ReconstructionDataCollector dis(Format format, byte[] data, PrintStream port) throws Format.UnknownOption {
         Decoding decoding = format.getDecoding();
         HighBitInterpretation hbi = (HighBitInterpretation) ((Format.Option.SimpleOption) format.getOption("high-bit")).value;
+
         ChromaticLineBuilder clb = new ChromaticLineBuilder();
         // FIXME: the delimiter should be configurable, not hardcoded as CR
         byte lineDelimiter = 0x0D;
