@@ -3,9 +3,10 @@ package net.mirky.redis.analysers;
 import java.io.PrintStream;
 
 import net.mirky.redis.Analyser;
-import net.mirky.redis.ChromaticTextGenerator;
 import net.mirky.redis.Decoding;
 import net.mirky.redis.Format;
+import net.mirky.redis.HighBitInterpretation;
+import net.mirky.redis.ChromaticLineBuilder;
 import net.mirky.redis.Format.UnknownOption;
 import net.mirky.redis.ReconstructionDataCollector;
 
@@ -23,20 +24,16 @@ public final class LinedTextAnalyser extends Analyser.Leaf {
         }
         int pos = 0;
         int lineNumber = 1;
-        ChromaticTextGenerator ctg = new ChromaticTextGenerator('<', '>', port);
+        ChromaticLineBuilder clb = new ChromaticLineBuilder();
         while (pos < data.length) {
-            ctg.appendLeftPadded(Integer.toString(lineNumber), '0', lineNumberWidth);
-            ctg.appendChar(' ');
+            clb.appendLeftPadded(Integer.toString(lineNumber), '0', lineNumberWidth);
+            clb.append(' ');
             for (int i = pos; i < pos + width && i < data.length; i++) {
                 byte b = data[i];
-                char c = decoding.decode(b);
-                if (c != 0) {
-                    ctg.appendChar(c);
-                } else {
-                    ctg.appendHexByteToken(b);
-                }
+                // FIXME: the lines format should support the /high-bit option, too
+                clb.processInputByte(b, HighBitInterpretation.KEEP, decoding);
             }
-            ctg.terpri();
+            clb.terpri(port);
             pos += width;
             lineNumber++;
         }

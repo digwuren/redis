@@ -48,6 +48,7 @@ public final class Decoding {
     // Escape nonprintables, leading and trailing whitespaces, and brokets by surrounding
     // them with brokets and representing their hex values of the original codes.  Multiple
     // adjacent inconvenient codes are delimited by a period.
+    // FIXME: instead of writing to {@link PrintStream}, we should be writing to a {@link ChromaticLineBuilder} instead.
     public final void displayForeignString(byte[] s, PrintStream port) {
         try {
             StringBuilder sb = new StringBuilder();
@@ -63,7 +64,7 @@ public final class Decoding {
                     justAppendedHex = false;
                 } else {
                     if (justAppendedHex) {
-                        sb.setCharAt(sb.length() - 1, '.');
+                        sb.setCharAt(sb.length() - 1, ' ');
                     } else {
                         sb.append('<');
                     }

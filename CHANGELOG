@@ -10,6 +10,8 @@ User-visible changes:
 * added the 'struct' option type
 * the 'd64-directory' display is now more streamlined and has the /step option
 * introduced a resource format for data structures
+* the zxs-basic-code format now colours control characters light blue but keeps
+  tokens yellow
 
 Programmer-visible changes:
 * introduced TextResource.Missing, an unchecked exception, thrown when opening
@@ -58,6 +60,8 @@ Programmer-visible changes:
 * introduced the d64direntry and unsigned-byte builtin struct:s
 * introduced Format.imposeDecodingIfExplicit(Format, Decoding)
 * refactored D64DirectoryAnalyser into StructArrayAnalyser
+* replaced BichromaticStringBuilder with ChromaticLineBuilder to take care of
+  both colours and delimiters
 
 == v0.1 2011-08-08
 

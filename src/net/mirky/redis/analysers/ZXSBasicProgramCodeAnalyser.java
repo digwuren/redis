@@ -1,16 +1,14 @@
 package net.mirky.redis.analysers;
 
-import java.io.IOException;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 
 import net.mirky.redis.Analyser;
-import net.mirky.redis.BichromaticStringBuilder;
+import net.mirky.redis.ControlData;
 import net.mirky.redis.Cursor;
 import net.mirky.redis.Format;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ImageError;
-import net.mirky.redis.ControlData;
+import net.mirky.redis.ChromaticLineBuilder;
 
 @Format.Options("zxs-basic-code/decoding:decoding=zx-spectrum/autostart:unsigned-decimal=0")
 public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPartial {
@@ -30,8 +28,7 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
                  * Spectrum's charset does not contains backticks, so there's no
                  * confusion that might raise if we used, say, ASCII brokets.
                  */
-                BichromaticStringBuilder bsb = new BichromaticStringBuilder("33;1");
-                BichromaticStringBuilder.DelimitedMode del = new BichromaticStringBuilder.DelimitedMode(bsb, '`', ' ', '`');
+                ChromaticLineBuilder clb = new ChromaticLineBuilder();
                 int lineNumber = cursor.getUnsignedBewyde(0); // sic, line number is big endian
                 int lineSize = cursor.getUnsignedLewyde(2);
                 if (!cursor.probe(4 + lineSize)) {
@@ -49,8 +46,8 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
                     port.println("* autostart here");
                     autostartLineSeen = true;
                 }
-                bsb.sb.append(lineNumber);
-                bsb.sb.append(' ');
+                clb.append(Integer.toString(lineNumber));
+                clb.append(' ');
                 int i = 4;
                 int digitSequenceStart = -1;
                 boolean lineProperlyTerminated = false;
@@ -61,19 +58,19 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
                         break;
                     } else if (c >= 0x12 && c <= 0x14 && (cursor.getUnsignedByte(i + 1) == 0x00 || cursor.getUnsignedByte(i + 1) == 0x01)) {
                         boolean newState = cursor.getUnsignedByte(i + 1) != 0;
-                        del.delimitForColour();
+                        clb.changeMode(ChromaticLineBuilder.CONTROL);
                         if (!newState) {
-                            bsb.sb.append('/');
+                            clb.append('/');
                         }
                         switch (c) {
                             case 0x12:
-                                bsb.sb.append("flash");
+                                clb.append("flash");
                                 break;
                             case 0x13:
-                                bsb.sb.append("bright");
+                                clb.append("bright");
                                 break;
                             case 0x14:
-                                bsb.sb.append("inverse");
+                                clb.append("inverse");
                                 break;
                         }
                         i += 2;
@@ -104,23 +101,23 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
                         }
                         if (!skip) {
                             // If we're not skipping, it's because there is no matching text number before the 0x0E.  Why?
-                            del.delimitForColour();
+                            clb.changeMode(ChromaticLineBuilder.ZXSB_TOKEN);
                             if (digitSequenceStart != -1) {
                                 // If because there was a different text number:
-                                bsb.sb.append("actually ");
+                                clb.append("actually ");
                             } else {
                                 // If because there was no text number:
-                                bsb.sb.append("number ");
+                                clb.append("number ");
                             }
-                            bsb.sb.append(binary.prepareForDisplay());
+                            clb.append(binary.prepareForDisplay());
                         }
                         digitSequenceStart = -1;
                         i += 6;
                     } else {
                         String keyword = ZXSBasicProgramCodeAnalyser.KEYWORDS[c];
                         if (keyword != null) {
-                            del.delimitForColour();
-                            bsb.sb.append(keyword);
+                            clb.changeMode(ChromaticLineBuilder.ZXSB_TOKEN);
+                            clb.append(keyword);
                             digitSequenceStart = -1;
                         } else {
                             if (c >= '0' && c <= '9') {
@@ -132,30 +129,21 @@ public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPar
                             }
                             char decodedChar = format.getDecoding().decode((byte) c);
                             if (decodedChar != 0) {
-                                del.delimitForPlain();
-                                bsb.sb.append(decodedChar);
+                                clb.changeMode(ChromaticLineBuilder.PLAIN);
+                                clb.append(decodedChar);
                             } else {
-                                del.delimitForColour();
-                                bsb.sb.append("0x");
-                                bsb.sb.append(Hex.b(c));
+                                clb.changeMode(ChromaticLineBuilder.CONTROL);
+                                clb.append(Hex.b(c));
                             }
                         }
                         i++;
                     }
                 }
                 if (!lineProperlyTerminated) {
-                    del.delimitForColour();
-                    bsb.sb.append("newline-missing");
+                    clb.changeMode(ChromaticLineBuilder.CONTROL);
+                    clb.append("noeol");
                 }
-                del.delimitForPlain();
-                try {
-                    port.write(bsb.sb.toString().getBytes("utf-8"));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException("utf-8 is not supported???", e);
-                } catch (IOException e) {
-                    throw new RuntimeException("I/O error writing to stdout", e);
-                }
-                port.println();
+                clb.terpri(port);
                 cursor.advance(4 + lineSize);
             }
             if (autostart != 32768 && !autostartLineSeen) {

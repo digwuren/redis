@@ -134,61 +134,55 @@ public final class Hex {
             port.println("(nothing to dump)");
             return;
         }
-        BichromaticStringBuilder bsb = new BichromaticStringBuilder("34"); // the secondary colour is blue
+        ChromaticLineBuilder clb = new ChromaticLineBuilder(); // the secondary colour is blue
         for (int row = origin & ~0xF; row - origin < data.length; row += 16) {
-            bsb.clear();
-            bsb.sb.append(t(row));
-            bsb.sb.append(':');
+            clb.append(t(row));
+            clb.append(':');
             for (int col = 0; col < 16; col++) {
                 int offset = row + col - origin;
-                bsb.sb.append(' ');
+                clb.append(' ');
                 if ((col & 3) == 0) {
-                    bsb.sb.append(' ');
+                    clb.append(' ');
                 }
                 if (offset >= 0 && offset < data.length) {
                     boolean masked = getMaskBit(mask, offset);
                     if (masked) {
-                        /*
-                         * {@link BichromaticStringBuilder#beginColour()} takes
-                         * care of not starting colour again if we're already in
-                         * colour mode.
-                         */
-                        bsb.beginColour();
+                        clb.changeMode(ChromaticLineBuilder.EXTRACTED);
                     }
-                    bsb.sb.append(b(data[offset]));
+                    clb.append(b(data[offset]));
                     if (masked && (col == 15 || !getMaskBit(mask, offset  +1))) {
-                        bsb.endColour();
+                        clb.changeMode(ChromaticLineBuilder.PLAIN);
                     }
                 } else {
-                    bsb.sb.append("  ");
+                    clb.append("  ");
                 }
             }
             if (decoding != null) {
-                bsb.sb.append("  ");
+                clb.append("  ");
                 for (int col = 0; col < 16; col++) {
                     int offset = row + col - origin;
                     if (offset < 0) {
-                        bsb.sb.append(' ');
+                        clb.append(' ');
                     } else if (offset < data.length) {
                         boolean masked = getMaskBit(mask, offset);
                         if (masked) {
-                            bsb.beginColour();
+                            clb.changeMode(ChromaticLineBuilder.EXTRACTED);
                         } else {
-                            bsb.endColour();
+                            clb.changeMode(ChromaticLineBuilder.PLAIN);
                         }
                         char dc = decoding.decode(data[offset]);
                         if (dc == 0) {
                             dc = '.';
                         }
-                        bsb.sb.append(dc);
+                        clb.append(dc);
                     } else {
-                        bsb.endColour();
+                        clb.changeMode(ChromaticLineBuilder.PLAIN);
                         break;
                     }
                 }
-                bsb.endColour();
+                clb.changeMode(ChromaticLineBuilder.PLAIN);
             }
-            bsb.printLine(port);
+            clb.terpri(port);
         }
     }
 
