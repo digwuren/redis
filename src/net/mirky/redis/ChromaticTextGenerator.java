@@ -8,7 +8,7 @@ public final class ChromaticTextGenerator {
     private final PrintStream port;
     
     public ChromaticTextGenerator(char tokenListStart, char tokenListEnd, PrintStream port) {
-        bsb = new BichromaticStringBuilder("34"); // blue
+        bsb = new BichromaticStringBuilder("34;1"); // blue
         del = new BichromaticStringBuilder.DelimitedMode(bsb, tokenListStart, ' ', tokenListEnd);
         this.port = port;
     }
@@ -31,6 +31,7 @@ public final class ChromaticTextGenerator {
     }
 
     public final void appendToken(String s) {
+        del.delimitForColour();
         bsb.sb.append(s);
     }
 
@@ -41,5 +42,6 @@ public final class ChromaticTextGenerator {
     public final void terpri() {
         del.delimitForPlain();
         bsb.printLine(port);
+        bsb.clear();
     }
 }
