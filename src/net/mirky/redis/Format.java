@@ -325,6 +325,39 @@ public final class Format {
             }
         };
 
+        @SimpleTypeName("high-bit")
+        static final Simple<HighBitInterpretation> HIGH_BIT = new Simple<HighBitInterpretation>() {
+            @Override
+            final void stringify(HighBitInterpretation value, StringBuilder sb) {
+                switch (value) {
+                    case KEEP:
+                        sb.append("keep");
+                        break;
+                    case DISCARD:
+                        sb.append("discard");
+                        break;
+                    case BRIGHT:
+                        sb.append("bright");
+                        break;
+                    default:
+                        throw new RuntimeException("bug detected");
+                }
+            }
+
+            @Override
+            final HighBitInterpretation parse(String name) throws OptionError {
+                if (name.toLowerCase().equals("keep")) {
+                    return HighBitInterpretation.KEEP;
+                } else if (name.toLowerCase().equals("discard")) {
+                    return HighBitInterpretation.DISCARD;
+                } else if (name.toLowerCase().equals("bright")) {
+                    return HighBitInterpretation.BRIGHT;
+                } else {
+                    throw new OptionError("unknown high bit interpretation: " + name);
+                }
+            }
+        };
+
         private static final Map<String, Simple> simpleTypes = new TreeMap<String, Simple>();
         static {
             for (Field field : OptionType.class.getDeclaredFields()) {

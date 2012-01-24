@@ -6,7 +6,7 @@ public final class ChromaticTextGenerator {
     private final BichromaticStringBuilder bsb;
     private final BichromaticStringBuilder.DelimitedMode del;
     private final PrintStream port;
-    
+
     public ChromaticTextGenerator(char tokenListStart, char tokenListEnd, PrintStream port) {
         bsb = new BichromaticStringBuilder("34;1"); // light blue
         del = new BichromaticStringBuilder.DelimitedMode(bsb, tokenListStart, ' ', tokenListEnd);
@@ -43,5 +43,40 @@ public final class ChromaticTextGenerator {
         del.delimitForPlain();
         bsb.printLine(port);
         bsb.clear();
+    }
+
+    public final void processInputByte(byte b, HighBitInterpretation hbi, Decoding decoding) {
+        boolean bright = false;
+        byte code = 0;
+        switch (hbi) {
+            case KEEP:
+                code = b;
+                break;
+            case DISCARD:
+                code = (byte) (b & 0x7F);
+                break;
+            case BRIGHT:
+                bright = (b & 0x80) != 0;
+                code = (byte) (b & 0x7F);
+                break;
+        }
+        char c = decoding.decode(code);
+        if (c != 0) {
+            del.delimitForPlain();
+            // FIXME: instead of turning bright on and off again, we should
+            // treat it as just another mode
+            if (bright) {
+                bsb.sb.append("\u001B[33;1m"); // yellow
+            }
+            bsb.sb.append(c);
+            if (bright) {
+                bsb.sb.append("\u001B[0m"); // plain
+            }
+        } else {
+            // Note that if the byte does not seem to have a graphical
+            // representation, we'll display the original value, rather than the
+            // one with high bit stripped.
+            appendHexByteToken(b);
+        }
     }
 }
