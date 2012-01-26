@@ -51,7 +51,6 @@ public abstract class IntegerSlice {
         private final String setMeaning;
         private final String clearMeaning;
 
-        // Non-empty messages should start with a space.
         public Flag(int rightShift, String setMeaning, String clearMeaning) {
             super(rightShift);
             this.setMeaning = setMeaning;
