@@ -4,11 +4,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 import net.mirky.redis.ResourceManager.ResolutionError;
+import net.mirky.redis.Struct.FieldParameterParser;
 
 public abstract class Struct {
     public final String name;
@@ -23,7 +26,7 @@ public abstract class Struct {
 
     public abstract void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError;
 
-    static final Struct.Basic BLANK = new Struct.Basic("blank");
+    private static final Struct.Basic BLANK = new Struct.Basic("blank");
 
     public static final class Union extends Struct {
         private final Rule[] rules;
@@ -102,7 +105,7 @@ public abstract class Struct {
         }
     }
 
-    static final class Basic extends Struct {
+    public static final class Basic extends Struct {
         private final Struct.AbstractField[] fields;
 
         public Basic(String name, AbstractField... fields) {
@@ -119,7 +122,7 @@ public abstract class Struct {
         }
     }
 
-    static final class Void extends Struct {
+    public static final class Void extends Struct {
         private final int size;
 
         public Void(String name, int size) {
@@ -134,7 +137,7 @@ public abstract class Struct {
         }
     }
 
-    static abstract class AbstractField {
+    public static abstract class AbstractField {
         public final int offset;
         public final String name;
 
@@ -152,7 +155,8 @@ public abstract class Struct {
         public abstract void showContent(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError;
     }
 
-    static final class OldField extends AbstractField {
+    // FIXME: why is it called OldField?  Is it obsolete?
+    public static final class OldField extends AbstractField {
         public final StructFieldType type;
 
         public OldField(int offset, String name, StructFieldType type) {
@@ -164,6 +168,127 @@ public abstract class Struct {
         public final void showContent(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
             type.showContent(cursor, offset, port, decoding);
         }
+    }
+
+    static abstract class FieldParameterParser {
+        /**
+         * Parse parameters of a field type, if any, and return the complete
+         * {@link StructFieldType}. Called with {@code lexer} positioned
+         * immediately after the keyword, so it may need to start by ignoring
+         * horizontal whitespace.
+         * 
+         * @throws ControlData.LineParseError
+         * @throws IOException
+         */
+        abstract StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
+    }
+
+    private static final Map<String, FieldParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, FieldParameterParser>();
+    
+    static {
+        KNOWN_FIELD_TYPES.put("unsigned-byte", new FieldParameterParser() {
+            @Override
+            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+                lexer.passNewline();
+                return StructFieldType.UNSIGNED_BYTE;
+            }
+        });
+        
+        KNOWN_FIELD_TYPES.put("unsigned-lewyde", new FieldParameterParser() {
+            @Override
+            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+                lexer.passNewline();
+                return StructFieldType.UNSIGNED_LEWYDE;
+            }
+        });
+
+        KNOWN_FIELD_TYPES.put("d64-sector-chain-start", new FieldParameterParser() {
+            @Override
+            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+                lexer.passNewline();
+                return StructFieldType.D64_SECTOR_CHAIN_START;
+            }
+        });
+
+        KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
+            @Override
+            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+                lexer.skipSpaces();
+                int size = lexer.parseUnsignedInteger("string length");
+                lexer.skipSpaces();
+                int padding = lexer.parseUnsignedInteger("char code");
+                if (padding >= 0x100) {
+                    lexer.complain("value too high to be a char code");
+                }
+                lexer.passNewline();
+                return new StructFieldType.PaddedString(size, (byte) padding);
+            }
+        });
+
+        KNOWN_FIELD_TYPES.put("sliced-byte", new FieldParameterParser() {
+            @Override
+            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+                lexer.skipSpaces();
+                lexer.passNewline();
+                lexer.passIndent();
+                ArrayList<IntegerSlice> slices = new ArrayList<IntegerSlice>();
+                while (!lexer.atDedent()) {
+                    lexer.noIndent();
+                    slices.add(parseIntegerSlice(lexer));
+                }
+                lexer.skipThisDedent();
+                return new StructFieldType.SlicedByteField(slices.toArray(new IntegerSlice[0]));
+            }
+        });
+    }
+
+    // Note that there are two forms of integer slices: 'basic' and 'flags'.
+    // Basic slices hold an integer, flag slices hold a single bit.
+    static final IntegerSlice parseIntegerSlice(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+        lexer.pass('@');
+        lexer.pass('.');
+        int rightShift = lexer.parseUnsignedInteger("right shift");
+        lexer.skipSpaces();
+        IntegerSlice slice;
+        if (lexer.atUnsignedInteger()) {
+            // it's a basic slice; the field width (in bits) comes next
+            int fieldWidth = lexer.parseUnsignedInteger("field width");
+            if (fieldWidth == 0) {
+                lexer.complain("zero-bit field?");
+            }
+            List<String> meanings = new ArrayList<String>();
+            while (true) {
+                lexer.skipSpaces();
+                if (!lexer.at('"')) {
+                    break;
+                }
+                meanings.add(lexer.parseThisString());
+            }
+            slice = new IntegerSlice.Basic(rightShift, fieldWidth, meanings.toArray(new String[0]));
+        } else {
+            // it's a flag slice; the field width is implicitly one
+            String setMessage;
+            if (lexer.at('"')) {
+                setMessage = lexer.parseThisString();
+            } else {
+                setMessage = null;
+            }
+            lexer.skipSpaces();
+            String clearMessage;
+            if (lexer.at('/')) {
+                lexer.skipChar();
+                lexer.skipSpaces();
+                clearMessage = lexer.parseString("cleared flag meaning");
+            } else {
+                clearMessage = null;
+            }
+            if (setMessage == null && clearMessage == null) {
+                lexer.complain("expected bit meaning");
+            }
+            slice = new IntegerSlice.Flag(rightShift, setMessage, clearMessage);
+        }
+        lexer.passNewline();
+        return slice;
     }
 
     public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("struct") {
@@ -182,7 +307,19 @@ public abstract class Struct {
                     lexer.skipSpaces();
                     lexer.pass(':');
                     lexer.skipSpaces();
-                    StructFieldType fieldType = parseFieldType(lexer);
+                    if (!lexer.atWord()) {
+                        lexer.complain("expected field type");
+                    }
+                    String fieldTypeName = lexer.parseThisDashedWord();
+                    FieldParameterParser parameterParser = KNOWN_FIELD_TYPES.get(fieldTypeName);
+                    if (parameterParser == null) {
+                        lexer.complain("unknown field type");
+                        // {@link
+                        // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
+                        // returned?
+                        throw new RuntimeException("bug detected");
+                    }
+                    StructFieldType fieldType = parameterParser.parseParameters(lexer);
                     fields.add(new OldField(fieldOffset, fieldName, fieldType));
                 }
                 reader.close();
@@ -192,106 +329,6 @@ public abstract class Struct {
             } catch (ControlData.LineParseError e) {
                 throw new RuntimeException("parse error reading resource " + name, e);
             }
-        }
-
-        /**
-         * Parse a field type specification and advance past its last line.
-         * 
-         * @param lexer
-         * @return the type object
-         * @throws LineParseError
-         * @throws IOException
-         */
-        private final StructFieldType parseFieldType(IndentationSensitiveLexer lexer)
-                throws LineParseError, IOException {
-            if (!lexer.atWord()) {
-                lexer.complain("expected field type");
-            }
-            String fieldType = lexer.parseThisDashedWord();
-            if (fieldType.equals("unsigned-byte")) {
-                lexer.passNewline();
-                return StructFieldType.UNSIGNED_BYTE;
-            } else if (fieldType.equals("unsigned-lewyde")) {
-                lexer.passNewline();
-                return StructFieldType.UNSIGNED_LEWYDE;
-            } else if (fieldType.equals("d64-sector-chain-start")) {
-                lexer.passNewline();
-                return StructFieldType.D64_SECTOR_CHAIN_START;
-            } else if (fieldType.equals("padded-string")) {
-                lexer.skipSpaces();
-                int size = lexer.parseUnsignedInteger("string length");
-                lexer.skipSpaces();
-                int padding = lexer.parseUnsignedInteger("char code");
-                if (padding >= 0x100) {
-                    lexer.complain("value too high to be a char code");
-                }
-                lexer.passNewline();
-                return new StructFieldType.PaddedString(size, (byte) padding);
-            } else if (fieldType.equals("sliced-byte")) {
-                lexer.skipSpaces();
-                lexer.passNewline();
-                lexer.passIndent();
-                ArrayList<IntegerSlice> slices = new ArrayList<IntegerSlice>();
-                while (!lexer.atDedent()) {
-                    lexer.noIndent();
-                    slices.add(parseIntegerSlice(lexer));
-                }
-                lexer.skipThisDedent();
-                return new StructFieldType.SlicedByteField(slices.toArray(new IntegerSlice[0]));
-            } else {
-                lexer.complain("unknown field type");
-                // {@link
-                // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
-                // returned?
-                throw new RuntimeException("bug detected");
-            }
-        }
-        
-        private final IntegerSlice parseIntegerSlice(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
-            lexer.pass('@');
-            lexer.pass('.');
-            int rightShift = lexer.parseUnsignedInteger("right shift");
-            lexer.skipSpaces();
-            IntegerSlice slice;
-            if (lexer.atUnsignedInteger()) {
-                // it's a basic field; the field width (in bits) comes next
-                int fieldWidth = lexer.parseUnsignedInteger("field width");
-                if (fieldWidth == 0) {
-                    lexer.complain("zero-bit field?");
-                }
-                List<String> meanings = new ArrayList<String>();
-                while (true) {
-                    lexer.skipSpaces();
-                    if (!lexer.at('"')) {
-                        break;
-                    }
-                    meanings.add(lexer.parseThisString());
-                }
-                slice = new IntegerSlice.Basic(rightShift, fieldWidth, meanings.toArray(new String[0]));
-            } else {
-                // it's a flag field; the field width is implicitly one
-                String setMessage;
-                if (lexer.at('"')) {
-                    setMessage = lexer.parseThisString();
-                } else {
-                    setMessage = null;
-                }
-                lexer.skipSpaces();
-                String clearMessage;
-                if (lexer.at('/')) {
-                    lexer.skipChar();
-                    lexer.skipSpaces();
-                    clearMessage = lexer.parseString("cleared flag meaning");
-                } else {
-                    clearMessage = null;
-                }
-                if (setMessage == null && clearMessage == null) {
-                    lexer.complain("expected bit meaning");
-                }
-                slice = new IntegerSlice.Flag(rightShift, setMessage, clearMessage);
-            }
-            lexer.passNewline();
-            return slice;
         }
     };
 
