@@ -190,6 +190,14 @@ public abstract class Struct {
             }
         });
 
+        KNOWN_FIELD_TYPES.put("unsigned-bewyde", new FieldParameterParser() {
+            @Override
+            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+                lexer.passNewline();
+                return StructFieldType.UNSIGNED_BEWYDE;
+            }
+        });
+
         KNOWN_FIELD_TYPES.put("d64-sector-chain-start", new FieldParameterParser() {
             @Override
             final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {

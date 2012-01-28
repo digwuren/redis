@@ -63,6 +63,14 @@ abstract class StructFieldType {
         }
     };
 
+    static final StructFieldType UNSIGNED_BEWYDE = new StructFieldType() {
+        @Override
+        final void show(Cursor cursor, int offset, PrintStream port, Decoding decoding) throws ImageError {
+            int value = cursor.getUnsignedBewyde(offset);
+            port.print("[" + Hex.w(value) + "] " + value);
+        }
+    };
+
     static final StructFieldType UNSIGNED_BYTE = new StructFieldType() {
         @Override
         final void show(Cursor cursor, int offset, PrintStream port, Decoding decoding) {
