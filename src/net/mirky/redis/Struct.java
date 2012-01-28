@@ -168,6 +168,21 @@ public abstract class Struct {
         abstract StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
     }
 
+    // for field types without parameters
+    private static final class SimpleFieldParameterParser extends FieldParameterParser {
+        private final StructFieldType fieldType;
+
+        public SimpleFieldParameterParser(StructFieldType fieldType) {
+            this.fieldType = fieldType;
+        }
+
+        @Override
+        final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+            lexer.passNewline();
+            return fieldType;
+        }
+    }
+
     private static final class SlicedIntegerFieldParameterParser extends FieldParameterParser {
         private final StructFieldType.SlicedIntegerType integerType;
     
@@ -197,37 +212,11 @@ public abstract class Struct {
     }
     
     static {
-        KNOWN_FIELD_TYPES.put("unsigned-byte", new FieldParameterParser() {
-            @Override
-            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-                lexer.passNewline();
-                return StructFieldType.UNSIGNED_BYTE;
-            }
-        });
-        
-        KNOWN_FIELD_TYPES.put("unsigned-lewyde", new FieldParameterParser() {
-            @Override
-            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-                lexer.passNewline();
-                return StructFieldType.UNSIGNED_LEWYDE;
-            }
-        });
+        KNOWN_FIELD_TYPES.put("unsigned-byte", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BYTE));
+        KNOWN_FIELD_TYPES.put("unsigned-lewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_LEWYDE));
+        KNOWN_FIELD_TYPES.put("unsigned-bewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BEWYDE));
 
-        KNOWN_FIELD_TYPES.put("unsigned-bewyde", new FieldParameterParser() {
-            @Override
-            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-                lexer.passNewline();
-                return StructFieldType.UNSIGNED_BEWYDE;
-            }
-        });
-
-        KNOWN_FIELD_TYPES.put("d64-sector-chain-start", new FieldParameterParser() {
-            @Override
-            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-                lexer.passNewline();
-                return StructFieldType.D64_SECTOR_CHAIN_START;
-            }
-        });
+        KNOWN_FIELD_TYPES.put("d64-sector-chain-start", new SimpleFieldParameterParser(StructFieldType.D64_SECTOR_CHAIN_START));
 
         KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
             @Override
