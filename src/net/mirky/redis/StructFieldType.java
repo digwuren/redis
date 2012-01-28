@@ -24,19 +24,52 @@ abstract class StructFieldType {
         }
     }
 
-    static class SlicedByteField extends StructFieldType {
+    enum SlicedIntegerType {
+        BYTE, LEWYDE, BEWYDE;
+
+        public final int extract(Cursor cursor, int offset) throws ImageError, RuntimeException {
+            switch (this) {
+                case BYTE:
+                    return cursor.getUnsignedByte(offset);
+                case LEWYDE:
+                    return cursor.getUnsignedLewyde(offset);
+                case BEWYDE:
+                    return cursor.getUnsignedBewyde(offset);
+                default:
+                    throw new RuntimeException("bug detected");
+            }
+        }
+
+        public final String hex(int i) {
+            switch (this) {
+                case BYTE:
+                    return Hex.b(i);
+                case LEWYDE:
+                case BEWYDE:
+                    return Hex.w(i);
+                default:
+                    throw new RuntimeException("bug detected");
+            }
+        }
+    }
+    
+    static class SlicedIntegerField extends StructFieldType {
+        private final SlicedIntegerType integerType;
         private final IntegerSlice[] slices;
 
-        public SlicedByteField(IntegerSlice[] slices) {
+        public SlicedIntegerField(SlicedIntegerType integerType, IntegerSlice[] slices) {
+            this.integerType = integerType;
             this.slices = slices;
         }
 
         @Override
-        final void show(Cursor cursor, int offset, PrintStream port, Decoding decoding) {
-            int fileTypeByte = cursor.getUnsignedByte(offset);
-            port.print("[" + Hex.b(fileTypeByte) + "]");
+        final void show(Cursor cursor, int offset, PrintStream port, Decoding decoding) throws ImageError {
+            int wholeField = integerType.extract(cursor, offset);
+            port.print('[');
+            port.print(integerType.hex(wholeField));
+            port.print(']');
             for (IntegerSlice slice : slices) {
-                port.print(slice.decode(fileTypeByte));
+                port.print(slice.decode(wholeField));
             }
         }
     }

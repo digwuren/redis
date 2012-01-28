@@ -11,6 +11,7 @@ import java.util.Map;
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 import net.mirky.redis.ResourceManager.ResolutionError;
+import net.mirky.redis.StructFieldType.SlicedIntegerType;
 
 public abstract class Struct {
     public final String name;
@@ -167,6 +168,28 @@ public abstract class Struct {
         abstract StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
     }
 
+    private static final class SlicedIntegerFieldParameterParser extends FieldParameterParser {
+        private final StructFieldType.SlicedIntegerType integerType;
+    
+        public SlicedIntegerFieldParameterParser(SlicedIntegerType integerType) {
+            this.integerType = integerType;
+        }
+    
+        @Override
+        final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+            lexer.skipSpaces();
+            lexer.passNewline();
+            lexer.passIndent();
+            ArrayList<IntegerSlice> slices = new ArrayList<IntegerSlice>();
+            while (!lexer.atDedent()) {
+                lexer.noIndent();
+                slices.add(parseIntegerSlice(lexer));
+            }
+            lexer.skipThisDedent();
+            return new StructFieldType.SlicedIntegerField(integerType, slices.toArray(new IntegerSlice[0]));
+        }
+    }
+
     private static final Map<String, FieldParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, FieldParameterParser>();
     
     static final FieldParameterParser getFieldTypeParameterParser(String name) {
@@ -221,21 +244,9 @@ public abstract class Struct {
             }
         });
 
-        KNOWN_FIELD_TYPES.put("sliced-byte", new FieldParameterParser() {
-            @Override
-            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-                lexer.skipSpaces();
-                lexer.passNewline();
-                lexer.passIndent();
-                ArrayList<IntegerSlice> slices = new ArrayList<IntegerSlice>();
-                while (!lexer.atDedent()) {
-                    lexer.noIndent();
-                    slices.add(parseIntegerSlice(lexer));
-                }
-                lexer.skipThisDedent();
-                return new StructFieldType.SlicedByteField(slices.toArray(new IntegerSlice[0]));
-            }
-        });
+        KNOWN_FIELD_TYPES.put("sliced-byte", new SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType.BYTE));
+        KNOWN_FIELD_TYPES.put("sliced-lewyde", new SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType.LEWYDE));
+        KNOWN_FIELD_TYPES.put("sliced-bewyde", new SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType.BEWYDE));
     }
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.
