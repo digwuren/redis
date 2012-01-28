@@ -105,9 +105,9 @@ public abstract class Struct {
     }
 
     public static final class Basic extends Struct {
-        private final Struct.AbstractField[] fields;
+        private final Struct.Field[] fields;
 
-        public Basic(String name, AbstractField... fields) {
+        public Basic(String name, Struct.Field... fields) {
             super(name);
             this.fields = fields;
         }
@@ -115,7 +115,7 @@ public abstract class Struct {
         @Override
         public final void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
             showBreadcrumbs(cursor, path, port);
-            for (AbstractField field : fields) {
+            for (Struct.Field field : fields) {
                 field.show(cursor, port, decoding);
             }
         }
@@ -136,36 +136,21 @@ public abstract class Struct {
         }
     }
 
-    public static abstract class AbstractField {
+    public static final class Field {
         public final int offset;
         public final String name;
-
-        public AbstractField(int offset, String name) {
-            this.offset = offset;
-            this.name = name;
-        }
-
-        public final void show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
-            StructFieldType.displayFieldPrefix(cursor, offset, name, port);
-            showContent(cursor, port, decoding);
-            port.println();
-        }
-
-        public abstract void showContent(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError;
-    }
-
-    // FIXME: why is it called OldField?  Is it obsolete?
-    public static final class OldField extends AbstractField {
         public final StructFieldType type;
 
-        public OldField(int offset, String name, StructFieldType type) {
-            super(offset, name);
+        public Field(int offset, String name, StructFieldType type) {
+            this.offset = offset;
+            this.name = name;
             this.type = type;
         }
 
-        @Override
-        public final void showContent(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
-            type.showContent(cursor, offset, port, decoding);
+        public final void show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+            port.print(Hex.t(cursor.tell() + offset) + ": " + name + ": ");
+            type.show(cursor, offset, port, decoding);
+            port.println();
         }
     }
 
@@ -300,7 +285,7 @@ public abstract class Struct {
             IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
                     '#');
             try {
-                ArrayList<AbstractField> fields = new ArrayList<AbstractField>();
+                ArrayList<Field> fields = new ArrayList<Field>();
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     lexer.pass('@');
@@ -323,10 +308,10 @@ public abstract class Struct {
                         throw new RuntimeException("bug detected");
                     }
                     StructFieldType fieldType = parameterParser.parseParameters(lexer);
-                    fields.add(new OldField(fieldOffset, fieldName, fieldType));
+                    fields.add(new Field(fieldOffset, fieldName, fieldType));
                 }
                 reader.close();
-                return new Struct.Basic(name, fields.toArray(new AbstractField[0]));
+                return new Struct.Basic(name, fields.toArray(new Field[0]));
             } catch (IOException e) {
                 throw new RuntimeException("I/O error reading resource " + name, e);
             } catch (ControlData.LineParseError e) {
