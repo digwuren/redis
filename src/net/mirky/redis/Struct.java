@@ -11,7 +11,6 @@ import java.util.Map;
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 import net.mirky.redis.ResourceManager.ResolutionError;
-import net.mirky.redis.Struct.FieldParameterParser;
 
 public abstract class Struct {
     public final String name;
@@ -185,6 +184,10 @@ public abstract class Struct {
 
     private static final Map<String, FieldParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, FieldParameterParser>();
     
+    static final FieldParameterParser getFieldTypeParameterParser(String name) {
+        return KNOWN_FIELD_TYPES.get(name);
+    }
+    
     static {
         KNOWN_FIELD_TYPES.put("unsigned-byte", new FieldParameterParser() {
             @Override
@@ -311,7 +314,7 @@ public abstract class Struct {
                         lexer.complain("expected field type");
                     }
                     String fieldTypeName = lexer.parseThisDashedWord();
-                    FieldParameterParser parameterParser = KNOWN_FIELD_TYPES.get(fieldTypeName);
+                    FieldParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
                     if (parameterParser == null) {
                         lexer.complain("unknown field type");
                         // {@link
