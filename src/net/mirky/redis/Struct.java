@@ -24,7 +24,7 @@ public abstract class Struct {
         port.println(Hex.t(cursor.tell()) + ": " + name + " @ " + path);
     }
 
-    public abstract void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError;
+    public abstract int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError;
 
     private static final Struct.Basic BLANK = new Struct.Basic("blank");
 
@@ -40,11 +40,10 @@ public abstract class Struct {
         }
 
         @Override
-        public final void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
             for (Rule rule : rules) {
                 if (rule.matches(cursor)) {
-                    rule.struct.show(cursor, path, port, decoding);
-                    return;
+                    return rule.struct.show(cursor, path, port, decoding);
                 }
             }
             // No rule matched. This must not happen.
@@ -114,11 +113,16 @@ public abstract class Struct {
         }
 
         @Override
-        public final void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
             showBreadcrumbs(cursor, path, port);
+            int offsetPastStruct = 0;
             for (Struct.Field field : fields) {
-                field.show(cursor, port, decoding);
+                int offsetPastField = field.show(cursor, port, decoding);
+                if (offsetPastField > offsetPastStruct) {
+                    offsetPastStruct = offsetPastField;
+                }
             }
+            return offsetPastStruct;
         }
     }
 
@@ -131,9 +135,10 @@ public abstract class Struct {
         }
 
         @Override
-        public final void show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
             showBreadcrumbs(cursor, path, port);
             Hex.dump(cursor.getBytes(0, size), cursor.tell(), decoding, port);
+            return size;
         }
     }
 
@@ -148,10 +153,28 @@ public abstract class Struct {
             this.type = type;
         }
 
-        public final void show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+        /**
+         * Show content of {@code this} field of the structure as a text line
+         * via the given {@port}.
+         * 
+         * @return the offset just past the field, relative to the cursor's
+         *         position
+         * @throws ImageError
+         *             in case the field can not be extracted from data
+         *             available via {@code cursor}. Note that this exception
+         *             can only be thrown before anything is output or
+         *             immediately after completing a full line, never in the
+         *             middle of outputting a line.
+         */
+        // FIXME: reorder the parameters so {@code port} goes last
+        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+            // FIXME: the prefix should be output by StructFieldType.show(...)
+            // rather than us so as to avoid outputting half of the line before
+            // throwing the error
             port.print(Hex.t(cursor.tell() + offset) + ": " + name + ": ");
-            type.show(cursor, offset, port, decoding);
+            int offsetPastField = type.show(cursor, offset, port, decoding);
             port.println();
+            return offsetPastField;
         }
     }
 
