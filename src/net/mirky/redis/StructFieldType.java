@@ -7,6 +7,18 @@ abstract class StructFieldType {
         // nothing to be done here
     }
 
+    /**
+     * Show the content of a field of {@code this} type, extracted from the
+     * specified {@code offset} via the given {@code cursor}, as a line output
+     * to the given {@code port}. If the field contains textual values, these
+     * are to be parsed using the given {@code decoding}.
+     * 
+     * @throws ImageError
+     *             in case the field can not be extracted from data available
+     *             via {@code cursor}. Note that this exception can only be
+     *             thrown before anything is output, never in the middle of
+     *             outputting a line.
+     */
     abstract void show(Cursor cursor, int offset, PrintStream port, Decoding decoding) throws ImageError;
 
     static final class PaddedString extends StructFieldType {
