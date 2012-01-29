@@ -4,6 +4,7 @@ net.mirky.redis.analysers.D64ImageAnalyser
 net.mirky.redis.analysers.LinedTextAnalyser
 net.mirky.redis.analysers.PlainTextAnalyser
 net.mirky.redis.analysers.RawBinaryAnalyser
+net.mirky.redis.analysers.StructAnalyser
 net.mirky.redis.analysers.StructArrayAnalyser
 net.mirky.redis.analysers.TapAnalyser
 net.mirky.redis.analysers.TzxAnalyser

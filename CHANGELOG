@@ -14,6 +14,7 @@ User-visible changes:
   tokens yellow
 * added the 'plain' format
 * added the /high-bit option to both the 'plain' and 'lines' formats
+* added the 'struct' and 'array' formats
 
 Programmer-visible changes:
 * introduced TextResource.Missing, an unchecked exception, thrown when opening
