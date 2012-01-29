@@ -339,7 +339,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
                 }
                 Format dirFormat = Format.getGuaranteedFormat("array");
                 try {
-                    dirFormat = dirFormat.parseChange("/struct=d64-dirent-union/step=0x20");
+                    dirFormat = dirFormat.parseChange("/struct=d64-dirent-union");
                 } catch (OptionError e) {
                     throw new RuntimeException("bug detected", e);
                 }
