@@ -16,7 +16,7 @@ public final class StructAnalyser extends Analyser.Leaf.PossiblyPartial {
         Struct struct = ((Format.Option.SimpleOption<Struct>) format.getOption("struct")).value;
         Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
         try {
-            return struct.show(cursor, "/", port, format.getDecoding());
+            return struct.show(cursor, port, format.getDecoding());
         } catch (ImageError e) {
             // FIXME: once we output via the {@link ChromaticLineBuilder}, this ought to be shown in red
             port.println("!!! unexpected end of image");

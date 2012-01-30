@@ -21,7 +21,7 @@ public final class StructArrayAnalyser extends Analyser.Leaf.PossiblyPartial {
                 if (entryNumber != 0) {
                     port.println();
                 }
-                int structSize = struct.show(cursor, Integer.toString(entryNumber), port, format.getDecoding());
+                int structSize = struct.show(cursor, port, format.getDecoding());
                 if (structSize == 0) {
                     // FIXME: once we output via the {@link ChromaticLineBuilder}, this ought to be shown in red
                     port.println("!!! null struct");

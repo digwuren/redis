@@ -20,11 +20,7 @@ public abstract class Struct {
         this.name = name;
     }
 
-    protected final void showBreadcrumbs(Cursor cursor, String path, PrintStream port) {
-        port.println(Hex.t(cursor.tell()) + ": " + name + " @ " + path);
-    }
-
-    public abstract int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError;
+    public abstract int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError;
 
     private static final Struct.Basic BLANK = new Struct.Basic("blank");
 
@@ -40,10 +36,10 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
             for (Rule rule : rules) {
                 if (rule.matches(cursor)) {
-                    return rule.struct.show(cursor, path, port, decoding);
+                    return rule.struct.show(cursor, port, decoding);
                 }
             }
             // No rule matched. This must not happen.
@@ -113,8 +109,8 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
-            showBreadcrumbs(cursor, path, port);
+        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+            port.println(Hex.t(cursor.tell()) + ": " + name);
             int offsetPastStruct = 0;
             for (Struct.Field field : fields) {
                 int offsetPastField = field.show(cursor, port, decoding);
@@ -135,8 +131,8 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, String path, PrintStream port, Decoding decoding) throws ImageError {
-            showBreadcrumbs(cursor, path, port);
+        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+            port.println(Hex.t(cursor.tell()) + ": " + name);
             Hex.dump(cursor.getBytes(0, size), cursor.tell(), decoding, port);
             return size;
         }
