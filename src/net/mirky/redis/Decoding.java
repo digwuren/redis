@@ -44,7 +44,7 @@ public final class Decoding {
         }
     }
 
-    // Display a filename, given as a sequence of bytes in this decoding, in stdout.
+    // Display a string, given as a sequence of bytes in this decoding, in the given {@code port}.
     // Escape nonprintables, leading and trailing whitespaces, and brokets by surrounding
     // them with brokets and representing their hex values of the original codes.  Multiple
     // adjacent inconvenient codes are delimited by a period.
@@ -73,6 +73,33 @@ public final class Decoding {
                     justAppendedHex = true;
                 }
             }
+            port.write(sb.toString().getBytes("utf-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("utf-8 is an Unsupported Encoding?  In Java???", e);
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error", e);
+        }
+    }
+
+    // Display a string, given as a sequence of bytes in this decoding, in the given {@code port}, in a manner reminiscient of C string literals.
+    // FIXME: instead of writing to {@link PrintStream}, we should be writing to a {@link ChromaticLineBuilder} instead.
+    public final void displayForeignStringAsLiteral(byte[] s, PrintStream port) {
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append('"');
+            for (int i = 0; i < s.length; i++) {
+                char c = decode(s[i]);
+                if (c >= 0x20 && c <= 0x7E) {
+                    if (c == '"' || c == '\\') {
+                        sb.append('\\');
+                    }
+                    sb.append(c);
+                } else {
+                    sb.append("\\x");
+                    sb.append(Hex.b(s[i]));
+                }
+            }
+            sb.append('"');
             port.write(sb.toString().getBytes("utf-8"));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("utf-8 is an Unsupported Encoding?  In Java???", e);

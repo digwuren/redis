@@ -39,7 +39,7 @@ abstract class StructFieldType {
         final int show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) throws ImageError {
             byte[] bytes = cursor.getPaddedBytes(offset, size, padding);
             port.print(Hex.t(cursor.tell() + offset) + ": [...]   " + name + ": ");
-            decoding.displayForeignString(bytes, port);
+            decoding.displayForeignStringAsLiteral(bytes, port);
             return offset + size;
         }
     }
