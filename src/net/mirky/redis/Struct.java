@@ -164,11 +164,7 @@ public abstract class Struct {
          */
         // FIXME: reorder the parameters so {@code port} goes last
         public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
-            // FIXME: the prefix should be output by StructFieldType.show(...)
-            // rather than us so as to avoid outputting half of the line before
-            // throwing the error
-            port.print(Hex.t(cursor.tell() + offset) + ": " + name + ": ");
-            int offsetPastField = type.show(cursor, offset, port, decoding);
+            int offsetPastField = type.show(cursor, offset, name, port, decoding);
             port.println();
             return offsetPastField;
         }
