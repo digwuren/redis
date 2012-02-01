@@ -124,19 +124,11 @@ abstract class StructFieldType {
         @Override
         final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             Cursor subcursor = cursor.subcursor(offset);
-            port.println(Hex.t(subcursor.tell()) + ":         " + indentation + name + ':');
-            int offsetPastStruct = 0; // relative to subcursor
-            Struct.Field[] fields = new Struct.Field[] {
+            Struct.Basic struct = new Struct.Basic("d64-sector-chain-start",
                     new Struct.Field(0, "track", UNSIGNED_BYTE),
-                    new Struct.Field(1, "sector", UNSIGNED_BYTE),
-            };
-            for (Struct.Field field : fields) {
-                int offsetPastField = field.show(subcursor, indentation + "  ", decoding, port);
-                if (offsetPastField > offsetPastStruct) {
-                    offsetPastStruct = offsetPastField;
-                }
-            }
-            return offset + offsetPastStruct;
+                    new Struct.Field(1, "sector", UNSIGNED_BYTE)
+            );
+            return offset + struct.show(subcursor, indentation, name, decoding, port);
         }
     };
 
