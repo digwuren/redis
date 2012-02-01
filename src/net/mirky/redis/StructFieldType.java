@@ -125,18 +125,18 @@ abstract class StructFieldType {
         final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             Cursor subcursor = cursor.subcursor(offset);
             port.println(Hex.t(subcursor.tell()) + ":         " + indentation + name + ':');
-            int pointerPast = 0; // relative to subcursor
+            int offsetPastStruct = 0; // relative to subcursor
             Struct.Field[] fields = new Struct.Field[] {
                     new Struct.Field(0, "track", UNSIGNED_BYTE),
                     new Struct.Field(1, "sector", UNSIGNED_BYTE),
             };
             for (Struct.Field field : fields) {
-                int ppcand = field.type.show(subcursor, field.offset, indentation + "  ", field.name, decoding, port);
-                if (ppcand > pointerPast) {
-                    pointerPast = ppcand;
+                int offsetPastField = field.show(subcursor, indentation + "  ", decoding, port);
+                if (offsetPastField > offsetPastStruct) {
+                    offsetPastStruct = offsetPastField;
                 }
             }
-            return offset + pointerPast;
+            return offset + offsetPastStruct;
         }
     };
 
