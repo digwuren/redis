@@ -164,7 +164,7 @@ public abstract class Struct {
          */
         // FIXME: reorder the parameters so {@code port} goes last
         public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
-            int offsetPastField = type.show(cursor, offset, name, port, decoding);
+            int offsetPastField = type.show(cursor, offset, "", name, port, decoding);
             port.println();
             return offsetPastField;
         }
