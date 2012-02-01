@@ -113,7 +113,7 @@ public abstract class Struct {
             port.println(Hex.t(cursor.tell()) + ": " + name);
             int offsetPastStruct = 0;
             for (Struct.Field field : fields) {
-                int offsetPastField = field.show(cursor, port, decoding);
+                int offsetPastField = field.show(cursor, decoding, port);
                 if (offsetPastField > offsetPastStruct) {
                     offsetPastStruct = offsetPastField;
                 }
@@ -162,8 +162,7 @@ public abstract class Struct {
          *             immediately after completing a full line, never in the
          *             middle of outputting a line.
          */
-        // FIXME: reorder the parameters so {@code port} goes last
-        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
             return type.show(cursor, offset, "", name, port, decoding);
         }
     }
