@@ -163,7 +163,7 @@ public abstract class Struct {
          *             middle of outputting a line.
          */
         public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
-            return type.show(cursor, offset, "", name, port, decoding);
+            return type.show(cursor, offset, "", name, decoding, port);
         }
     }
 
