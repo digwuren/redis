@@ -120,19 +120,18 @@ abstract class StructFieldType {
         }
     }
 
-    static final StructFieldType D64_SECTOR_CHAIN_START = new StructFieldType() {
+    static final class StructWrapperFieldType extends StructFieldType {
+        private final Struct struct;
+    
+        StructWrapperFieldType(Struct struct) {
+            this.struct = struct;
+        }
+    
         @Override
         final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            Cursor subcursor = cursor.subcursor(offset);
-            Struct struct;
-            try {
-                struct = Struct.MANAGER.get("d64-sector-chain-start");
-            } catch (ResourceManager.ResolutionError e) {
-                throw new RuntimeException("bug detected");
-            }
-            return offset + struct.show(subcursor, indentation, name, decoding, port);
+            return offset + struct.show(cursor.subcursor(offset), indentation, name, decoding, port);
         }
-    };
+    }
 
     static final StructFieldType UNSIGNED_LEWYDE = new StructFieldType() {
         @Override

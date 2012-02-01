@@ -62,7 +62,8 @@ Programmer-visible changes:
   prefix when in hex
 * introduced the d64direntry and unsigned-byte builtin struct:s
 * introduced Format.imposeDecodingIfExplicit(Format, Decoding)
-* refactored D64DirectoryAnalyser into StructArrayAnalyser
+* refactored D64DirectoryAnalyser into StructArrayAnalyser, d64-dirent.struct,
+  and d64-sector-chain-start.struct
 * replaced BichromaticStringBuilder with ChromaticLineBuilder to take care of
   both colours and delimiters
 * introduced Cursor.subcursor(int)

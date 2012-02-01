@@ -11,7 +11,6 @@ import java.util.Map;
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 import net.mirky.redis.ResourceManager.ResolutionError;
-import net.mirky.redis.StructFieldType.SlicedIntegerType;
 
 public abstract class Struct {
     public final String name;
@@ -198,7 +197,7 @@ public abstract class Struct {
     private static final class SlicedIntegerFieldParameterParser extends FieldParameterParser {
         private final StructFieldType.SlicedIntegerType integerType;
     
-        public SlicedIntegerFieldParameterParser(SlicedIntegerType integerType) {
+        public SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType integerType) {
             this.integerType = integerType;
         }
     
@@ -227,8 +226,6 @@ public abstract class Struct {
         KNOWN_FIELD_TYPES.put("unsigned-byte", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BYTE));
         KNOWN_FIELD_TYPES.put("unsigned-lewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_LEWYDE));
         KNOWN_FIELD_TYPES.put("unsigned-bewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BEWYDE));
-
-        KNOWN_FIELD_TYPES.put("d64-sector-chain-start", new SimpleFieldParameterParser(StructFieldType.D64_SECTOR_CHAIN_START));
 
         KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
             @Override
@@ -320,14 +317,23 @@ public abstract class Struct {
                     }
                     String fieldTypeName = lexer.parseThisDashedWord();
                     FieldParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
+                    StructFieldType fieldType;
                     if (parameterParser == null) {
-                        lexer.complain("unknown field type");
-                        // {@link
-                        // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
-                        // returned?
-                        throw new RuntimeException("bug detected");
+                        Struct struct;
+                        try {
+                            struct = Struct.MANAGER.get(fieldTypeName);
+                        } catch (ResourceManager.ResolutionError e) {
+                            lexer.complain("unknown field type");
+                            // {@link
+                            // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
+                            // returned?
+                            throw new RuntimeException("bug detected");
+                        }
+                        fieldType = new StructFieldType.StructWrapperFieldType(struct);
+                        lexer.passNewline();
+                    } else {
+                        fieldType = parameterParser.parseParameters(lexer);
                     }
-                    StructFieldType fieldType = parameterParser.parseParameters(lexer);
                     fields.add(new Field(fieldOffset, fieldName, fieldType));
                 }
                 reader.close();
