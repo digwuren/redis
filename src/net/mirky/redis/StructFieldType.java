@@ -126,13 +126,15 @@ abstract class StructFieldType {
             Cursor subcursor = cursor.subcursor(offset);
             port.println(Hex.t(subcursor.tell()) + ":         " + indentation + name + ':');
             int pointerPast = 0; // relative to subcursor
-            int ppcand = UNSIGNED_BYTE.show(subcursor, 0, indentation + "  ", "track", decoding, port);
-            if (ppcand > pointerPast) {
-                pointerPast = ppcand;
-            }
-            ppcand = UNSIGNED_BYTE.show(subcursor, 1, indentation + "  ", "sector", decoding, port);
-            if (ppcand > pointerPast) {
-                pointerPast = ppcand;
+            Struct.Field[] fields = new Struct.Field[] {
+                    new Struct.Field(0, "track", UNSIGNED_BYTE),
+                    new Struct.Field(1, "sector", UNSIGNED_BYTE),
+            };
+            for (Struct.Field field : fields) {
+                int ppcand = field.type.show(subcursor, field.offset, indentation + "  ", field.name, decoding, port);
+                if (ppcand > pointerPast) {
+                    pointerPast = ppcand;
+                }
             }
             return offset + pointerPast;
         }
