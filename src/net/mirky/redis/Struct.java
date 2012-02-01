@@ -20,7 +20,7 @@ public abstract class Struct {
         this.name = name;
     }
 
-    public abstract int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError;
+    public abstract int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError;
 
     private static final Struct.Basic BLANK = new Struct.Basic("blank");
 
@@ -36,10 +36,10 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
+        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
             for (Rule rule : rules) {
                 if (rule.matches(cursor)) {
-                    return rule.struct.show(cursor, decoding, port);
+                    return rule.struct.show(cursor, indentation, itemName, decoding, port);
                 }
             }
             // No rule matched. This must not happen.
@@ -109,11 +109,11 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
-            port.println(Hex.t(cursor.tell()) + ": " + name);
+        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
+            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             int offsetPastStruct = 0;
             for (Struct.Field field : fields) {
-                int offsetPastField = field.show(cursor, decoding, port);
+                int offsetPastField = field.show(cursor, indentation + "  ", decoding, port);
                 if (offsetPastField > offsetPastStruct) {
                     offsetPastStruct = offsetPastField;
                 }
@@ -131,8 +131,8 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
-            port.println(Hex.t(cursor.tell()) + ": " + name);
+        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
+            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             Hex.dump(cursor.getBytes(0, size), cursor.tell(), decoding, port);
             return size;
         }
@@ -162,8 +162,8 @@ public abstract class Struct {
          *             immediately after completing a full line, never in the
          *             middle of outputting a line.
          */
-        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
-            return type.show(cursor, offset, "", name, decoding, port);
+        public final int show(Cursor cursor, String indentation, Decoding decoding, PrintStream port) throws ImageError {
+            return type.show(cursor, offset, indentation, name, decoding, port);
         }
     }
 
