@@ -65,6 +65,7 @@ Programmer-visible changes:
 * refactored D64DirectoryAnalyser into StructArrayAnalyser
 * replaced BichromaticStringBuilder with ChromaticLineBuilder to take care of
   both colours and delimiters
+* introduced Cursor.subcursor(int)
 
 == v0.1 2011-08-08
 

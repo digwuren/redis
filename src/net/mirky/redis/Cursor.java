@@ -28,6 +28,7 @@ public abstract class Cursor {
     public abstract boolean atEnd();
     public abstract boolean probe(int amount);
     public abstract int tell();
+    public abstract Cursor subcursor(int offset);
 
     public static final class ByteArrayCursor extends Cursor {
         private final byte[] data;
@@ -199,6 +200,11 @@ public abstract class Cursor {
                 }
             }
             return true;
+        }
+        
+        @Override
+        public final ByteArrayCursor subcursor(int offset) {
+            return new ByteArrayCursor(data, pos + offset);
         }
     }
 }
