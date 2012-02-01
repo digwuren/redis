@@ -122,12 +122,9 @@ abstract class StructFieldType {
         final int show(Cursor cursor, int offset, String name, PrintStream port, Decoding decoding) {
             int track = cursor.getUnsignedByte(offset);
             int sector = cursor.getUnsignedByte(offset + 1);
-            port.print(Hex.t(cursor.tell() + offset) + ": [" + Hex.b(track) + ' ' + Hex.b(sector) + "] " + name + ": ");
-            if (track == 0 && sector == 0) {
-                port.print("n/a");
-            } else {
-                port.print("track " + track + ", sector " + sector);
-            }
+            port.println(Hex.t(cursor.tell() + offset) + ":         " + name + ':');
+            port.println(Hex.t(cursor.tell() + offset) + ": [" + Hex.b(track) + "]      track: " + track);
+            port.print(Hex.t(cursor.tell() + offset + 1) + ": [" + Hex.b(sector) + "]      sector: " + sector);
             return offset + 2;
         }
     };
