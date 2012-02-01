@@ -124,10 +124,12 @@ abstract class StructFieldType {
         @Override
         final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             Cursor subcursor = cursor.subcursor(offset);
-            Struct.Basic struct = new Struct.Basic("d64-sector-chain-start",
-                    new Struct.Field(0, "track", UNSIGNED_BYTE),
-                    new Struct.Field(1, "sector", UNSIGNED_BYTE)
-            );
+            Struct struct;
+            try {
+                struct = Struct.MANAGER.get("d64-sector-chain-start");
+            } catch (ResourceManager.ResolutionError e) {
+                throw new RuntimeException("bug detected");
+            }
             return offset + struct.show(subcursor, indentation, name, decoding, port);
         }
     };
