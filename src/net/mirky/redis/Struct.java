@@ -20,7 +20,7 @@ public abstract class Struct {
         this.name = name;
     }
 
-    public abstract int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError;
+    public abstract int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError;
 
     private static final Struct.Basic BLANK = new Struct.Basic("blank");
 
@@ -36,10 +36,10 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
             for (Rule rule : rules) {
                 if (rule.matches(cursor)) {
-                    return rule.struct.show(cursor, port, decoding);
+                    return rule.struct.show(cursor, decoding, port);
                 }
             }
             // No rule matched. This must not happen.
@@ -109,7 +109,7 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ": " + name);
             int offsetPastStruct = 0;
             for (Struct.Field field : fields) {
@@ -131,7 +131,7 @@ public abstract class Struct {
         }
 
         @Override
-        public final int show(Cursor cursor, PrintStream port, Decoding decoding) throws ImageError {
+        public final int show(Cursor cursor, Decoding decoding, PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ": " + name);
             Hex.dump(cursor.getBytes(0, size), cursor.tell(), decoding, port);
             return size;
