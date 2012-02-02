@@ -203,7 +203,7 @@ abstract class StructureDescriptionParser {
                 if (!lexer.atEndOfFile()) {
                     lexer.complain("garbage follows structure description");
                 }
-                return new BinaryElementType.Struct("struct", steps.toArray(new BinaryElementType.Struct.Step[0]));
+                return new BinaryElementType.Struct(steps.toArray(new BinaryElementType.Struct.Step[0]));
             }
         });
     }

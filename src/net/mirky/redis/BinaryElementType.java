@@ -210,18 +210,16 @@ public abstract class BinaryElementType {
     static final PlainUnsignedInteger UNSIGNED_BYTE = new PlainUnsignedInteger(BasicInteger.BYTE);
 
     public static final class Struct extends BinaryElementType {
-        private final String name;
         private final Struct.Step[] steps;
 
-        public Struct(String name, Struct.Step... fields) {
-            this.name = name;
+        public Struct(Struct.Step... fields) {
             this.steps = fields;
         }
 
         @Override
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
-            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
+            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + "struct");
             Context ctx = new Context(cursor, indentation + "  ", decoding, port);
             int posPastStruct = ctx.origin;
             for (Struct.Step step : steps) {
