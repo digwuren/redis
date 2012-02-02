@@ -22,13 +22,13 @@ public final class StructArrayAnalyser extends Analyser.Leaf.PossiblyPartial {
                 if (!firstp) {
                     port.println();
                 }
-                int structSize = elementType.show(cursor, "", null, format.getDecoding(), port);
-                if (structSize == 0) {
+                int posBeforeElement = cursor.tell();
+                elementType.showAndAdvance(cursor, "", null, format.getDecoding(), port);
+                if (cursor.tell() == posBeforeElement) {
                     // FIXME: once we output via the {@link ChromaticLineBuilder}, this ought to be shown in red
                     port.println("!!! null struct");
                     break;
                 }
-                cursor.advance(structSize);
                 firstp = false;
             }
         } catch (ImageError e) {
