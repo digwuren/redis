@@ -148,6 +148,23 @@ abstract class StructureDescriptionParser {
         return type;
     }
 
+    public static final Step parseThisSeek(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+        assert lexer.at('@');
+        lexer.skipChar();
+        int sign;
+        if (lexer.at('+')) {
+            lexer.skipChar();
+            sign = +1;
+        } else if (lexer.at('-')) {
+            lexer.skipChar();
+            sign = -1;
+        } else {
+            sign = 0;
+        }
+        int offset = lexer.parseUnsignedInteger("offset");
+        return sign == 0 ? new Step.LocalSeek(offset) : new Step.RelSeek(sign * offset);
+    }
+
     private static final Map<String, StructureDescriptionParser.ParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, StructureDescriptionParser.ParameterParser>();
 
     static final StructureDescriptionParser.ParameterParser getFieldTypeParameterParser(String name) {
@@ -180,26 +197,12 @@ abstract class StructureDescriptionParser {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
                 lexer.passNewline();
                 lexer.passIndent();
+                
                 while (!lexer.atDedent()) {
                     lexer.noIndent();
                     if (lexer.at('@')) {
-                        lexer.skipChar();
-                        int sign;
-                        if (lexer.at('+')) {
-                            lexer.skipChar();
-                            sign = +1;
-                        } else if (lexer.at('-')) {
-                            lexer.skipChar();
-                            sign = -1;
-                        } else {
-                            sign = 0;
-                        }
-                        int offset = lexer.parseUnsignedInteger("offset");
-                        if (sign == 0) {
-                            steps.add(new Step.LocalSeek(offset));
-                        } else {
-                            steps.add(new Step.RelSeek(sign * offset));
-                        }
+                        Step seek = parseThisSeek(lexer);
+                        steps.add(seek);
                         lexer.skipSpaces();
                     }
                     if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
