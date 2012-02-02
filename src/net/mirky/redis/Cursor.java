@@ -37,13 +37,15 @@ public final class Cursor {
         return pos == data.length;
     }
 
-    public final byte getByte(int offset) {
+    public final byte getByte(int offset) throws ImageError {
         int addr = pos + offset;
-        assert addr >= 0 && addr < data.length;
+        if (addr < 0 || addr > data.length - 1) {
+            throw new ImageError("cursor outside image");
+        }
         return data[addr];
     }
-
-    public final int getUnsignedByte(int offset) {
+    
+    public final int getUnsignedByte(int offset) throws ImageError {
         return getByte(offset) & 0xFF;
     }
 
@@ -123,7 +125,7 @@ public final class Cursor {
         }
     }
 
-    public final boolean hasMagic(int offset, byte... etalon) {
+    public final boolean hasMagic(int offset, byte... etalon) throws ImageError {
         if (data.length < etalon.length && offset > data.length - etalon.length) {
             return false;
         }
@@ -144,7 +146,7 @@ public final class Cursor {
         advance(size);
     }
 
-    public final boolean regionBlank(int offset, int size) {
+    public final boolean regionBlank(int offset, int size) throws ImageError {
         for (int i = 0; i < size; i++) {
             if (getByte(offset + i) != 0) {
                 return false;

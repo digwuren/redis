@@ -62,7 +62,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
 
     static final class StringVariableTemplate extends ZXSBasicVariableDataAnalyser.Template {
         @Override
-        final boolean matches(Cursor cursor) {
+        final boolean matches(Cursor cursor) throws ImageError {
             int name = cursor.getUnsignedByte(0);
             return name >= 0x41 && name <= 0x5A;
         }
@@ -78,7 +78,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
             port.println();
         }
 
-        final String name(Cursor cursor) {
+        final String name(Cursor cursor) throws ImageError {
             return (char) (cursor.getUnsignedByte(0) + 0x20) + "$";
         }
 
@@ -90,7 +90,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
 
     static final class NumericVariableTemplate extends ZXSBasicVariableDataAnalyser.Template {
         @Override
-        final boolean matches(Cursor cursor) {
+        final boolean matches(Cursor cursor) throws ImageError {
             int name = cursor.getUnsignedByte(0);
             return (name >= 0x61 && name <= 0x7A);
         }
@@ -103,7 +103,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
             port.println(name(cursor) + ": " + binary.prepareForDisplay());
         }
 
-        final char name(Cursor cursor) {
+        final char name(Cursor cursor) throws ImageError {
             return (char) ((cursor.getUnsignedByte(0) & 0x1F) + 0x60);
         }
 
@@ -191,7 +191,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
 
     static final class LongNamedNumericVariableTemplate extends ZXSBasicVariableDataAnalyser.Template {
         @Override
-        final boolean matches(Cursor cursor) {
+        final boolean matches(Cursor cursor) throws ImageError {
             int name = cursor.getUnsignedByte(0);
             if (!(name >= 0xA1 && name <= 0xBA)) {
                 return false;
@@ -217,7 +217,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
             port.println(name(cursor) + ": " + binary.prepareForDisplay());
         }
 
-        final String name(Cursor cursor) {
+        final String name(Cursor cursor) throws ImageError {
             StringBuilder sb = new StringBuilder();
             sb.append((char) ((cursor.getUnsignedByte(0) & 0x1F) + 0x60));
             int b;
@@ -231,7 +231,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
         }
 
         @Override
-        final int size(Cursor cursor) {
+        final int size(Cursor cursor) throws ImageError {
             return name(cursor).length() + 5;
         }
     }
@@ -314,7 +314,7 @@ public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPa
 
     static final class ForVariableTemplate extends ZXSBasicVariableDataAnalyser.Template {
         @Override
-        final boolean matches(Cursor cursor) {
+        final boolean matches(Cursor cursor) throws ImageError {
             int name = cursor.getUnsignedByte(0);
             return name >= 0xE1 && name < 0xFA;
         }

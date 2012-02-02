@@ -406,7 +406,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
             }
         }
 
-        final int getSectorErrorByte(int diskSector) {
+        final int getSectorErrorByte(int diskSector) throws ImageError {
             assert diskSector >= 0 && diskSector < geometry.getDiskSectorCount();
             if (errorDataCursor != null) {
                 return errorDataCursor.getUnsignedByte(diskSector);
