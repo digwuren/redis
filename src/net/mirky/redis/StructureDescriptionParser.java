@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.mirky.redis.BinaryElementType.Struct.Step;
 import net.mirky.redis.ControlData.LineParseError;
 
 abstract class StructureDescriptionParser {
@@ -147,7 +148,8 @@ abstract class StructureDescriptionParser {
             } else {
                 fieldType = parameterParser.parseParameters(lexer);
             }
-            fields.add(new BinaryElementType.Struct.Step(fieldOffset, fieldName, fieldType));
+            fields.add(new Step.Seek(fieldOffset));
+            fields.add(new Step.Pass(fieldName, fieldType));
         }
         reader.close();
         return new BinaryElementType.Struct(name, fields.toArray(new BinaryElementType.Struct.Step[0]));

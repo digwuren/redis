@@ -245,20 +245,35 @@ public abstract class BinaryElementType {
             cursor.seek(posPastStruct);
         }
 
-        public static final class Step {
-            public final int offset;
-            public final String name;
-            public final BinaryElementType type;
+        public static abstract class Step {
+            public abstract void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError;
 
-            public Step(int offset, String name, BinaryElementType fieldType) {
-                this.offset = offset;
-                this.name = name;
-                this.type = fieldType;
+            public static final class Seek extends Step {
+                public final int offset;
+            
+                public Seek(int offset) {
+                    this.offset = offset;
+                }
+            
+                @Override
+                public final void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError {
+                    cursor.seek(origin + offset);
+                }
             }
 
-            public final void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError {
-                cursor.seek(origin + offset);
-                type.pass(cursor, indentation + "  ", name, decoding, port);
+            public static final class Pass extends Step {
+                public final String name;
+                public final BinaryElementType type;
+            
+                public Pass(String name, BinaryElementType fieldType) {
+                    this.name = name;
+                    this.type = fieldType;
+                }
+            
+                @Override
+                public final void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError {
+                    type.pass(cursor, indentation + "  ", name, decoding, port);
+                }
             }
         }
     }
