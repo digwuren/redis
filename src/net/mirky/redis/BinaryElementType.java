@@ -125,12 +125,12 @@ public abstract class BinaryElementType {
         public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             int wholeField = integerType.extract(cursor);
+            cursor.advance(integerType.size());
             port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + itemName + ':');
             for (Slice slice : slices) {
                 port.print(slice.decode(wholeField));
             }
             port.println();
-            cursor.advance(integerType.size());
         }
 
         /**
@@ -210,17 +210,12 @@ public abstract class BinaryElementType {
             this.type = type;
         }
 
-        // FIXME: inline
-        public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            int value = type.extract(cursor);
-            port.println(Hex.t(cursor.tell()) + ": [" + type.hex(value) + "]" + type.hexPadding() + " " + indentation + name + ": " + value);
-            return type.size();
-        }
-
         @Override
         public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
-            cursor.advance(show(cursor, indentation, itemName, decoding, port));
+            int value = type.extract(cursor);
+            cursor.advance(type.size());
+            port.println(Hex.t(cursor.tell()) + ": [" + type.hex(value) + "]" + type.hexPadding() + " " + indentation + itemName + ": " + value);
         }
     }
     
