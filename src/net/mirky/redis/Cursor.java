@@ -48,6 +48,12 @@ public final class Cursor {
     public final int getUnsignedByte(int offset) throws ImageError {
         return getByte(offset) & 0xFF;
     }
+    
+    public final int passUnsignedByte() throws ImageError {
+        int value = getUnsignedByte(0);
+        advance(1);
+        return value;
+    }
 
     public final int getUnsignedLewyde(int offset) throws ImageError {
         int addr = pos + offset;
@@ -58,6 +64,12 @@ public final class Cursor {
         return (data[addr] & 0xFF) + (data[addr + 1] & 0xFF) * 256;
     }
 
+    public final int passUnsignedLewyde() throws ImageError {
+        int value = getUnsignedLewyde(0);
+        advance(2);
+        return value;
+    }
+
     public final int getUnsignedBewyde(int offset) throws ImageError {
         int addr = pos + offset;
         assert addr >= 0;
@@ -65,6 +77,12 @@ public final class Cursor {
             throw new ImageError("cursor outside image");
         }
         return (data[addr + 1] & 0xFF) + (data[addr] & 0xFF) * 256;
+    }
+
+    public final int passUnsignedBewyde() throws ImageError {
+        int value = getUnsignedBewyde(0);
+        advance(2);
+        return value;
     }
 
     public final int getUnsignedLetribyte(int offset) throws ImageError {
