@@ -234,10 +234,10 @@ public abstract class BinaryElementType {
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
-            int origin = cursor.tell();
-            int posPastStruct = origin;
+            Context ctx = new Context(cursor, indentation + "  ", decoding, port);
+            int posPastStruct = ctx.origin;
             for (Struct.Step step : steps) {
-                step.step(cursor, indentation, decoding, port, origin);
+                step.step(ctx);
                 if (cursor.tell() > posPastStruct) {
                     posPastStruct = cursor.tell();
                 }
@@ -245,8 +245,24 @@ public abstract class BinaryElementType {
             cursor.seek(posPastStruct);
         }
 
+        public static final class Context {
+            public final Cursor cursor;
+            public final String indentation;
+            public final Decoding decoding;
+            public final PrintStream port;
+            public final int origin;
+
+            public Context(Cursor cursor, String indentation, Decoding decoding, PrintStream port) {
+                this.cursor = cursor;
+                this.indentation = indentation;
+                this.decoding = decoding;
+                this.port = port;
+                origin = cursor.tell();
+            }
+        }
+
         public static abstract class Step {
-            public abstract void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError;
+            public abstract void step(Context ctx) throws ImageError;
 
             public static final class Seek extends Step {
                 public final int offset;
@@ -256,8 +272,8 @@ public abstract class BinaryElementType {
                 }
             
                 @Override
-                public final void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError {
-                    cursor.seek(origin + offset);
+                public final void step(Context ctx) throws ImageError {
+                    ctx.cursor.seek(ctx.origin + offset);
                 }
             }
 
@@ -271,8 +287,8 @@ public abstract class BinaryElementType {
                 }
             
                 @Override
-                public final void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError {
-                    type.pass(cursor, indentation + "  ", name, decoding, port);
+                public final void step(Context ctx) throws ImageError {
+                    type.pass(ctx.cursor, ctx.indentation, name, ctx.decoding, ctx.port);
                 }
             }
         }
