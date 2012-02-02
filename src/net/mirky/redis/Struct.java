@@ -10,44 +10,37 @@ import java.util.Map;
 
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 
-public abstract class Struct extends AbstractStruct {
+public final class Struct extends AbstractStruct {
     public final String name;
+    private final Struct.Field[] fields;
 
-    public Struct(String name) {
+    public Struct(String name, Struct.Field... fields) {
         this.name = name;
+        this.fields = fields;
     }
 
-    public static final class Basic extends Struct {
-        private final Struct.Basic.Field[] fields;
-
-        public Basic(String name, Struct.Basic.Field... fields) {
-            super(name);
-            this.fields = fields;
-        }
-
-        @Override
-        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
-            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
-            int offsetPastStruct = 0;
-            for (Struct.Basic.Field field : fields) {
-                int offsetPastField = field.offset + field.type.show(cursor.subcursor(field.offset), indentation + "  ", field.name, decoding, port);
-                if (offsetPastField > offsetPastStruct) {
-                    offsetPastStruct = offsetPastField;
-                }
+    @Override
+    public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
+        port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
+        int offsetPastStruct = 0;
+        for (Struct.Field field : fields) {
+            int offsetPastField = field.offset + field.type.show(cursor.subcursor(field.offset), indentation + "  ", field.name, decoding, port);
+            if (offsetPastField > offsetPastStruct) {
+                offsetPastStruct = offsetPastField;
             }
-            return offsetPastStruct;
         }
+        return offsetPastStruct;
+    }
 
-        public static final class Field {
-            public final int offset;
-            public final String name;
-            public final AbstractStruct type;
-        
-            public Field(int offset, String name, AbstractStruct fieldType) {
-                this.offset = offset;
-                this.name = name;
-                this.type = fieldType;
-            }
+    public static final class Field {
+        public final int offset;
+        public final String name;
+        public final AbstractStruct type;
+
+        public Field(int offset, String name, AbstractStruct fieldType) {
+            this.offset = offset;
+            this.name = name;
+            this.type = fieldType;
         }
     }
 
@@ -81,11 +74,11 @@ public abstract class Struct extends AbstractStruct {
 
     private static final class SlicedIntegerFieldParameterParser extends FieldParameterParser {
         private final StructFieldType.SlicedIntegerType integerType;
-    
+
         public SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType integerType) {
             this.integerType = integerType;
         }
-    
+
         @Override
         final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.skipSpaces();
@@ -102,11 +95,11 @@ public abstract class Struct extends AbstractStruct {
     }
 
     private static final Map<String, FieldParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, FieldParameterParser>();
-    
+
     static final FieldParameterParser getFieldTypeParameterParser(String name) {
         return KNOWN_FIELD_TYPES.get(name);
     }
-    
+
     static {
         KNOWN_FIELD_TYPES.put("unsigned-byte", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BYTE));
         KNOWN_FIELD_TYPES.put("unsigned-lewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_LEWYDE));
@@ -187,7 +180,7 @@ public abstract class Struct extends AbstractStruct {
             IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
                     '#');
             try {
-                ArrayList<Struct.Basic.Field> fields = new ArrayList<Struct.Basic.Field>();
+                ArrayList<Struct.Field> fields = new ArrayList<Struct.Field>();
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     lexer.pass('@');
@@ -219,10 +212,10 @@ public abstract class Struct extends AbstractStruct {
                     } else {
                         fieldType = parameterParser.parseParameters(lexer);
                     }
-                    fields.add(new Struct.Basic.Field(fieldOffset, fieldName, fieldType));
+                    fields.add(new Struct.Field(fieldOffset, fieldName, fieldType));
                 }
                 reader.close();
-                return new Struct.Basic(name, fields.toArray(new Struct.Basic.Field[0]));
+                return new Struct(name, fields.toArray(new Struct.Field[0]));
             } catch (IOException e) {
                 throw new RuntimeException("I/O error reading resource " + name, e);
             } catch (ControlData.LineParseError e) {
