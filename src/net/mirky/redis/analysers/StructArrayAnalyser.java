@@ -6,6 +6,7 @@ import net.mirky.redis.Analyser;
 import net.mirky.redis.Cursor;
 import net.mirky.redis.Format;
 import net.mirky.redis.ImageError;
+import net.mirky.redis.Named;
 import net.mirky.redis.Struct;
 
 @Format.Options("array/decoding:decoding=ascii/struct!:struct=unsigned-byte")
@@ -13,12 +14,12 @@ public final class StructArrayAnalyser extends Analyser.Leaf.PossiblyPartial {
     @Override
     protected final int disPartially(Format format, byte[] data, PrintStream port) throws RuntimeException {
         @SuppressWarnings("unchecked")
-        Struct struct = ((Format.Option.SimpleOption<Struct>) format.getOption("struct")).value;
+        Struct struct = ((Format.Option.SimpleOption<Named<Struct>>) format.getOption("struct")).value.content;
         Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
         try {
-            int entryNumber = 0; // for the breadcrumb trail
+            boolean firstp = true;
             while (!cursor.atEnd()) {
-                if (entryNumber != 0) {
+                if (!firstp) {
                     port.println();
                 }
                 int structSize = struct.show(cursor, "", null, format.getDecoding(), port);
@@ -28,7 +29,7 @@ public final class StructArrayAnalyser extends Analyser.Leaf.PossiblyPartial {
                     break;
                 }
                 cursor.advance(structSize);
-                entryNumber++;
+                firstp = false;
             }
         } catch (ImageError e) {
             // FIXME: once we output via the {@link ChromaticLineBuilder}, this ought to be shown in red

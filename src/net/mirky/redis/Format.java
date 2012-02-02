@@ -236,16 +236,16 @@ public final class Format {
         };
 
         @SimpleTypeName("struct")
-        static final Simple<Struct> STRUCT = new Simple<Struct>() {
+        static final Simple<Named<Struct>> STRUCT = new Simple<Named<Struct>>() {
             @Override
-            final void stringify(Struct value, StringBuilder sb) {
+            final void stringify(Named<Struct> value, StringBuilder sb) {
                 sb.append(value.name);
             }
 
             @Override
-            final Struct parse(String name) throws OptionError {
+            final Named<Struct> parse(String name) throws OptionError {
                 try {
-                    return Struct.MANAGER.get(name);
+                    return new Named<Struct>(name, Struct.MANAGER.get(name));
                 } catch (ResourceManager.ResolutionError e) {
                     throw new OptionError("unknown structure: " + name, e);
                 }

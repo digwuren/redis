@@ -11,7 +11,7 @@ import java.util.Map;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 
 public final class Struct extends AbstractStruct {
-    public final String name;
+    private final String name;
     private final Struct.Field[] fields;
 
     public Struct(String name, Struct.Field... fields) {

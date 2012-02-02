@@ -6,6 +6,7 @@ import net.mirky.redis.Analyser;
 import net.mirky.redis.Cursor;
 import net.mirky.redis.Format;
 import net.mirky.redis.ImageError;
+import net.mirky.redis.Named;
 import net.mirky.redis.Struct;
 
 @Format.Options("struct/decoding:decoding=ascii/struct!:struct=unsigned-byte")
@@ -13,7 +14,7 @@ public final class StructAnalyser extends Analyser.Leaf.PossiblyPartial {
     @Override
     protected final int disPartially(Format format, byte[] data, PrintStream port) throws RuntimeException {
         @SuppressWarnings("unchecked")
-        Struct struct = ((Format.Option.SimpleOption<Struct>) format.getOption("struct")).value;
+        Struct struct = ((Format.Option.SimpleOption<Named<Struct>>) format.getOption("struct")).value.content;
         Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
         try {
             return struct.show(cursor, "", null, format.getDecoding(), port);

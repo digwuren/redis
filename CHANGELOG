@@ -67,6 +67,8 @@ Programmer-visible changes:
 * replaced BichromaticStringBuilder with ChromaticLineBuilder to take care of
   both colours and delimiters
 * introduced Cursor.subcursor(int)
+* implemented a Cursor.ByteArrayCursor.toString() to aid debugging
+* introduced Named<...>
 
 == v0.1 2011-08-08
 
