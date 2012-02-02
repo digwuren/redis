@@ -30,15 +30,10 @@ public abstract class BinaryElementType {
      * until we'll have decoupled positioning data from field data.
      */
     public static final BinaryElementType NULL = new BinaryElementType() {
-        // FIXME: inline
-        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) {
-            return 0;
-        }
-
         @Override
         public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
-                PrintStream port) throws ImageError {
-            cursor.advance(show(cursor, indentation, itemName, decoding, port));
+                PrintStream port) {
+            // nothing to do
         }
     };
 
