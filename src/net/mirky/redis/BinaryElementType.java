@@ -46,19 +46,14 @@ public abstract class BinaryElementType {
             this.padding = padding;
         }
 
-        // FIXME: inline
-        public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            byte[] bytes = cursor.getPaddedBytes(0, size, padding);
-            port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + name + ": ");
-            decoding.displayForeignStringAsLiteral(bytes, port);
-            port.println();
-            return size;
-        }
-
         @Override
         public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
-            cursor.advance(show(cursor, indentation, itemName, decoding, port));
+            byte[] bytes = cursor.getPaddedBytes(0, size, padding);
+                    port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + itemName + ": ");
+                    decoding.displayForeignStringAsLiteral(bytes, port);
+                    port.println();
+            cursor.advance(size);
         }
     }
 
