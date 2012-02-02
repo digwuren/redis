@@ -208,7 +208,7 @@ public abstract class BinaryElementType {
     static final PlainUnsignedInteger UNSIGNED_BEWYDE = new PlainUnsignedInteger(BasicInteger.BEWYDE);
     static final PlainUnsignedInteger UNSIGNED_BYTE = new PlainUnsignedInteger(BasicInteger.BYTE);
 
-    public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("struct") {
+    public static final ResourceManager<BinaryElementType> MANAGER = new ResourceManager<BinaryElementType>("struct") {
         @Override
         public final Struct load(String name, BufferedReader reader) {
             try {
@@ -222,4 +222,10 @@ public abstract class BinaryElementType {
             }
         }
     };
+
+    static {
+        MANAGER.cache.put("unsigned-byte", UNSIGNED_BYTE);
+        MANAGER.cache.put("unsigned-lewyde", UNSIGNED_LEWYDE);
+        MANAGER.cache.put("unsigned-bewyde", UNSIGNED_BEWYDE);
+    }
 }

@@ -3,21 +3,21 @@ package net.mirky.redis.analysers;
 import java.io.PrintStream;
 
 import net.mirky.redis.Analyser;
+import net.mirky.redis.BinaryElementType;
 import net.mirky.redis.Cursor;
 import net.mirky.redis.Format;
 import net.mirky.redis.ImageError;
 import net.mirky.redis.Named;
-import net.mirky.redis.Struct;
 
 @Format.Options("struct/decoding:decoding=ascii/struct!:struct=unsigned-byte")
 public final class StructAnalyser extends Analyser.Leaf.PossiblyPartial {
     @Override
     protected final int disPartially(Format format, byte[] data, PrintStream port) throws RuntimeException {
         @SuppressWarnings("unchecked")
-        Struct struct = ((Format.Option.SimpleOption<Named<Struct>>) format.getOption("struct")).value.content;
+        BinaryElementType elementType = ((Format.Option.SimpleOption<Named<BinaryElementType>>) format.getOption("struct")).value.content;
         Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
         try {
-            return struct.show(cursor, "", null, format.getDecoding(), port);
+            return elementType.show(cursor, "", null, format.getDecoding(), port);
         } catch (ImageError e) {
             // FIXME: once we output via the {@link ChromaticLineBuilder}, this ought to be shown in red
             port.println("!!! unexpected end of image");

@@ -160,10 +160,6 @@ abstract class StructureDescriptionParser {
     }
 
     static {
-        KNOWN_FIELD_TYPES.put("unsigned-byte", new StructureDescriptionParser.SimpleFieldParameterParser(BinaryElementType.UNSIGNED_BYTE));
-        KNOWN_FIELD_TYPES.put("unsigned-lewyde", new StructureDescriptionParser.SimpleFieldParameterParser(BinaryElementType.UNSIGNED_LEWYDE));
-        KNOWN_FIELD_TYPES.put("unsigned-bewyde", new StructureDescriptionParser.SimpleFieldParameterParser(BinaryElementType.UNSIGNED_BEWYDE));
-
         KNOWN_FIELD_TYPES.put("padded-string", new StructureDescriptionParser.ParameterParser() {
             @Override
             final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
