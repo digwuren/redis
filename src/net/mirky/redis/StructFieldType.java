@@ -29,14 +29,14 @@ abstract class StructFieldType extends AbstractStruct {
     enum SlicedIntegerType {
         BYTE, LEWYDE, BEWYDE;
 
-        public final int extract(Cursor cursor, int offset) throws ImageError, RuntimeException {
+        public final int extract(Cursor cursor) throws ImageError, RuntimeException {
             switch (this) {
                 case BYTE:
-                    return cursor.getUnsignedByte(offset);
+                    return cursor.getUnsignedByte(0);
                 case LEWYDE:
-                    return cursor.getUnsignedLewyde(offset);
+                    return cursor.getUnsignedLewyde(0);
                 case BEWYDE:
-                    return cursor.getUnsignedBewyde(offset);
+                    return cursor.getUnsignedBewyde(0);
                 default:
                     throw new RuntimeException("bug detected");
             }
@@ -90,7 +90,7 @@ abstract class StructFieldType extends AbstractStruct {
 
         @Override
         public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            int wholeField = integerType.extract(cursor, 0);
+            int wholeField = integerType.extract(cursor);
             port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "] " + integerType.hexPadding() + indentation + name + ':');
             for (IntegerSlice slice : slices) {
                 port.print(slice.decode(wholeField));
