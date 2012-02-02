@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import net.mirky.redis.BinaryElementType.SlicedInteger.Slice;
+
 public abstract class BinaryElementType {
     /**
      * Show the content of an item of {@code this} structure, extracted from the
@@ -50,9 +52,9 @@ public abstract class BinaryElementType {
         public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             byte[] bytes = cursor.getPaddedBytes(0, size, padding);
-                    port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + itemName + ": ");
-                    decoding.displayForeignStringAsLiteral(bytes, port);
-                    port.println();
+            port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + itemName + ": ");
+            decoding.displayForeignStringAsLiteral(bytes, port);
+            port.println();
             cursor.advance(size);
         }
     }
@@ -119,21 +121,16 @@ public abstract class BinaryElementType {
             this.slices = slices;
         }
 
-        // FIXME: inline
-        public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
+        @Override
+        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+                PrintStream port) throws ImageError {
             int wholeField = integerType.extract(cursor);
-            port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + name + ':');
+            port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + itemName + ':');
             for (Slice slice : slices) {
                 port.print(slice.decode(wholeField));
             }
             port.println();
-            return integerType.size();
-        }
-
-        @Override
-        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
-                PrintStream port) throws ImageError {
-            cursor.advance(show(cursor, indentation, itemName, decoding, port));
+            cursor.advance(integerType.size());
         }
 
         /**
