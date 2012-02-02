@@ -16,7 +16,6 @@ abstract class StructFieldType {
      *            indentation prefix inherited from the context
      * @param name
      *            name of the field
-     * 
      * @return the offset just past the field, relative to the cursor's position
      * 
      * @throws ImageError
@@ -25,7 +24,7 @@ abstract class StructFieldType {
      *             thrown before anything is output, never in the middle of
      *             outputting a line.
      */
-    abstract int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError;
+    abstract int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError;
 
     static final class PaddedString extends StructFieldType {
         private final int size;
@@ -37,12 +36,12 @@ abstract class StructFieldType {
         }
 
         @Override
-        final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            byte[] bytes = cursor.getPaddedBytes(offset, size, padding);
-            port.print(Hex.t(cursor.tell() + offset) + ": [...]   " + indentation + name + ": ");
+        final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
+            byte[] bytes = cursor.getPaddedBytes(0, size, padding);
+            port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + name + ": ");
             decoding.displayForeignStringAsLiteral(bytes, port);
             port.println();
-            return offset + size;
+            return size;
         }
     }
 
@@ -109,14 +108,14 @@ abstract class StructFieldType {
         }
 
         @Override
-        final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            int wholeField = integerType.extract(cursor, offset);
-            port.print(Hex.t(cursor.tell() + offset) + ": [" + integerType.hex(wholeField) + "] " + integerType.hexPadding() + indentation + name + ':');
+        final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
+            int wholeField = integerType.extract(cursor, 0);
+            port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "] " + integerType.hexPadding() + indentation + name + ':');
             for (IntegerSlice slice : slices) {
                 port.print(slice.decode(wholeField));
             }
             port.println();
-            return offset + integerType.size();
+            return integerType.size();
         }
     }
 
@@ -128,35 +127,35 @@ abstract class StructFieldType {
         }
     
         @Override
-        final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            return offset + struct.show(cursor.subcursor(offset), indentation, name, decoding, port);
+        final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
+            return struct.show(cursor, indentation, name, decoding, port);
         }
     }
 
     static final StructFieldType UNSIGNED_LEWYDE = new StructFieldType() {
         @Override
-        final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            int value = cursor.getUnsignedLewyde(offset);
-            port.println(Hex.t(cursor.tell() + offset) + ": [" + Hex.w(value) + "]  " + indentation + name + ": " + value);
-            return offset + 2;
+        final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
+            int value = cursor.getUnsignedLewyde(0);
+            port.println(Hex.t(cursor.tell()) + ": [" + Hex.w(value) + "]  " + indentation + name + ": " + value);
+            return 2;
         }
     };
 
     static final StructFieldType UNSIGNED_BEWYDE = new StructFieldType() {
         @Override
-        final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            int value = cursor.getUnsignedBewyde(offset);
-            port.println(Hex.t(cursor.tell() + offset) + ": [" + Hex.w(value) + "]  " + indentation + name + ": " + value);
-            return offset + 2;
+        final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
+            int value = cursor.getUnsignedBewyde(0);
+            port.println(Hex.t(cursor.tell()) + ": [" + Hex.w(value) + "]  " + indentation + name + ": " + value);
+            return 2;
         }
     };
 
     static final StructFieldType UNSIGNED_BYTE = new StructFieldType() {
         @Override
-        final int show(Cursor cursor, int offset, String indentation, String name, Decoding decoding, PrintStream port) {
-            int value = cursor.getUnsignedByte(offset);
-            port.println(Hex.t(cursor.tell() + offset) + ": [" + Hex.b(value) + "]    " + indentation + name + ": " +  value);
-            return offset + 1;
+        final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) {
+            int value = cursor.getUnsignedByte(0);
+            port.println(Hex.t(cursor.tell()) + ": [" + Hex.b(value) + "]    " + indentation + name + ": " +  value);
+            return 1;
         }
     };
 }
