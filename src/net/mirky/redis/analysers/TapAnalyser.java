@@ -13,7 +13,7 @@ public final class TapAnalyser extends Analyser.Container {
     protected final ReconstructionDataCollector extractFiles(Format format, byte[] fileData) throws ImageError {
         int crc32 = BinaryUtil.crc32(fileData);
         ReconstructionDataCollector rcn = new ReconstructionDataCollector(fileData.length);
-        ZXSTapeBlockPairer pairer = new ZXSTapeBlockPairer(format, new Cursor.ByteArrayCursor(fileData, 0), rcn);
+        ZXSTapeBlockPairer pairer = new ZXSTapeBlockPairer(format, new Cursor(fileData, 0), rcn);
         while (!pairer.cursor.atEnd()) {
             int blockSize = pairer.cursor.getUnsignedLewyde(0);
             pairer.cursor.advance(2);

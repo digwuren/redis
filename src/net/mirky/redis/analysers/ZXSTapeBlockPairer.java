@@ -22,7 +22,7 @@ public final class ZXSTapeBlockPairer {
     final Cursor cursor;
     HeaderData headerData;
     
-    public ZXSTapeBlockPairer(Format format, Cursor.ByteArrayCursor cursor, ReconstructionDataCollector rcn) {
+    public ZXSTapeBlockPairer(Format format, Cursor cursor, ReconstructionDataCollector rcn) {
         this.format = format;
         this.cursor = cursor;
         this.rcn = rcn;

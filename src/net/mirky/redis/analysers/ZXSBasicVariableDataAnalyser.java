@@ -15,7 +15,7 @@ import net.mirky.redis.ImageError;
 public final class ZXSBasicVariableDataAnalyser extends Analyser.Leaf.PossiblyPartial {
     @Override
     protected final int disPartially(Format format, byte[] data, PrintStream port) {
-        Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
+        Cursor cursor = new Cursor(data, 0);
         ZXSBasicVariableDataAnalyser.Template[] templates = new ZXSBasicVariableDataAnalyser.Template[]{
                 new ZXSBasicVariableDataAnalyser.StringVariableTemplate(),
                 new ZXSBasicVariableDataAnalyser.NumericVariableTemplate(),

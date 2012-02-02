@@ -15,7 +15,7 @@ public final class StructArrayAnalyser extends Analyser.Leaf.PossiblyPartial {
     protected final int disPartially(Format format, byte[] data, PrintStream port) throws RuntimeException {
         @SuppressWarnings("unchecked")
         BinaryElementType elementType = ((Format.Option.SimpleOption<Named<BinaryElementType>>) format.getOption("struct")).value.content;
-        Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
+        Cursor cursor = new Cursor(data, 0);
         try {
             boolean firstp = true;
             while (!cursor.atEnd()) {

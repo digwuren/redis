@@ -129,7 +129,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
                 diskSectorTraversed[i] = false;
             }
             if (errorDataOffset != -1) {
-                errorDataCursor = new Cursor.ByteArrayCursor(data, errorDataOffset);
+                errorDataCursor = new Cursor(data, errorDataOffset);
             } else {
                 errorDataCursor = null;
             }
@@ -150,7 +150,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
         }
 
         private final void extractHeaderSector() throws ImageError {
-            Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
+            Cursor cursor = new Cursor(data, 0);
             int headerDiskSectorNumber = D64ImageExtractor.D64ImageGeometry.calcDiskSectorNumber(18, 0);
             D64ImageExtractor.D64ImageGeometry.seekDiskSector(cursor, headerDiskSectorNumber);
             checkDiskSectorGoodness(headerDiskSectorNumber);
@@ -220,7 +220,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
             int direntCount = directoryData.length / 32;
             dirEntries = new D64ImageExtractor.DirEntry[direntCount];
             Set<String> seenFilenames = new HashSet<String>();
-            Cursor cursor = new Cursor.ByteArrayCursor(directoryData, 0);
+            Cursor cursor = new Cursor(directoryData, 0);
             for (int i = 0; i < direntCount; i++) {
                 parseDirEntry(cursor, i, seenFilenames);
                 cursor.advance(32);
@@ -281,7 +281,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
         }
 
         private final void extractUntraversedNonblankSectors() throws ImageError {
-            Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
+            Cursor cursor = new Cursor(data, 0);
             for (int diskSector = 0; diskSector < geometry.getDiskSectorCount(); diskSector++) {
                 if (!diskSectorTraversed[diskSector]) {
                     D64ImageExtractor.D64ImageGeometry.seekDiskSector(cursor, diskSector);
@@ -297,7 +297,7 @@ public final class D64ImageAnalyser extends Analyser.Container {
             ArrayList<Integer> diskSectorNumbers = new ArrayList<Integer>();
             int track = startTrack;
             int sector = startSector;
-            Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
+            Cursor cursor = new Cursor(data, 0);
             do {
                 int diskSector = D64ImageExtractor.D64ImageGeometry.calcDiskSectorNumber(track, sector);
                 diskSectorNumbers.add(new Integer(diskSector));

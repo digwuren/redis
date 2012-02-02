@@ -14,7 +14,7 @@ import net.mirky.redis.ChromaticLineBuilder;
 public final class ZXSBasicProgramCodeAnalyser extends Analyser.Leaf.PossiblyPartial {
     @Override
     protected final int disPartially(Format format, byte[] data, PrintStream port) throws Format.UnknownOption, RuntimeException {
-        Cursor cursor = new Cursor.ByteArrayCursor(data, 0);
+        Cursor cursor = new Cursor(data, 0);
         int lastLineNumber = 0; // so we can check for out-of-order lines
         int autostart = format.getIntegerOption("autostart");
         boolean autostartLineSeen = false;

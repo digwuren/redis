@@ -14,7 +14,7 @@ public final class TzxAnalyser extends Analyser.Container {
     protected final ReconstructionDataCollector extractFiles(Format format, byte[] fileData) throws ImageError {
         int crc32 = BinaryUtil.crc32(fileData);
         ReconstructionDataCollector rcn = new ReconstructionDataCollector(fileData.length);
-        ZXSTapeBlockPairer pairer = new ZXSTapeBlockPairer(format, new Cursor.ByteArrayCursor(fileData, 0), rcn);
+        ZXSTapeBlockPairer pairer = new ZXSTapeBlockPairer(format, new Cursor(fileData, 0), rcn);
         if (!pairer.cursor.hasMagic(0, (byte) 0x5A, (byte) 0x58, (byte) 0x54, (byte) 0x61, (byte) 0x70, (byte) 0x65, (byte) 0x21, (byte) 0x1A)) {
             throw new ImageError("tzx magic not found");
         }
