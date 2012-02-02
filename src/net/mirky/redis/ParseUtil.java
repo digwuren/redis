@@ -283,12 +283,6 @@ public final class ParseUtil {
             return dent == 0 && !eof && lineLexer.atWord();
         }
         
-        public final String parseThisWord() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
-            assert dent == 0 && !eof;
-            return lineLexer.parseThisWord();
-        }
-        
         public final String parseThisDashedWord() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
