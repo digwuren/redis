@@ -99,9 +99,9 @@ public abstract class BinaryElementType {
     
     static class SlicedInteger extends BinaryElementType {
         private final BasicInteger integerType;
-        private final IntegerSlice[] slices;
+        private final Slice[] slices;
 
-        public SlicedInteger(BasicInteger integerType, IntegerSlice[] slices) {
+        public SlicedInteger(BasicInteger integerType, Slice[] slices) {
             this.integerType = integerType;
             this.slices = slices;
         }
@@ -110,11 +110,80 @@ public abstract class BinaryElementType {
         public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             int wholeField = integerType.extract(cursor);
             port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + name + ':');
-            for (IntegerSlice slice : slices) {
+            for (Slice slice : slices) {
                 port.print(slice.decode(wholeField));
             }
             port.println();
             return integerType.size();
+        }
+
+        /**
+         * An integer slice specifies how to extract and interpret a part of an integer
+         * or other similar bit vector. The main integer is normally extracted from the
+         * binary via a {@link BinaryElementType.SlicedInteger} instance.
+         */
+        static abstract class Slice {
+            protected final int rightShift;
+
+            protected Slice(int shift) {
+                this.rightShift = shift;
+            }
+
+            /**
+             * Given the full integer, extract this slice and decode it for human
+             * consumption.
+             * 
+             * @param field
+             *            full field, not just this slice
+             * @return decoded slice as a {@link String} instance. If the result is
+             *         a non-empty string, it will start with a space.
+             */
+            public abstract String decode(int field);
+
+            static final class Basic extends Slice {
+                private final int width;
+                private final String[] meanings;
+
+                // Note that {@code meanings} can be shorter than {@code 1 << bitCount}, and it
+                // can contain {@code null}:s.
+                public Basic(int rightShift, int width, String[] meanings) {
+                    super(rightShift);
+                    this.width = width;
+                    this.meanings = meanings;
+                }
+
+                @Override
+                public final String decode(int field) {
+                    int code = (field >> rightShift) & ((1 << width) - 1);
+                    String meaning = code < meanings.length ? meanings[code] : null;
+                    if (meaning != null) {
+                        return ' ' + meaning;
+                    } else {
+                        return " #" + code + " (invalid)";
+                    }
+                }
+            }
+
+            static final class Flag extends Slice {
+                private final String setMeaning;
+                private final String clearMeaning;
+
+                public Flag(int rightShift, String setMeaning, String clearMeaning) {
+                    super(rightShift);
+                    this.setMeaning = setMeaning;
+                    this.clearMeaning = clearMeaning;
+                }
+
+                @Override
+                public final String decode(int field) {
+                    String meaning = ((field >> rightShift) & 1) != 0 ? setMeaning : clearMeaning;
+                    if (meaning != null) {
+                        return ' ' + meaning;
+                    } else {
+                        return "";
+                    }
+                }
+            }
         }
     }
 

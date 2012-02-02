@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
-
 public final class Struct extends BinaryElementType {
     private final String name;
     private final Struct.Field[] fields;
@@ -54,7 +52,7 @@ public final class Struct extends BinaryElementType {
          * @throws ControlData.LineParseError
          * @throws IOException
          */
-        abstract BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
+        abstract BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
     }
 
     // for field types without parameters
@@ -66,7 +64,7 @@ public final class Struct extends BinaryElementType {
         }
 
         @Override
-        final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.passNewline();
             return fieldType;
         }
@@ -80,17 +78,17 @@ public final class Struct extends BinaryElementType {
         }
 
         @Override
-        final BinaryElementType.SlicedInteger parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.skipSpaces();
             lexer.passNewline();
             lexer.passIndent();
-            ArrayList<IntegerSlice> slices = new ArrayList<IntegerSlice>();
+            ArrayList<BinaryElementType.SlicedInteger.Slice> slices = new ArrayList<BinaryElementType.SlicedInteger.Slice>();
             while (!lexer.atDedent()) {
                 lexer.noIndent();
                 slices.add(parseIntegerSlice(lexer));
             }
             lexer.skipThisDedent();
-            return new BinaryElementType.SlicedInteger(integerType, slices.toArray(new IntegerSlice[0]));
+            return new BinaryElementType.SlicedInteger(integerType, slices.toArray(new BinaryElementType.SlicedInteger.Slice[0]));
         }
     }
 
@@ -107,7 +105,7 @@ public final class Struct extends BinaryElementType {
 
         KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
             @Override
-            final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+            final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
                 lexer.skipSpaces();
                 int size = lexer.parseUnsignedInteger("string length");
                 lexer.skipSpaces();
@@ -127,12 +125,12 @@ public final class Struct extends BinaryElementType {
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.
     // Basic slices hold an integer, flag slices hold a single bit.
-    static final IntegerSlice parseIntegerSlice(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+    static final BinaryElementType.SlicedInteger.Slice parseIntegerSlice(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
         lexer.pass('@');
         lexer.pass('.');
         int rightShift = lexer.parseUnsignedInteger("right shift");
         lexer.skipSpaces();
-        IntegerSlice slice;
+        BinaryElementType.SlicedInteger.Slice slice;
         if (lexer.atUnsignedInteger()) {
             // it's a basic slice; the field width (in bits) comes next
             int fieldWidth = lexer.parseUnsignedInteger("field width");
@@ -147,7 +145,7 @@ public final class Struct extends BinaryElementType {
                 }
                 meanings.add(lexer.parseThisString());
             }
-            slice = new IntegerSlice.Basic(rightShift, fieldWidth, meanings.toArray(new String[0]));
+            slice = new BinaryElementType.SlicedInteger.Slice.Basic(rightShift, fieldWidth, meanings.toArray(new String[0]));
         } else {
             // it's a flag slice; the field width is implicitly one
             String setMessage;
@@ -168,7 +166,7 @@ public final class Struct extends BinaryElementType {
             if (setMessage == null && clearMessage == null) {
                 lexer.complain("expected bit meaning");
             }
-            slice = new IntegerSlice.Flag(rightShift, setMessage, clearMessage);
+            slice = new BinaryElementType.SlicedInteger.Slice.Flag(rightShift, setMessage, clearMessage);
         }
         lexer.passNewline();
         return slice;
@@ -177,7 +175,7 @@ public final class Struct extends BinaryElementType {
     public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("struct") {
         @Override
         public final Struct load(String name, BufferedReader reader) {
-            IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
+            ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
                     '#');
             try {
                 ArrayList<Struct.Field> fields = new ArrayList<Struct.Field>();
