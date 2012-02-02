@@ -73,9 +73,9 @@ public final class Struct extends BinaryElementType {
     }
 
     private static final class SlicedIntegerFieldParameterParser extends FieldParameterParser {
-        private final BinaryElementType.SlicedIntegerType integerType;
+        private final BinaryElementType.BasicInteger integerType;
 
-        public SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType integerType) {
+        public SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger integerType) {
             this.integerType = integerType;
         }
 
@@ -120,9 +120,9 @@ public final class Struct extends BinaryElementType {
             }
         });
 
-        KNOWN_FIELD_TYPES.put("sliced-byte", new SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType.BYTE));
-        KNOWN_FIELD_TYPES.put("sliced-lewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType.LEWYDE));
-        KNOWN_FIELD_TYPES.put("sliced-bewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType.BEWYDE));
+        KNOWN_FIELD_TYPES.put("sliced-byte", new SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.BYTE));
+        KNOWN_FIELD_TYPES.put("sliced-lewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.LEWYDE));
+        KNOWN_FIELD_TYPES.put("sliced-bewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.BEWYDE));
     }
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.

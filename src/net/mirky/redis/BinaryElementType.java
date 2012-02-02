@@ -44,7 +44,7 @@ public abstract class BinaryElementType {
         }
     }
 
-    enum SlicedIntegerType {
+    enum BasicInteger {
         BYTE, LEWYDE, BEWYDE;
 
         public final int extract(Cursor cursor) throws ImageError, RuntimeException {
@@ -98,10 +98,10 @@ public abstract class BinaryElementType {
     }
     
     static class SlicedIntegerField extends BinaryElementType {
-        private final SlicedIntegerType integerType;
+        private final BasicInteger integerType;
         private final IntegerSlice[] slices;
 
-        public SlicedIntegerField(SlicedIntegerType integerType, IntegerSlice[] slices) {
+        public SlicedIntegerField(BasicInteger integerType, IntegerSlice[] slices) {
             this.integerType = integerType;
             this.slices = slices;
         }
@@ -119,9 +119,9 @@ public abstract class BinaryElementType {
     }
 
     static final class PlainUnsignedInteger extends BinaryElementType {
-        private final SlicedIntegerType type;
+        private final BasicInteger type;
 
-        PlainUnsignedInteger(SlicedIntegerType type) {
+        PlainUnsignedInteger(BasicInteger type) {
             this.type = type;
         }
 
@@ -133,7 +133,7 @@ public abstract class BinaryElementType {
         }
     }
     
-    static final PlainUnsignedInteger UNSIGNED_LEWYDE = new PlainUnsignedInteger(SlicedIntegerType.LEWYDE);
-    static final PlainUnsignedInteger UNSIGNED_BEWYDE = new PlainUnsignedInteger(SlicedIntegerType.BEWYDE);
-    static final PlainUnsignedInteger UNSIGNED_BYTE = new PlainUnsignedInteger(SlicedIntegerType.BYTE);
+    static final PlainUnsignedInteger UNSIGNED_LEWYDE = new PlainUnsignedInteger(BasicInteger.LEWYDE);
+    static final PlainUnsignedInteger UNSIGNED_BEWYDE = new PlainUnsignedInteger(BasicInteger.BEWYDE);
+    static final PlainUnsignedInteger UNSIGNED_BYTE = new PlainUnsignedInteger(BasicInteger.BYTE);
 }
