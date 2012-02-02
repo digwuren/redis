@@ -34,10 +34,10 @@ public abstract class Cursor {
         private final byte[] data;
         private int pos;
 
-        public ByteArrayCursor(byte[] data, int offset) {
-            assert offset >= 0 && offset <= data.length;
+        public ByteArrayCursor(byte[] data, int pos) {
+            assert pos >= 0 && pos <= data.length;
             this.data = data;
-            this.pos = offset;
+            this.pos = pos;
         }
 
         @Override
