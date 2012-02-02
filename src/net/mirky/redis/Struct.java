@@ -12,14 +12,12 @@ import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 import net.mirky.redis.ResourceManager.ResolutionError;
 
-public abstract class Struct {
+public abstract class Struct extends AbstractStruct {
     public final String name;
 
     public Struct(String name) {
         this.name = name;
     }
-
-    public abstract int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError;
 
     private static final Struct.Basic BLANK = new Struct.Basic("blank");
 
