@@ -6,4 +6,4 @@
 @3 data-start: d64-sector-chain-start
 @21 side-chain-start: d64-sector-chain-start
 @30 sector-count: unsigned-lewyde
-@32 dummy: null
+@32

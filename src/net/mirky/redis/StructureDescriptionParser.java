@@ -118,41 +118,47 @@ abstract class StructureDescriptionParser {
             RuntimeException {
         ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
         '#');
-        ArrayList<BinaryElementType.Struct.Step> fields = new ArrayList<BinaryElementType.Struct.Step>();
+        ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
         while (!lexer.atEndOfFile()) {
             lexer.noIndent();
-            lexer.pass('@');
-            int fieldOffset = lexer.parseUnsignedInteger("offset");
-            lexer.skipSpaces();
-            String fieldName = lexer.parseDashedWord("field name");
-            lexer.skipSpaces();
-            lexer.pass(':');
-            lexer.skipSpaces();
-            if (!lexer.atWord()) {
-                lexer.complain("expected field type");
+            if (lexer.at('@')) {
+                lexer.pass('@');
+                int fieldOffset = lexer.parseUnsignedInteger("offset");
+                steps.add(new Step.Seek(fieldOffset));
+                lexer.skipSpaces();
             }
-            String fieldTypeName = lexer.parseThisDashedWord();
-            StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
-            BinaryElementType fieldType;
-            if (parameterParser == null) {
-                try {
-                    fieldType = BinaryElementType.MANAGER.get(fieldTypeName);
-                } catch (ResourceManager.ResolutionError e) {
-                    lexer.complain("unknown field type");
-                    // {@link
-                    // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
-                    // returned?
-                    throw new RuntimeException("bug detected");
+            if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                String fieldName = lexer.parseDashedWord("field name");
+                lexer.skipSpaces();
+                lexer.pass(':');
+                lexer.skipSpaces();
+                if (!lexer.atWord()) {
+                    lexer.complain("expected field type");
                 }
-                lexer.passNewline();
+                String fieldTypeName = lexer.parseThisDashedWord();
+                StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
+                BinaryElementType fieldType;
+                if (parameterParser == null) {
+                    try {
+                        fieldType = BinaryElementType.MANAGER.get(fieldTypeName);
+                    } catch (ResourceManager.ResolutionError e) {
+                        lexer.complain("unknown field type");
+                        // {@link
+                        // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
+                        // returned?
+                        throw new RuntimeException("bug detected");
+                    }
+                    lexer.passNewline();
+                } else {
+                    fieldType = parameterParser.parseParameters(lexer);
+                }
+                steps.add(new Step.Pass(fieldName, fieldType));
             } else {
-                fieldType = parameterParser.parseParameters(lexer);
+                lexer.passNewline();
             }
-            fields.add(new Step.Seek(fieldOffset));
-            fields.add(new Step.Pass(fieldName, fieldType));
         }
         reader.close();
-        return new BinaryElementType.Struct(name, fields.toArray(new BinaryElementType.Struct.Step[0]));
+        return new BinaryElementType.Struct(name, steps.toArray(new BinaryElementType.Struct.Step[0]));
     }
 
     private static final Map<String, StructureDescriptionParser.ParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, StructureDescriptionParser.ParameterParser>();
