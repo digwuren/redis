@@ -113,11 +113,11 @@ abstract class StructureDescriptionParser {
         return slice;
     }
 
-    public static final Struct parseStructureDescription(String name, BufferedReader reader) throws LineParseError, IOException,
+    public static final BinaryElementType.Struct parseStructureDescription(String name, BufferedReader reader) throws LineParseError, IOException,
             RuntimeException {
         ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
         '#');
-        ArrayList<Struct.Field> fields = new ArrayList<Struct.Field>();
+        ArrayList<BinaryElementType.Struct.Field> fields = new ArrayList<BinaryElementType.Struct.Field>();
         while (!lexer.atEndOfFile()) {
             lexer.noIndent();
             lexer.pass('@');
@@ -147,10 +147,10 @@ abstract class StructureDescriptionParser {
             } else {
                 fieldType = parameterParser.parseParameters(lexer);
             }
-            fields.add(new Struct.Field(fieldOffset, fieldName, fieldType));
+            fields.add(new BinaryElementType.Struct.Field(fieldOffset, fieldName, fieldType));
         }
         reader.close();
-        return new Struct(name, fields.toArray(new Struct.Field[0]));
+        return new BinaryElementType.Struct(name, fields.toArray(new BinaryElementType.Struct.Field[0]));
     }
 
     private static final Map<String, StructureDescriptionParser.ParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, StructureDescriptionParser.ParameterParser>();
