@@ -73,14 +73,14 @@ public final class Struct extends BinaryElementType {
     }
 
     private static final class SlicedIntegerFieldParameterParser extends FieldParameterParser {
-        private final StructFieldType.SlicedIntegerType integerType;
+        private final BinaryElementType.SlicedIntegerType integerType;
 
-        public SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType integerType) {
+        public SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType integerType) {
             this.integerType = integerType;
         }
 
         @Override
-        final StructFieldType.SlicedIntegerField parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType.SlicedIntegerField parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.skipSpaces();
             lexer.passNewline();
             lexer.passIndent();
@@ -90,7 +90,7 @@ public final class Struct extends BinaryElementType {
                 slices.add(parseIntegerSlice(lexer));
             }
             lexer.skipThisDedent();
-            return new StructFieldType.SlicedIntegerField(integerType, slices.toArray(new IntegerSlice[0]));
+            return new BinaryElementType.SlicedIntegerField(integerType, slices.toArray(new IntegerSlice[0]));
         }
     }
 
@@ -101,9 +101,9 @@ public final class Struct extends BinaryElementType {
     }
 
     static {
-        KNOWN_FIELD_TYPES.put("unsigned-byte", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BYTE));
-        KNOWN_FIELD_TYPES.put("unsigned-lewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_LEWYDE));
-        KNOWN_FIELD_TYPES.put("unsigned-bewyde", new SimpleFieldParameterParser(StructFieldType.UNSIGNED_BEWYDE));
+        KNOWN_FIELD_TYPES.put("unsigned-byte", new SimpleFieldParameterParser(BinaryElementType.UNSIGNED_BYTE));
+        KNOWN_FIELD_TYPES.put("unsigned-lewyde", new SimpleFieldParameterParser(BinaryElementType.UNSIGNED_LEWYDE));
+        KNOWN_FIELD_TYPES.put("unsigned-bewyde", new SimpleFieldParameterParser(BinaryElementType.UNSIGNED_BEWYDE));
 
         KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
             @Override
@@ -116,13 +116,13 @@ public final class Struct extends BinaryElementType {
                     lexer.complain("value too high to be a char code");
                 }
                 lexer.passNewline();
-                return new StructFieldType.PaddedString(size, (byte) padding);
+                return new BinaryElementType.PaddedString(size, (byte) padding);
             }
         });
 
-        KNOWN_FIELD_TYPES.put("sliced-byte", new SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType.BYTE));
-        KNOWN_FIELD_TYPES.put("sliced-lewyde", new SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType.LEWYDE));
-        KNOWN_FIELD_TYPES.put("sliced-bewyde", new SlicedIntegerFieldParameterParser(StructFieldType.SlicedIntegerType.BEWYDE));
+        KNOWN_FIELD_TYPES.put("sliced-byte", new SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType.BYTE));
+        KNOWN_FIELD_TYPES.put("sliced-lewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType.LEWYDE));
+        KNOWN_FIELD_TYPES.put("sliced-bewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.SlicedIntegerType.BEWYDE));
     }
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.
