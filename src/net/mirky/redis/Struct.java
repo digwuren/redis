@@ -59,14 +59,14 @@ public final class Struct extends BinaryElementType {
 
     // for field types without parameters
     private static final class SimpleFieldParameterParser extends FieldParameterParser {
-        private final StructFieldType fieldType;
+        private final BinaryElementType fieldType;
 
-        public SimpleFieldParameterParser(StructFieldType fieldType) {
+        public SimpleFieldParameterParser(BinaryElementType fieldType) {
             this.fieldType = fieldType;
         }
 
         @Override
-        final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.passNewline();
             return fieldType;
         }
@@ -80,7 +80,7 @@ public final class Struct extends BinaryElementType {
         }
 
         @Override
-        final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final StructFieldType.SlicedIntegerField parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.skipSpaces();
             lexer.passNewline();
             lexer.passIndent();

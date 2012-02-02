@@ -7,7 +7,7 @@ abstract class StructFieldType extends BinaryElementType {
         // nothing to be done here
     }
 
-    static final class PaddedString extends StructFieldType {
+    static final class PaddedString extends BinaryElementType {
         private final int size;
         private final byte padding;
 
@@ -79,7 +79,7 @@ abstract class StructFieldType extends BinaryElementType {
         }
     }
     
-    static class SlicedIntegerField extends StructFieldType {
+    static class SlicedIntegerField extends BinaryElementType {
         private final SlicedIntegerType integerType;
         private final IntegerSlice[] slices;
 
@@ -100,7 +100,7 @@ abstract class StructFieldType extends BinaryElementType {
         }
     }
 
-    static final class PlainUnsignedInteger extends StructFieldType {
+    static final class PlainUnsignedInteger extends BinaryElementType {
         private final SlicedIntegerType type;
 
         PlainUnsignedInteger(SlicedIntegerType type) {
@@ -115,7 +115,7 @@ abstract class StructFieldType extends BinaryElementType {
         }
     }
     
-    static final StructFieldType UNSIGNED_LEWYDE = new PlainUnsignedInteger(SlicedIntegerType.LEWYDE);
-    static final StructFieldType UNSIGNED_BEWYDE = new PlainUnsignedInteger(SlicedIntegerType.BEWYDE);
-    static final StructFieldType UNSIGNED_BYTE = new PlainUnsignedInteger(SlicedIntegerType.BYTE);
+    static final PlainUnsignedInteger UNSIGNED_LEWYDE = new PlainUnsignedInteger(SlicedIntegerType.LEWYDE);
+    static final PlainUnsignedInteger UNSIGNED_BEWYDE = new PlainUnsignedInteger(SlicedIntegerType.BEWYDE);
+    static final PlainUnsignedInteger UNSIGNED_BYTE = new PlainUnsignedInteger(SlicedIntegerType.BYTE);
 }
