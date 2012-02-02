@@ -1,7 +1,5 @@
 package net.mirky.redis;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.PrintStream;
 
 public final class Struct extends BinaryElementType {
@@ -37,19 +35,4 @@ public final class Struct extends BinaryElementType {
             this.type = fieldType;
         }
     }
-
-    public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("struct") {
-        @Override
-        public final Struct load(String name, BufferedReader reader) {
-            try {
-                try {
-                    return StructureDescriptionParser.parseStructureDescription(name, reader);
-                } catch (ControlData.LineParseError e) {
-                    throw new RuntimeException("parse error reading resource " + name, e);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("I/O error reading resource " + name, e);
-            }
-        }
-    };
 }

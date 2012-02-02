@@ -135,7 +135,7 @@ abstract class StructureDescriptionParser {
             BinaryElementType fieldType;
             if (parameterParser == null) {
                 try {
-                    fieldType = Struct.MANAGER.get(fieldTypeName);
+                    fieldType = BinaryElementType.MANAGER.get(fieldTypeName);
                 } catch (ResourceManager.ResolutionError e) {
                     lexer.complain("unknown field type");
                     // {@link

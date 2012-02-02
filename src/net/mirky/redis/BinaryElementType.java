@@ -1,5 +1,7 @@
 package net.mirky.redis;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintStream;
 
 public abstract class BinaryElementType {
@@ -205,4 +207,19 @@ public abstract class BinaryElementType {
     static final PlainUnsignedInteger UNSIGNED_LEWYDE = new PlainUnsignedInteger(BasicInteger.LEWYDE);
     static final PlainUnsignedInteger UNSIGNED_BEWYDE = new PlainUnsignedInteger(BasicInteger.BEWYDE);
     static final PlainUnsignedInteger UNSIGNED_BYTE = new PlainUnsignedInteger(BasicInteger.BYTE);
+
+    public static final ResourceManager<Struct> MANAGER = new ResourceManager<Struct>("struct") {
+        @Override
+        public final Struct load(String name, BufferedReader reader) {
+            try {
+                try {
+                    return StructureDescriptionParser.parseStructureDescription(name, reader);
+                } catch (ControlData.LineParseError e) {
+                    throw new RuntimeException("parse error reading resource " + name, e);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("I/O error reading resource " + name, e);
+            }
+        }
+    };
 }

@@ -245,7 +245,7 @@ public final class Format {
             @Override
             final Named<Struct> parse(String name) throws OptionError {
                 try {
-                    return new Named<Struct>(name, Struct.MANAGER.get(name));
+                    return new Named<Struct>(name, BinaryElementType.MANAGER.get(name));
                 } catch (ResourceManager.ResolutionError e) {
                     throw new OptionError("unknown structure: " + name, e);
                 }
