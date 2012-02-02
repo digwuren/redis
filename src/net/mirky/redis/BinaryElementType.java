@@ -285,7 +285,7 @@ public abstract class BinaryElementType {
             Cursor localCursor = cursor.subcursor(0);
             for (Struct.Field field : fields) {
                 localCursor.seek(origin + field.offset);
-                localCursor.advance(field.type.show(localCursor, indentation + "  ", field.name, decoding, port));
+                field.type.showAndAdvance(localCursor, indentation + "  ", field.name, decoding, port);
                 if (localCursor.tell() > posPastStruct) {
                     posPastStruct = localCursor.tell();
                 }
