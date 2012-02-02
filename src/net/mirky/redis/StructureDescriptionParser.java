@@ -123,7 +123,7 @@ abstract class StructureDescriptionParser {
             lexer.pass('@');
             int fieldOffset = lexer.parseUnsignedInteger("offset");
             lexer.skipSpaces();
-            String fieldName = lexer.parseString("field name");
+            String fieldName = lexer.parseDashedWord("field name");
             lexer.skipSpaces();
             lexer.pass(':');
             lexer.skipSpaces();
