@@ -23,7 +23,28 @@ public abstract class BinaryElementType {
      *             thrown before anything is output, never in the middle of
      *             outputting a line.
      */
+    @Deprecated // in favour of {@link #showAndAdvance(Cursor, String, String, Decoding, PrintStream)}
     public abstract int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port)
+            throws ImageError;
+
+    /**
+     * Show the content of an item of {@code this} structure, extracted from the
+     * given {@code cursor}, as a sequence of full lines, output to the given
+     * {@code port}. If the field contains textual values, these are to be
+     * parsed using the given {@code decoding}.  Advance the cursor over the extracted item.
+     * 
+     * @param indentation
+     *            indentation prefix inherited from the context
+     * @param itemName
+     *            contextual name of the item
+     * 
+     * @throws ImageError
+     *             in case the field can not be extracted from data available
+     *             via {@code cursor}. Note that this exception can only be
+     *             thrown before anything is output, never in the middle of
+     *             outputting a line.
+     */
+    public abstract void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port)
             throws ImageError;
 
     /**
@@ -31,9 +52,16 @@ public abstract class BinaryElementType {
      * until we'll have decoupled positioning data from field data.
      */
     public static final BinaryElementType NULL = new BinaryElementType() {
+        // FIXME: inline
         @Override
         public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) {
             return 0;
+        }
+
+        @Override
+        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+                PrintStream port) throws ImageError {
+            cursor.advance(show(cursor, indentation, itemName, decoding, port));
         }
     };
 
@@ -46,6 +74,7 @@ public abstract class BinaryElementType {
             this.padding = padding;
         }
 
+        // FIXME: inline
         @Override
         public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             byte[] bytes = cursor.getPaddedBytes(0, size, padding);
@@ -53,6 +82,12 @@ public abstract class BinaryElementType {
             decoding.displayForeignStringAsLiteral(bytes, port);
             port.println();
             return size;
+        }
+
+        @Override
+        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+                PrintStream port) throws ImageError {
+            cursor.advance(show(cursor, indentation, itemName, decoding, port));
         }
     }
 
@@ -118,6 +153,7 @@ public abstract class BinaryElementType {
             this.slices = slices;
         }
 
+        // FIXME: inline
         @Override
         public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             int wholeField = integerType.extract(cursor);
@@ -127,6 +163,12 @@ public abstract class BinaryElementType {
             }
             port.println();
             return integerType.size();
+        }
+
+        @Override
+        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+                PrintStream port) throws ImageError {
+            cursor.advance(show(cursor, indentation, itemName, decoding, port));
         }
 
         /**
@@ -206,11 +248,18 @@ public abstract class BinaryElementType {
             this.type = type;
         }
 
+        // FIXME: inline
         @Override
         public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
             int value = type.extract(cursor);
             port.println(Hex.t(cursor.tell()) + ": [" + type.hex(value) + "]" + type.hexPadding() + " " + indentation + name + ": " + value);
             return type.size();
+        }
+
+        @Override
+        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+                PrintStream port) throws ImageError {
+            cursor.advance(show(cursor, indentation, itemName, decoding, port));
         }
     }
     
@@ -227,6 +276,7 @@ public abstract class BinaryElementType {
             this.fields = fields;
         }
 
+        // FIXME: inline
         @Override
         public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
@@ -241,6 +291,12 @@ public abstract class BinaryElementType {
                 }
             }
             return posPastStruct - origin;
+        }
+
+        @Override
+        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+                PrintStream port) throws ImageError {
+            cursor.advance(show(cursor, indentation, itemName, decoding, port));
         }
 
         public static final class Field {
