@@ -121,12 +121,12 @@ public abstract class Struct extends AbstractStruct {
         public static final class Field {
             public final int offset;
             public final String name;
-            public final StructFieldType type;
+            public final AbstractStruct type;
         
-            public Field(int offset, String name, StructFieldType type) {
+            public Field(int offset, String name, AbstractStruct fieldType) {
                 this.offset = offset;
                 this.name = name;
-                this.type = type;
+                this.type = fieldType;
             }
         }
     }
@@ -157,7 +157,7 @@ public abstract class Struct extends AbstractStruct {
          * @throws ControlData.LineParseError
          * @throws IOException
          */
-        abstract StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
+        abstract AbstractStruct parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
     }
 
     // for field types without parameters
@@ -210,7 +210,7 @@ public abstract class Struct extends AbstractStruct {
 
         KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
             @Override
-            final StructFieldType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+            final AbstractStruct parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
                 lexer.skipSpaces();
                 int size = lexer.parseUnsignedInteger("string length");
                 lexer.skipSpaces();
@@ -298,7 +298,7 @@ public abstract class Struct extends AbstractStruct {
                     }
                     String fieldTypeName = lexer.parseThisDashedWord();
                     FieldParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
-                    StructFieldType fieldType;
+                    AbstractStruct fieldType;
                     if (parameterParser == null) {
                         Struct struct;
                         try {
