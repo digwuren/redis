@@ -100,19 +100,6 @@ abstract class StructFieldType extends AbstractStruct {
         }
     }
 
-    static final class StructWrapperFieldType extends StructFieldType {
-        private final Struct struct;
-    
-        StructWrapperFieldType(Struct struct) {
-            this.struct = struct;
-        }
-    
-        @Override
-        public final int show(Cursor cursor, String indentation, String name, Decoding decoding, PrintStream port) throws ImageError {
-            return struct.show(cursor, indentation, name, decoding, port);
-        }
-    }
-
     static final class PlainUnsignedInteger extends StructFieldType {
         private final SlicedIntegerType type;
 

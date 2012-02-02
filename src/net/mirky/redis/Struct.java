@@ -197,9 +197,8 @@ public final class Struct extends AbstractStruct {
                     FieldParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
                     AbstractStruct fieldType;
                     if (parameterParser == null) {
-                        Struct struct;
                         try {
-                            struct = Struct.MANAGER.get(fieldTypeName);
+                            fieldType = Struct.MANAGER.get(fieldTypeName);
                         } catch (ResourceManager.ResolutionError e) {
                             lexer.complain("unknown field type");
                             // {@link
@@ -207,7 +206,6 @@ public final class Struct extends AbstractStruct {
                             // returned?
                             throw new RuntimeException("bug detected");
                         }
-                        fieldType = new StructFieldType.StructWrapperFieldType(struct);
                         lexer.passNewline();
                     } else {
                         fieldType = parameterParser.parseParameters(lexer);
