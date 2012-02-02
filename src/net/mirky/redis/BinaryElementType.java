@@ -296,7 +296,7 @@ public abstract class BinaryElementType {
 
     public static final ResourceManager<BinaryElementType> MANAGER = new ResourceManager<BinaryElementType>("struct") {
         @Override
-        public final Struct load(String name, BufferedReader reader) {
+        public final BinaryElementType load(String name, BufferedReader reader) {
             try {
                 try {
                     return StructureDescriptionParser.parseStructureDescription(name, reader);

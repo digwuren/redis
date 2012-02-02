@@ -9,6 +9,7 @@ import java.util.Map;
 
 import net.mirky.redis.BinaryElementType.Struct.Step;
 import net.mirky.redis.ControlData.LineParseError;
+import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 
 abstract class StructureDescriptionParser {
     private StructureDescriptionParser() {
@@ -114,51 +115,37 @@ abstract class StructureDescriptionParser {
         return slice;
     }
 
-    public static final BinaryElementType.Struct parseStructureDescription(String name, BufferedReader reader) throws LineParseError, IOException,
+    public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws LineParseError, IOException,
             RuntimeException {
         ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
         '#');
-        ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
-        while (!lexer.atEndOfFile()) {
-            lexer.noIndent();
-            if (lexer.at('@')) {
-                lexer.pass('@');
-                int fieldOffset = lexer.parseUnsignedInteger("offset");
-                steps.add(new Step.Seek(fieldOffset));
-                lexer.skipSpaces();
-            }
-            if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                String fieldName = lexer.parseDashedWord("field name");
-                lexer.skipSpaces();
-                lexer.pass(':');
-                lexer.skipSpaces();
-                if (!lexer.atWord()) {
-                    lexer.complain("expected field type");
-                }
-                String fieldTypeName = lexer.parseThisDashedWord();
-                StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
-                BinaryElementType fieldType;
-                if (parameterParser == null) {
-                    try {
-                        fieldType = BinaryElementType.MANAGER.get(fieldTypeName);
-                    } catch (ResourceManager.ResolutionError e) {
-                        lexer.complain("unknown field type");
-                        // {@link
-                        // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
-                        // returned?
-                        throw new RuntimeException("bug detected");
-                    }
-                    lexer.passNewline();
-                } else {
-                    fieldType = parameterParser.parseParameters(lexer);
-                }
-                steps.add(new Step.Pass(fieldName, fieldType));
-            } else {
-                lexer.passNewline();
-            }
+        try {
+            return parseType(lexer);
+        } finally {
+            reader.close();
         }
-        reader.close();
-        return new BinaryElementType.Struct(name, steps.toArray(new BinaryElementType.Struct.Step[0]));
+    }
+
+    public static final BinaryElementType parseType(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError,
+            IOException, RuntimeException {
+        String keyword = lexer.parseDashedWord("type");
+        StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(keyword);
+        BinaryElementType type;
+        if (parameterParser == null) {
+            try {
+                type = BinaryElementType.MANAGER.get(keyword);
+            } catch (ResourceManager.ResolutionError e) {
+                lexer.complain("unknown type");
+                // {@link
+                // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
+                // returned?
+                throw new RuntimeException("bug detected");
+            }
+            lexer.passNewline();
+        } else {
+            type = parameterParser.parseParameters(lexer);
+        }
+        return type;
     }
 
     private static final Map<String, StructureDescriptionParser.ParameterParser> KNOWN_FIELD_TYPES = new HashMap<String, StructureDescriptionParser.ParameterParser>();
@@ -168,7 +155,11 @@ abstract class StructureDescriptionParser {
     }
 
     static {
-        KNOWN_FIELD_TYPES.put("padded-string", new StructureDescriptionParser.ParameterParser() {
+        KNOWN_FIELD_TYPES.put("sliced-byte", new SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.BYTE));
+        KNOWN_FIELD_TYPES.put("sliced-lewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.LEWYDE));
+        KNOWN_FIELD_TYPES.put("sliced-bewyde", new SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.BEWYDE));
+
+        KNOWN_FIELD_TYPES.put("padded-string", new ParameterParser() {
             @Override
             final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
                 lexer.skipSpaces();
@@ -182,9 +173,38 @@ abstract class StructureDescriptionParser {
                 return new BinaryElementType.PaddedString(size, (byte) padding);
             }
         });
-
-        KNOWN_FIELD_TYPES.put("sliced-byte", new StructureDescriptionParser.SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.BYTE));
-        KNOWN_FIELD_TYPES.put("sliced-lewyde", new StructureDescriptionParser.SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.LEWYDE));
-        KNOWN_FIELD_TYPES.put("sliced-bewyde", new StructureDescriptionParser.SlicedIntegerFieldParameterParser(BinaryElementType.BasicInteger.BEWYDE));
+        
+        KNOWN_FIELD_TYPES.put("struct", new ParameterParser() {
+            @Override
+            final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+                ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
+                lexer.passNewline();
+                lexer.passIndent();
+                while (!lexer.atDedent()) {
+                    lexer.noIndent();
+                    if (lexer.at('@')) {
+                        lexer.skipChar();
+                        int fieldOffset = lexer.parseUnsignedInteger("offset");
+                        steps.add(new Step.Seek(fieldOffset));
+                        lexer.skipSpaces();
+                    }
+                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                        String fieldName = lexer.parseDashedWord("field name");
+                        lexer.skipSpaces();
+                        lexer.pass(':');
+                        lexer.skipSpaces();
+                        BinaryElementType fieldType = parseType(lexer);
+                        steps.add(new Step.Pass(fieldName, fieldType));
+                    } else {
+                        lexer.passNewline();
+                    }
+                }
+                lexer.skipThisDedent();
+                if (!lexer.atEndOfFile()) {
+                    lexer.complain("garbage follows structure description");
+                }
+                return new BinaryElementType.Struct("struct", steps.toArray(new BinaryElementType.Struct.Step[0]));
+            }
+        });
     }
 }

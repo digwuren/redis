@@ -1,2 +1,3 @@
-@0 track: unsigned-byte
-@1 sector: unsigned-byte
+struct
+    track: unsigned-byte
+    sector: unsigned-byte

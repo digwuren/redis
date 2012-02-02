@@ -1,9 +1,10 @@
-@5 filename: padded-string 16 0xA0
-@2 type-byte: sliced-byte
-    @.0 4 "DEL" "SEQ" "PRG" "USR" "REL"
-    @.6 "(locked)"
-    @.7 /"(unclosed)"
-@3 data-start: d64-sector-chain-start
-@21 side-chain-start: d64-sector-chain-start
-@30 sector-count: unsigned-lewyde
-@32
+struct
+    @5 filename: padded-string 16 0xA0
+    @2 type-byte: sliced-byte
+        @.0 4 "DEL" "SEQ" "PRG" "USR" "REL"
+        @.6 "(locked)"
+        @.7 /"(unclosed)"
+    @3 data-start: d64-sector-chain-start
+    @21 side-chain-start: d64-sector-chain-start
+    @30 sector-count: unsigned-lewyde
+    @32
