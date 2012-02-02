@@ -230,14 +230,17 @@ public abstract class BinaryElementType {
         @Override
         public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
-            int offsetPastStruct = 0;
+            int origin = cursor.tell();
+            int posPastStruct = origin;
+            Cursor localCursor = cursor.subcursor(0);
             for (Struct.Field field : fields) {
-                int offsetPastField = field.offset + field.type.show(cursor.subcursor(field.offset), indentation + "  ", field.name, decoding, port);
-                if (offsetPastField > offsetPastStruct) {
-                    offsetPastStruct = offsetPastField;
+                localCursor.seek(origin + field.offset);
+                localCursor.advance(field.type.show(localCursor, indentation + "  ", field.name, decoding, port));
+                if (localCursor.tell() > posPastStruct) {
+                    posPastStruct = localCursor.tell();
                 }
             }
-            return offsetPastStruct;
+            return posPastStruct - origin;
         }
 
         public static final class Field {
