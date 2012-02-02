@@ -23,7 +23,7 @@ public final class StructArrayAnalyser extends Analyser.Leaf.PossiblyPartial {
                     port.println();
                 }
                 int posBeforeElement = cursor.tell();
-                elementType.showAndAdvance(cursor, "", null, format.getDecoding(), port);
+                elementType.pass(cursor, "", null, format.getDecoding(), port);
                 if (cursor.tell() == posBeforeElement) {
                     // FIXME: once we output via the {@link ChromaticLineBuilder}, this ought to be shown in red
                     port.println("!!! null struct");

@@ -22,7 +22,7 @@ public abstract class BinaryElementType {
      *             thrown before anything is output, never in the middle of
      *             outputting a line.
      */
-    public abstract void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port)
+    public abstract void pass(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port)
             throws ImageError;
 
     /**
@@ -31,7 +31,7 @@ public abstract class BinaryElementType {
      */
     public static final BinaryElementType NULL = new BinaryElementType() {
         @Override
-        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+        public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) {
             // nothing to do
         }
@@ -47,7 +47,7 @@ public abstract class BinaryElementType {
         }
 
         @Override
-        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+        public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             byte[] bytes = cursor.getPaddedBytes(0, size, padding);
             port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + itemName + ": ");
@@ -120,7 +120,7 @@ public abstract class BinaryElementType {
         }
 
         @Override
-        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+        public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             int wholeField = integerType.extract(cursor);
             cursor.advance(integerType.size());
@@ -209,7 +209,7 @@ public abstract class BinaryElementType {
         }
 
         @Override
-        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+        public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             int value = type.extract(cursor);
             cursor.advance(type.size());
@@ -231,14 +231,14 @@ public abstract class BinaryElementType {
         }
 
         @Override
-        public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
+        public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             int origin = cursor.tell();
             int posPastStruct = origin;
             for (Struct.Field field : fields) {
                 cursor.seek(origin + field.offset);
-                field.type.showAndAdvance(cursor, indentation + "  ", field.name, decoding, port);
+                field.type.pass(cursor, indentation + "  ", field.name, decoding, port);
                 if (cursor.tell() > posPastStruct) {
                     posPastStruct = cursor.tell();
                 }
