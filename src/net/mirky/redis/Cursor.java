@@ -146,15 +146,6 @@ public final class Cursor {
         advance(size);
     }
 
-    public final boolean regionBlank(int offset, int size) throws ImageError {
-        for (int i = 0; i < size; i++) {
-            if (getByte(offset + i) != 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public final Cursor subcursor(int offset) {
         return new Cursor(data, pos + offset);
     }
