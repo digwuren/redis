@@ -289,6 +289,13 @@ public final class ParseUtil {
             return lineLexer.parseThisDashedWord();
         }
 
+        public final String parseDashedWord(String significance) throws ControlData.LineParseError, IOException {
+            if (!atWord()) {
+                complain("expected " + significance + ", a word (dashes permitted)");
+            }
+            return parseThisDashedWord();
+        }
+
         public final boolean atCommentChar() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             return at(commentChar);
