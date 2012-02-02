@@ -49,14 +49,14 @@ public abstract class BinaryElementType {
     enum BasicInteger {
         BYTE, LEWYDE, BEWYDE;
 
-        public final int extract(Cursor cursor) throws ImageError, RuntimeException {
+        public final int pass(Cursor cursor) throws ImageError, RuntimeException {
             switch (this) {
                 case BYTE:
-                    return cursor.getUnsignedByte(0);
+                    return cursor.passUnsignedByte();
                 case LEWYDE:
-                    return cursor.getUnsignedLewyde(0);
+                    return cursor.passUnsignedLewyde();
                 case BEWYDE:
-                    return cursor.getUnsignedBewyde(0);
+                    return cursor.passUnsignedBewyde();
                 default:
                     throw new RuntimeException("bug detected");
             }
@@ -74,18 +74,6 @@ public abstract class BinaryElementType {
             }
         }
         
-        public final int size() {
-            switch (this) {
-                case BYTE:
-                    return 1;
-                case LEWYDE:
-                case BEWYDE:
-                    return 2;
-                default:
-                    throw new RuntimeException("bug detected");
-            }
-        }
-
         public final String hexPadding() {
             switch (this) {
                 case BYTE:
@@ -112,8 +100,7 @@ public abstract class BinaryElementType {
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             int pos = cursor.tell();
-            int wholeField = integerType.extract(cursor);
-            cursor.advance(integerType.size());
+            int wholeField = integerType.pass(cursor);
             port.print(Hex.t(pos) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + itemName + ':');
             for (Slice slice : slices) {
                 port.print(slice.decode(wholeField));
@@ -202,8 +189,7 @@ public abstract class BinaryElementType {
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             int pos = cursor.tell();
-            int value = type.extract(cursor);
-            cursor.advance(type.size());
+            int value = type.pass(cursor);
             port.println(Hex.t(pos) + ": [" + type.hex(value) + "]" + type.hexPadding() + " " + indentation + itemName + ": " + value);
         }
     }
