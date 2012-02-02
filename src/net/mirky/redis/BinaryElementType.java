@@ -37,11 +37,12 @@ public abstract class BinaryElementType {
         @Override
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
+            int pos = cursor.tell();
             byte[] bytes = cursor.getPaddedBytes(0, size, padding);
-            port.print(Hex.t(cursor.tell()) + ": [...]   " + indentation + itemName + ": ");
+            cursor.advance(size);
+            port.print(Hex.t(pos) + ": [...]   " + indentation + itemName + ": ");
             decoding.displayForeignStringAsLiteral(bytes, port);
             port.println();
-            cursor.advance(size);
         }
     }
 
@@ -110,9 +111,10 @@ public abstract class BinaryElementType {
         @Override
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
+            int pos = cursor.tell();
             int wholeField = integerType.extract(cursor);
             cursor.advance(integerType.size());
-            port.print(Hex.t(cursor.tell()) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + itemName + ':');
+            port.print(Hex.t(pos) + ": [" + integerType.hex(wholeField) + "]" + integerType.hexPadding() + " " + indentation + itemName + ':');
             for (Slice slice : slices) {
                 port.print(slice.decode(wholeField));
             }
@@ -199,9 +201,10 @@ public abstract class BinaryElementType {
         @Override
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
+            int pos = cursor.tell();
             int value = type.extract(cursor);
             cursor.advance(type.size());
-            port.println(Hex.t(cursor.tell()) + ": [" + type.hex(value) + "]" + type.hexPadding() + " " + indentation + itemName + ": " + value);
+            port.println(Hex.t(pos) + ": [" + type.hex(value) + "]" + type.hexPadding() + " " + indentation + itemName + ": " + value);
         }
     }
     
