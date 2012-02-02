@@ -206,5 +206,10 @@ public abstract class Cursor {
         public final ByteArrayCursor subcursor(int offset) {
             return new ByteArrayCursor(data, pos + offset);
         }
+        
+        @Override
+        public final String toString() {
+            return "@" + pos + ":" + data.length;
+        }
     }
 }
