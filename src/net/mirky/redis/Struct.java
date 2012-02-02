@@ -100,9 +100,9 @@ public abstract class Struct {
     }
 
     public static final class Basic extends Struct {
-        private final Struct.Field[] fields;
+        private final Struct.Basic.Field[] fields;
 
-        public Basic(String name, Struct.Field... fields) {
+        public Basic(String name, Struct.Basic.Field... fields) {
             super(name);
             this.fields = fields;
         }
@@ -111,13 +111,42 @@ public abstract class Struct {
         public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             int offsetPastStruct = 0;
-            for (Struct.Field field : fields) {
+            for (Struct.Basic.Field field : fields) {
                 int offsetPastField = field.show(cursor, indentation + "  ", decoding, port);
                 if (offsetPastField > offsetPastStruct) {
                     offsetPastStruct = offsetPastField;
                 }
             }
             return offsetPastStruct;
+        }
+
+        public static final class Field {
+            public final int offset;
+            public final String name;
+            public final StructFieldType type;
+        
+            public Field(int offset, String name, StructFieldType type) {
+                this.offset = offset;
+                this.name = name;
+                this.type = type;
+            }
+        
+            /**
+             * Show content of {@code this} field of the structure as a text line
+             * via the given {@port}.
+             * 
+             * @return the offset just past the field, relative to the cursor's
+             *         position
+             * @throws ImageError
+             *             in case the field can not be extracted from data
+             *             available via {@code cursor}. Note that this exception
+             *             can only be thrown before anything is output or
+             *             immediately after completing a full line, never in the
+             *             middle of outputting a line.
+             */
+            public final int show(Cursor cursor, String indentation, Decoding decoding, PrintStream port) throws ImageError {
+                return offset + type.show(cursor.subcursor(offset), indentation, name, decoding, port);
+            }
         }
     }
 
@@ -134,35 +163,6 @@ public abstract class Struct {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             Hex.dump(cursor.getBytes(0, size), cursor.tell(), decoding, port);
             return size;
-        }
-    }
-
-    public static final class Field {
-        public final int offset;
-        public final String name;
-        public final StructFieldType type;
-
-        public Field(int offset, String name, StructFieldType type) {
-            this.offset = offset;
-            this.name = name;
-            this.type = type;
-        }
-
-        /**
-         * Show content of {@code this} field of the structure as a text line
-         * via the given {@port}.
-         * 
-         * @return the offset just past the field, relative to the cursor's
-         *         position
-         * @throws ImageError
-         *             in case the field can not be extracted from data
-         *             available via {@code cursor}. Note that this exception
-         *             can only be thrown before anything is output or
-         *             immediately after completing a full line, never in the
-         *             middle of outputting a line.
-         */
-        public final int show(Cursor cursor, String indentation, Decoding decoding, PrintStream port) throws ImageError {
-            return offset + type.show(cursor.subcursor(offset), indentation, name, decoding, port);
         }
     }
 
@@ -302,7 +302,7 @@ public abstract class Struct {
             IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name,
                     '#');
             try {
-                ArrayList<Field> fields = new ArrayList<Field>();
+                ArrayList<Struct.Basic.Field> fields = new ArrayList<Struct.Basic.Field>();
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     lexer.pass('@');
@@ -334,10 +334,10 @@ public abstract class Struct {
                     } else {
                         fieldType = parameterParser.parseParameters(lexer);
                     }
-                    fields.add(new Field(fieldOffset, fieldName, fieldType));
+                    fields.add(new Struct.Basic.Field(fieldOffset, fieldName, fieldType));
                 }
                 reader.close();
-                return new Struct.Basic(name, fields.toArray(new Field[0]));
+                return new Struct.Basic(name, fields.toArray(new Struct.Basic.Field[0]));
             } catch (IOException e) {
                 throw new RuntimeException("I/O error reading resource " + name, e);
             } catch (ControlData.LineParseError e) {
