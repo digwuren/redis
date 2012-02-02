@@ -250,16 +250,29 @@ public abstract class BinaryElementType {
         public static abstract class Step {
             public abstract void step(Context ctx) throws ImageError;
 
-            public static final class Seek extends Step {
+            public static final class LocalSeek extends Step {
                 public final int offset;
             
-                public Seek(int offset) {
+                public LocalSeek(int offset) {
                     this.offset = offset;
                 }
             
                 @Override
                 public final void step(Context ctx) throws ImageError {
                     ctx.cursor.seek(ctx.origin + offset);
+                }
+            }
+
+            public static final class RelSeek extends Step {
+                public final int offset;
+            
+                public RelSeek(int offset) {
+                    this.offset = offset;
+                }
+            
+                @Override
+                public final void step(Context ctx) throws ImageError {
+                    ctx.cursor.advance(offset);
                 }
             }
 

@@ -184,8 +184,22 @@ abstract class StructureDescriptionParser {
                     lexer.noIndent();
                     if (lexer.at('@')) {
                         lexer.skipChar();
-                        int fieldOffset = lexer.parseUnsignedInteger("offset");
-                        steps.add(new Step.Seek(fieldOffset));
+                        int sign;
+                        if (lexer.at('+')) {
+                            lexer.skipChar();
+                            sign = +1;
+                        } else if (lexer.at('-')) {
+                            lexer.skipChar();
+                            sign = -1;
+                        } else {
+                            sign = 0;
+                        }
+                        int offset = lexer.parseUnsignedInteger("offset");
+                        if (sign == 0) {
+                            steps.add(new Step.LocalSeek(offset));
+                        } else {
+                            steps.add(new Step.RelSeek(sign * offset));
+                        }
                         lexer.skipSpaces();
                     }
                     if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {

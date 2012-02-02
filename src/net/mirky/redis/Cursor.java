@@ -18,8 +18,8 @@ public final class Cursor {
         pos = newOffset;
     }
 
+    // Note that negative advances are permitted.
     public final void advance(int delta) throws ImageError {
-        assert delta > 0;
         seek(pos + delta);
     }
 
