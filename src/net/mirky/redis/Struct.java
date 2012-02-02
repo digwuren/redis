@@ -8,93 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
-import net.mirky.redis.ResourceManager.ResolutionError;
 
 public abstract class Struct extends AbstractStruct {
     public final String name;
 
     public Struct(String name) {
         this.name = name;
-    }
-
-    private static final Struct.Basic BLANK = new Struct.Basic("blank");
-
-    public static final class Union extends Struct {
-        private final Rule[] rules;
-
-        public Union(String name, Rule... rules) {
-            super(name);
-            if (rules.length == 0 || !(rules[rules.length - 1] instanceof Rule.Always)) {
-                throw new RuntimeException("the last rule in a Struct.Conditional must be a Rule.Always");
-            }
-            this.rules = rules;
-        }
-
-        @Override
-        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
-            for (Rule rule : rules) {
-                if (rule.matches(cursor)) {
-                    return rule.struct.show(cursor, indentation, itemName, decoding, port);
-                }
-            }
-            // No rule matched. This must not happen.
-            throw new RuntimeException("bug detected");
-        }
-
-        public static abstract class Rule {
-            public final Struct struct;
-
-            public Rule(Struct struct) {
-                this.struct = struct;
-            }
-
-            public abstract boolean matches(Cursor cursor);
-
-            public static final class RegionBlank extends Rule {
-                public final int offset;
-                public final int size;
-
-                public RegionBlank(int offset, int size, Struct struct) {
-                    super(struct);
-                    this.offset = offset;
-                    this.size = size;
-                }
-
-                @Override
-                public final boolean matches(Cursor cursor) {
-                    return cursor.regionBlank(offset, size);
-                }
-            }
-
-            public static final class ByteEquals extends Rule {
-                public final int offset;
-                public final byte etalon;
-
-                public ByteEquals(int offset, byte etalon, Struct struct) {
-                    super(struct);
-                    this.offset = offset;
-                    this.etalon = etalon;
-                }
-
-                @Override
-                public final boolean matches(Cursor cursor) {
-                    return ((byte) cursor.getUnsignedByte(offset)) == etalon;
-                }
-            }
-
-            public static final class Always extends Rule {
-                public Always(Struct struct) {
-                    super(struct);
-                }
-
-                @Override
-                public final boolean matches(Cursor cursor) {
-                    return true;
-                }
-            }
-        }
     }
 
     public static final class Basic extends Struct {
@@ -128,22 +48,6 @@ public abstract class Struct extends AbstractStruct {
                 this.name = name;
                 this.type = fieldType;
             }
-        }
-    }
-
-    public static final class Void extends Struct {
-        private final int size;
-
-        public Void(String name, int size) {
-            super(name);
-            this.size = size;
-        }
-
-        @Override
-        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
-            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
-            Hex.dump(cursor.getBytes(0, size), cursor.tell(), decoding, port);
-            return size;
         }
     }
 
@@ -230,7 +134,7 @@ public abstract class Struct extends AbstractStruct {
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.
     // Basic slices hold an integer, flag slices hold a single bit.
-    static final IntegerSlice parseIntegerSlice(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+    static final IntegerSlice parseIntegerSlice(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
         lexer.pass('@');
         lexer.pass('.');
         int rightShift = lexer.parseUnsignedInteger("right shift");
@@ -326,18 +230,4 @@ public abstract class Struct extends AbstractStruct {
             }
         }
     };
-
-    public static final Struct D64_DIRENT_UNION;
-
-    static {
-        try {
-            D64_DIRENT_UNION = new Struct.Union("d64-dirent-union",
-                    new Union.Rule.RegionBlank(2, 30, BLANK),
-                    new Union.Rule.ByteEquals(2, (byte) 0, new Void("d64-dirent-blank", 32)),
-                    new Union.Rule.Always(Struct.MANAGER.get("d64-dirent")));
-        } catch (ResolutionError e) {
-            throw new RuntimeException("Bug detected", e);
-        }
-        MANAGER.cache.put("d64-dirent-union", D64_DIRENT_UNION);
-    }
 }
