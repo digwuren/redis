@@ -2,7 +2,7 @@ package net.mirky.redis;
 
 import java.io.PrintStream;
 
-public abstract class AbstractStruct {
+public abstract class BinaryElementType {
     /**
      * Show the content of an item of {@code this} structure, extracted from the
      * given {@code cursor}, as a sequence of full lines, output to the given

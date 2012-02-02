@@ -10,7 +10,7 @@ import java.util.Map;
 
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 
-public final class Struct extends AbstractStruct {
+public final class Struct extends BinaryElementType {
     private final String name;
     private final Struct.Field[] fields;
 
@@ -35,9 +35,9 @@ public final class Struct extends AbstractStruct {
     public static final class Field {
         public final int offset;
         public final String name;
-        public final AbstractStruct type;
+        public final BinaryElementType type;
 
-        public Field(int offset, String name, AbstractStruct fieldType) {
+        public Field(int offset, String name, BinaryElementType fieldType) {
             this.offset = offset;
             this.name = name;
             this.type = fieldType;
@@ -54,7 +54,7 @@ public final class Struct extends AbstractStruct {
          * @throws ControlData.LineParseError
          * @throws IOException
          */
-        abstract AbstractStruct parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
+        abstract BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
     }
 
     // for field types without parameters
@@ -107,7 +107,7 @@ public final class Struct extends AbstractStruct {
 
         KNOWN_FIELD_TYPES.put("padded-string", new FieldParameterParser() {
             @Override
-            final AbstractStruct parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+            final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
                 lexer.skipSpaces();
                 int size = lexer.parseUnsignedInteger("string length");
                 lexer.skipSpaces();
@@ -195,7 +195,7 @@ public final class Struct extends AbstractStruct {
                     }
                     String fieldTypeName = lexer.parseThisDashedWord();
                     FieldParameterParser parameterParser = getFieldTypeParameterParser(fieldTypeName);
-                    AbstractStruct fieldType;
+                    BinaryElementType fieldType;
                     if (parameterParser == null) {
                         try {
                             fieldType = Struct.MANAGER.get(fieldTypeName);

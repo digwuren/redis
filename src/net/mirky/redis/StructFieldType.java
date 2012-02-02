@@ -2,7 +2,7 @@ package net.mirky.redis;
 
 import java.io.PrintStream;
 
-abstract class StructFieldType extends AbstractStruct {
+abstract class StructFieldType extends BinaryElementType {
     public StructFieldType() {
         // nothing to be done here
     }
