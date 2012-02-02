@@ -26,6 +26,16 @@ public abstract class BinaryElementType {
     public abstract int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port)
             throws ImageError;
 
+    /**
+     * Contentless zero-length element, used as a dummy structure end marker
+     * until we'll have decoupled positioning data from field data.
+     */
+    public static final BinaryElementType NULL = new BinaryElementType() {
+        @Override
+        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) {
+            return 0;
+        }
+    };
 
     static final class PaddedString extends BinaryElementType {
         private final int size;
@@ -259,6 +269,7 @@ public abstract class BinaryElementType {
     };
 
     static {
+        MANAGER.cache.put("null", NULL);
         MANAGER.cache.put("unsigned-byte", UNSIGNED_BYTE);
         MANAGER.cache.put("unsigned-lewyde", UNSIGNED_LEWYDE);
         MANAGER.cache.put("unsigned-bewyde", UNSIGNED_BEWYDE);
