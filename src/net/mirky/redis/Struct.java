@@ -112,7 +112,7 @@ public abstract class Struct {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             int offsetPastStruct = 0;
             for (Struct.Basic.Field field : fields) {
-                int offsetPastField = field.show(cursor, indentation + "  ", decoding, port);
+                int offsetPastField = field.offset + field.type.show(cursor.subcursor(field.offset), indentation + "  ", field.name, decoding, port);
                 if (offsetPastField > offsetPastStruct) {
                     offsetPastStruct = offsetPastField;
                 }
@@ -129,23 +129,6 @@ public abstract class Struct {
                 this.offset = offset;
                 this.name = name;
                 this.type = type;
-            }
-        
-            /**
-             * Show content of {@code this} field of the structure as a text line
-             * via the given {@port}.
-             * 
-             * @return the offset just past the field, relative to the cursor's
-             *         position
-             * @throws ImageError
-             *             in case the field can not be extracted from data
-             *             available via {@code cursor}. Note that this exception
-             *             can only be thrown before anything is output or
-             *             immediately after completing a full line, never in the
-             *             middle of outputting a line.
-             */
-            public final int show(Cursor cursor, String indentation, Decoding decoding, PrintStream port) throws ImageError {
-                return offset + type.show(cursor.subcursor(offset), indentation, name, decoding, port);
             }
         }
     }
