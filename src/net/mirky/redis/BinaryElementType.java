@@ -223,11 +223,11 @@ public abstract class BinaryElementType {
 
     public static final class Struct extends BinaryElementType {
         private final String name;
-        private final Struct.Field[] fields;
+        private final Struct.Step[] steps;
 
-        public Struct(String name, Struct.Field... fields) {
+        public Struct(String name, Struct.Step... fields) {
             this.name = name;
-            this.fields = fields;
+            this.steps = fields;
         }
 
         @Override
@@ -236,9 +236,8 @@ public abstract class BinaryElementType {
             port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
             int origin = cursor.tell();
             int posPastStruct = origin;
-            for (Struct.Field field : fields) {
-                cursor.seek(origin + field.offset);
-                field.type.pass(cursor, indentation + "  ", field.name, decoding, port);
+            for (Struct.Step step : steps) {
+                step.step(cursor, indentation, decoding, port, origin);
                 if (cursor.tell() > posPastStruct) {
                     posPastStruct = cursor.tell();
                 }
@@ -246,15 +245,20 @@ public abstract class BinaryElementType {
             cursor.seek(posPastStruct);
         }
 
-        public static final class Field {
+        public static final class Step {
             public final int offset;
             public final String name;
             public final BinaryElementType type;
 
-            public Field(int offset, String name, BinaryElementType fieldType) {
+            public Step(int offset, String name, BinaryElementType fieldType) {
                 this.offset = offset;
                 this.name = name;
                 this.type = fieldType;
+            }
+
+            public final void step(Cursor cursor, String indentation, Decoding decoding, PrintStream port, int origin) throws ImageError {
+                cursor.seek(origin + offset);
+                type.pass(cursor, indentation + "  ", name, decoding, port);
             }
         }
     }
