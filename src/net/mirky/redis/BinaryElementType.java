@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import net.mirky.redis.BinaryElementType.SlicedInteger.Slice;
-
 public abstract class BinaryElementType {
     /**
      * Show the content of an item of {@code this} structure, extracted from the
@@ -232,26 +230,20 @@ public abstract class BinaryElementType {
             this.fields = fields;
         }
 
-        // FIXME: inline
-        public final int show(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port) throws ImageError {
-            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
-            int origin = cursor.tell();
-            int posPastStruct = origin;
-            Cursor localCursor = cursor.subcursor(0);
-            for (Struct.Field field : fields) {
-                localCursor.seek(origin + field.offset);
-                field.type.showAndAdvance(localCursor, indentation + "  ", field.name, decoding, port);
-                if (localCursor.tell() > posPastStruct) {
-                    posPastStruct = localCursor.tell();
-                }
-            }
-            return posPastStruct - origin;
-        }
-
         @Override
         public final void showAndAdvance(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
-            cursor.advance(show(cursor, indentation, itemName, decoding, port));
+            port.println(Hex.t(cursor.tell()) + ":         " + indentation + (itemName != null ? itemName + ": " : "") + name);
+            int origin = cursor.tell();
+            int posPastStruct = origin;
+            for (Struct.Field field : fields) {
+                cursor.seek(origin + field.offset);
+                field.type.showAndAdvance(cursor, indentation + "  ", field.name, decoding, port);
+                if (cursor.tell() > posPastStruct) {
+                    posPastStruct = cursor.tell();
+                }
+            }
+            cursor.seek(posPastStruct);
         }
 
         public static final class Field {
