@@ -80,7 +80,7 @@ public final class Struct extends BinaryElementType {
         }
 
         @Override
-        final BinaryElementType.SlicedIntegerField parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType.SlicedInteger parseParameters(IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
             lexer.skipSpaces();
             lexer.passNewline();
             lexer.passIndent();
@@ -90,7 +90,7 @@ public final class Struct extends BinaryElementType {
                 slices.add(parseIntegerSlice(lexer));
             }
             lexer.skipThisDedent();
-            return new BinaryElementType.SlicedIntegerField(integerType, slices.toArray(new IntegerSlice[0]));
+            return new BinaryElementType.SlicedInteger(integerType, slices.toArray(new IntegerSlice[0]));
         }
     }
 

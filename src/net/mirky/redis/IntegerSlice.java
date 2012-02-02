@@ -3,7 +3,7 @@ package net.mirky.redis;
 /**
  * An integer slice specifies how to extract and interpret a part of an integer
  * or other similar bit vector. The main integer is normally extracted from the
- * binary via a {@link StructFieldType.SlicedIntegerField} instance.
+ * binary via a {@link BinaryElementType.SlicedInteger} instance.
  */
 public abstract class IntegerSlice {
     protected final int rightShift;

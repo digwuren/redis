@@ -97,11 +97,11 @@ public abstract class BinaryElementType {
         }
     }
     
-    static class SlicedIntegerField extends BinaryElementType {
+    static class SlicedInteger extends BinaryElementType {
         private final BasicInteger integerType;
         private final IntegerSlice[] slices;
 
-        public SlicedIntegerField(BasicInteger integerType, IntegerSlice[] slices) {
+        public SlicedInteger(BasicInteger integerType, IntegerSlice[] slices) {
             this.integerType = integerType;
             this.slices = slices;
         }
