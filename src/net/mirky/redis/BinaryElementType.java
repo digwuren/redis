@@ -239,6 +239,11 @@ public abstract class BinaryElementType {
         public static abstract class Step {
             public abstract void step(Context ctx) throws ImageError;
 
+            /**
+             * For field pass steps, set the field type.  For seek steps, do nothing.
+             */
+            public abstract void setType(BinaryElementType type);
+
             public static final class LocalSeek extends Step {
                 public final int offset;
             
@@ -249,6 +254,11 @@ public abstract class BinaryElementType {
                 @Override
                 public final void step(Context ctx) throws ImageError {
                     ctx.cursor.seek(ctx.origin + offset);
+                }
+
+                @Override
+                public final void setType(BinaryElementType type) {
+                    // nothing to do, seek steps are not typed
                 }
             }
 
@@ -263,20 +273,30 @@ public abstract class BinaryElementType {
                 public final void step(Context ctx) throws ImageError {
                     ctx.cursor.advance(offset);
                 }
+
+                @Override
+                public final void setType(BinaryElementType type) {
+                    // nothing to do, seek steps are not typed
+                }
             }
 
             public static final class Pass extends Step {
                 public final String name;
-                public final BinaryElementType type;
+                public BinaryElementType type;
             
-                public Pass(String name, BinaryElementType fieldType) {
+                public Pass(String name, BinaryElementType type) {
                     this.name = name;
-                    this.type = fieldType;
+                    this.type = type;
                 }
             
                 @Override
                 public final void step(Context ctx) throws ImageError {
                     type.pass(ctx.cursor, ctx.indentation, name, ctx.decoding, ctx.port);
+                }
+
+                @Override
+                public final void setType(BinaryElementType type) {
+                    this.type = type;
                 }
             }
         }
