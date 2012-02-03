@@ -201,18 +201,27 @@ abstract class StructureDescriptionParser {
                 
                 while (!lexer.atDedent()) {
                     lexer.noIndent();
-                    if (lexer.at('@')) {
-                        Step seek = parseThisSeek(lexer);
-                        lineSteps.add(seek);
-                        lexer.skipSpaces();
-                    }
                     boolean haveFields = false;
-                    if (lexer.atWord()) {
-                        String fieldName = lexer.parseDashedWord("field name");
+                    do {
                         lexer.skipSpaces();
-                        lineSteps.add(new Step.Pass(fieldName, null));
-                        haveFields = true;
-                    }
+                        boolean parsedSomething = false;
+                        if (lexer.at('@')) {
+                            Step seek = parseThisSeek(lexer);
+                            lineSteps.add(seek);
+                            lexer.skipSpaces();
+                            parsedSomething = true;
+                        }
+                        if (lexer.atWord()) {
+                            String fieldName = lexer.parseDashedWord("field name");
+                            lexer.skipSpaces();
+                            lineSteps.add(new Step.Pass(fieldName, null));
+                            haveFields = true;
+                            parsedSomething = true;
+                        }
+                        if (!parsedSomething) {
+                            lexer.complain("expected field name or seek");
+                        }
+                    } while (lexer.passOpt(','));
                     if (haveFields) {
                         lexer.pass(':');
                         lexer.skipSpaces();
