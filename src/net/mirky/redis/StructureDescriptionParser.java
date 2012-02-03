@@ -195,6 +195,7 @@ abstract class StructureDescriptionParser {
             @Override
             final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
+                ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
                 lexer.passNewline();
                 lexer.passIndent();
                 
@@ -202,19 +203,28 @@ abstract class StructureDescriptionParser {
                     lexer.noIndent();
                     if (lexer.at('@')) {
                         Step seek = parseThisSeek(lexer);
-                        steps.add(seek);
+                        lineSteps.add(seek);
                         lexer.skipSpaces();
                     }
-                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                    boolean haveFields = false;
+                    if (lexer.atWord()) {
                         String fieldName = lexer.parseDashedWord("field name");
                         lexer.skipSpaces();
+                        lineSteps.add(new Step.Pass(fieldName, null));
+                        haveFields = true;
+                    }
+                    if (haveFields) {
                         lexer.pass(':');
                         lexer.skipSpaces();
                         BinaryElementType fieldType = parseType(lexer);
-                        steps.add(new Step.Pass(fieldName, fieldType));
+                        for (Step step : lineSteps) {
+                            step.setType(fieldType);
+                        }
                     } else {
                         lexer.passNewline();
                     }
+                    steps.addAll(lineSteps);
+                    lineSteps.clear();
                 }
                 lexer.skipThisDedent();
                 if (!lexer.atEndOfFile()) {
