@@ -342,6 +342,14 @@ public final class ParseUtil {
             skipChar();
         }
 
+        public final boolean passOpt(char c) throws ControlData.LineParseError, IOException {
+            boolean result = at(c);
+            if (result) {
+                skipChar();
+            }
+            return result;
+        }
+
         /**
          * Parse an unsigned integer from the cursor onwards. If there isn't one
          * at the cursor, report an error and state the significance of the
