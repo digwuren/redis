@@ -411,6 +411,15 @@ public final class ParseUtil {
             ensureCurrentLine();
             return lineLexer.parseRestOfLine();
         }
+
+        public final boolean passOptDashedWord(String etalon) throws ControlData.LineParseError, IOException {
+            if (atWord() && peekThisDashedWord().equals(etalon)) {
+                parseThisDashedWord();
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     public static final class IndentationSensitiveFileLexer extends IndentationSensitiveLexer {
