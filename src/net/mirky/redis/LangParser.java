@@ -53,19 +53,25 @@ final class LangParser {
                     throw new DisassemblyTableParseError("duplicate lang header item " + name);
                 }
                 seenHeaderLines.add(name);
-                if (name.equals("Dispatch-suboffset")) {
-                    dispatchSuboffset = Integer.parseInt(value);
-                } else if (name.equals("Default-countdown")) {
-                    defaultCountdown = Integer.parseInt(value);
-                } else if (name.equals("Trivial")) {
-                    trivial = parseBoolean(value);
-                } else {
-                    throw new DisassemblyTableParseError("unknown lang file header item " + name);
-                }
+                processHeader(name, value);
             } else {
                 stillInHeader = false;
                 parseLangFileBodyLine(line);
             }
+        }
+    }
+
+    // Called by {@code parse(...)} for each header name-value pair. Guaranteed
+    // to be called at most once per name.
+    private final void processHeader(String name, String value) throws NumberFormatException, DisassemblyTableParseError {
+        if (name.equalsIgnoreCase("Dispatch-suboffset")) {
+            dispatchSuboffset = Integer.parseInt(value);
+        } else if (name.equalsIgnoreCase("Default-countdown")) {
+            defaultCountdown = Integer.parseInt(value);
+        } else if (name.equalsIgnoreCase("Trivial")) {
+            trivial = parseBoolean(value);
+        } else {
+            throw new DisassemblyTableParseError("unknown lang file header item " + name);
         }
     }
 
