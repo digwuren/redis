@@ -69,6 +69,7 @@ Programmer-visible changes:
 * introduced Cursor.subcursor(int)
 * implemented a Cursor.ByteArrayCursor.toString() to aid debugging
 * introduced Named<...>
+* converted LangParser into an independent class
 
 == v0.1 2011-08-08
 
