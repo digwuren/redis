@@ -40,12 +40,13 @@ final class LangParser {
     final void parse(BufferedReader reader) throws IOException, DisassemblyTableParseError {
         String line;
         Set<String> seenHeaderLines = new TreeSet<String>();
+        boolean stillInHeader = true;
         while ((line = reader.readLine()) != null) {
             if (line.length() == 0 || line.charAt(0) == '#') {
                 continue;
             }
-            Matcher headerLineMatcher = HEADER_LINE_RE.matcher(line);
-            if (headerLineMatcher.matches()) {
+            Matcher headerLineMatcher;
+            if (stillInHeader && (headerLineMatcher = HEADER_LINE_RE.matcher(line)).matches()) {
                 String name = headerLineMatcher.group(1);
                 String value = headerLineMatcher.group(2);
                 if (seenHeaderLines.contains(name)) {
@@ -62,6 +63,7 @@ final class LangParser {
                     throw new DisassemblyTableParseError("unknown lang file header item " + name);
                 }
             } else {
+                stillInHeader = false;
                 parseLangFileBodyLine(line);
             }
         }
