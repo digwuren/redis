@@ -115,6 +115,13 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
+        public final String peekThisDashedWord() {
+            int begin = pos;
+            String word = parseThisDashedWord();
+            pos = begin;
+            return word;
+        }
+
         /**
          * Parse the unsigned integer starting from the cursor. Programming
          * error if the cursor is not at an unsigned integer.
@@ -287,6 +294,12 @@ public final class ParseUtil {
             ensureCurrentLine();
             assert dent == 0 && !eof;
             return lineLexer.parseThisDashedWord();
+        }
+
+        public final String peekThisDashedWord() throws ControlData.LineParseError, IOException {
+            ensureCurrentLine();
+            assert dent == 0 && !eof;
+            return lineLexer.peekThisDashedWord();
         }
 
         public final String parseDashedWord(String significance) throws ControlData.LineParseError, IOException {
