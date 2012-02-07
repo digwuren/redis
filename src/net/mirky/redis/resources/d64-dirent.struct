@@ -1,3 +1,5 @@
+# Directory entry structure used in Commodore 64 disk images
+
 struct
     @+2 # skip the two bytes reserved for sector linkage
     type-byte: sliced-byte
