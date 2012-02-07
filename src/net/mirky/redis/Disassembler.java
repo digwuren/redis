@@ -925,20 +925,6 @@ public final class Disassembler {
                 }
             }
 
-            /*
-             * An instance of this with a brief message is thrown internally
-             * when lang file parsing fails. Considering that all our lang files
-             * are considered internal to the project, this is not supposed to
-             * happen, so we catch all our {@link DisassemblyTableParseError}:s
-             * and throw a RuntimeException to the caller instead (but we'll
-             * retain the {@link DisassemblyTableParseError} as a cause).
-             */
-            static final class DisassemblyTableParseError extends Exception {
-                DisassemblyTableParseError(String msg) {
-                    super(msg);
-                }
-            }
-
             /**
              * A CodeSet instance represents a particular set of integer codes,
              * typically in the range of 0-255. We have two kinds of CodeSet:s,

@@ -91,20 +91,19 @@ final class LangParser {
                     // decipherer line
                     parseDeciphererLine(setSpec, content);
                 }
-            } catch (Disassembler.Lang.Tabular.DisassemblyTableParseError e) {
+            } catch (DisassemblyTableParseError e) {
                 throw new RuntimeException("invalid lang file line: " + line, e);
             }
         }
     }
 
-    final void parseDeciphererLine(String setSpec, String content) throws RuntimeException,
-    Disassembler.Lang.Tabular.DisassemblyTableParseError {
+    final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
         Disassembler.Lang.Tabular.CodeSet set = Disassembler.Lang.Tabular.CodeSet.parse(setSpec);
         byte[] decipherer = parseDecipherer(content);
         for (int i = 0; i < 256; i++) {
             if (set.matches(i)) {
                 if (decipherers[i] != null) {
-                    throw new Disassembler.Lang.Tabular.DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
+                    throw new DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
                 }
                 decipherers[i] = decipherer;
             }
@@ -157,11 +156,11 @@ final class LangParser {
             coll = new Disassembler.Lang.Tabular.BytecodeCollector();
         }
 
-        final void parseProcessingStep(String step) throws Disassembler.Lang.Tabular.DisassemblyTableParseError, RuntimeException {
+        final void parseProcessingStep(String step) throws DisassemblyTableParseError, RuntimeException {
             Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveInitialStep(step);
             if (resolvedStep != null) {
                 if (!resolvedStep.typeMatches(size)) {
-                    throw new Disassembler.Lang.Tabular.DisassemblyTableParseError("type mismatch for step " + step);
+                    throw new DisassemblyTableParseError("type mismatch for step " + step);
                 }
                 coll.add(resolvedStep.code);
                 if (resolvedStep.sizeAfter != -1) {
@@ -174,7 +173,7 @@ final class LangParser {
                     size = 0;
                 } else {
                     if (size == 0) {
-                        throw new Disassembler.Lang.Tabular.DisassemblyTableParseError("attempt to process void value");
+                        throw new DisassemblyTableParseError("attempt to process void value");
                     }
                     if (minitablesByName.containsKey(step)) {
                         int minitableNumber = minitablesByName.get(step).intValue();
@@ -219,7 +218,7 @@ final class LangParser {
                         coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
                         size = 0;
                     } else {
-                        throw new Disassembler.Lang.Tabular.DisassemblyTableParseError("unknown processing step: " + step);
+                        throw new DisassemblyTableParseError("unknown processing step: " + step);
                     }
                 }
             }
@@ -267,16 +266,16 @@ final class LangParser {
                 String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
                 try {
                     if (stepSpecs.length == 0) {
-                        throw new Disassembler.Lang.Tabular.DisassemblyTableParseError("empty broketed part");
+                        throw new DisassemblyTableParseError("empty broketed part");
                     }
                     size = 0;
                     for (int i = 0; i < stepSpecs.length; i++) {
                         parseProcessingStep(stepSpecs[i]);
                     }
                     if (size != 0) {
-                        throw new Disassembler.Lang.Tabular.DisassemblyTableParseError("final step missing");
+                        throw new DisassemblyTableParseError("final step missing");
                     }
-                } catch (Disassembler.Lang.Tabular.DisassemblyTableParseError e) {
+                } catch (DisassemblyTableParseError e) {
                     throw new RuntimeException("error parsing opcode decipherer broketed part <"
                             + broketedPart + ">", e);
                 }
@@ -285,6 +284,20 @@ final class LangParser {
             probe = string.length();
             passLiteralText();
             return coll.finish();
+        }
+    }
+
+    /*
+     * An instance of this with a brief message is thrown internally
+     * when lang file parsing fails. Considering that all our lang files
+     * are considered internal to the project, this is not supposed to
+     * happen, so we catch all our {@link DisassemblyTableParseError}:s
+     * and throw a RuntimeException to the caller instead (but we'll
+     * retain the {@link DisassemblyTableParseError} as a cause).
+     */
+    static final class DisassemblyTableParseError extends Exception {
+        DisassemblyTableParseError(String msg) {
+            super(msg);
         }
     }
 }
