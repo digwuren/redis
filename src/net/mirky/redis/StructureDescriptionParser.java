@@ -76,9 +76,9 @@ abstract class StructureDescriptionParser {
         BinaryElementType.SlicedInteger.Slice slice;
         if (lexer.atUnsignedInteger()) {
             // it's a basic slice; the field width (in bits) comes next
-            int fieldWidth = lexer.parseUnsignedInteger("field width");
-            if (fieldWidth == 0) {
-                lexer.complain("zero-bit field?");
+            int sliceWidth = lexer.parseUnsignedInteger("slice width");
+            if (sliceWidth == 0) {
+                lexer.complain("zero-bit slice?");
             }
             List<String> meanings = new ArrayList<String>();
             while (true) {
@@ -88,28 +88,28 @@ abstract class StructureDescriptionParser {
                 }
                 meanings.add(lexer.parseThisString());
             }
-            slice = new BinaryElementType.SlicedInteger.Slice.Basic(rightShift, fieldWidth, meanings.toArray(new String[0]));
+            slice = new BinaryElementType.SlicedInteger.Slice.Basic(rightShift, sliceWidth, meanings.toArray(new String[0]));
         } else {
             // it's a flag slice; the field width is implicitly one
-            String setMessage;
+            String setFlagName;
             if (lexer.at('"')) {
-                setMessage = lexer.parseThisString();
+                setFlagName = lexer.parseThisString();
             } else {
-                setMessage = null;
+                setFlagName = null;
             }
             lexer.skipSpaces();
-            String clearMessage;
+            String clearFlagName;
             if (lexer.at('/')) {
                 lexer.skipChar();
                 lexer.skipSpaces();
-                clearMessage = lexer.parseString("cleared flag meaning");
+                clearFlagName = lexer.parseString("cleared flag meaning");
             } else {
-                clearMessage = null;
+                clearFlagName = null;
             }
-            if (setMessage == null && clearMessage == null) {
+            if (setFlagName == null && clearFlagName == null) {
                 lexer.complain("expected bit meaning");
             }
-            slice = new BinaryElementType.SlicedInteger.Slice.Flag(rightShift, setMessage, clearMessage);
+            slice = new BinaryElementType.SlicedInteger.Slice.Flag(rightShift, setFlagName, clearFlagName);
         }
         lexer.passNewline();
         return slice;
