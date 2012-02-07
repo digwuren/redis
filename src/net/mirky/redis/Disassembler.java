@@ -810,7 +810,7 @@ public final class Disassembler {
 
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
                 LangParser parser = new LangParser();
-                parser.parse(reader);
+                parser.parse(name, reader);
                 return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.minitables, parser.referredLanguages, parser);
             }
 

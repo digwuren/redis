@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 final class LangParser {
     final byte[][] decipherers;
@@ -37,27 +35,47 @@ final class LangParser {
         trivial = false; // by default, not trivial
     }
 
-    final void parse(BufferedReader reader) throws IOException, DisassemblyTableParseError {
-        String line;
+    final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError, RuntimeException {
+        Set<String> knownHeaderItems = new TreeSet<String>();
+        // note that the membership is checked with a downcased specimen
+        knownHeaderItems.add("dispatch-suboffset");
+        knownHeaderItems.add("default-countdown");
+        knownHeaderItems.add("trivial");
         Set<String> seenHeaderLines = new TreeSet<String>();
-        boolean stillInHeader = true;
-        while ((line = reader.readLine()) != null) {
-            if (line.length() == 0 || line.charAt(0) == '#') {
-                continue;
-            }
-            Matcher headerLineMatcher;
-            if (stillInHeader && (headerLineMatcher = HEADER_LINE_RE.matcher(line)).matches()) {
-                String name = headerLineMatcher.group(1);
-                String value = headerLineMatcher.group(2);
-                if (seenHeaderLines.contains(name)) {
-                    throw new DisassemblyTableParseError("duplicate lang header item " + name);
+        
+        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name, '#');
+        String itemName = null;
+        try {
+            try {
+                while (lexer.atWord() && knownHeaderItems.contains((itemName = lexer.peekThisDashedWord()).toLowerCase())) {
+                    if (seenHeaderLines.contains(itemName)) {
+                        throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
+                    }
+                    seenHeaderLines.add(itemName);
+                    lexer.parseThisDashedWord();
+                    lexer.skipSpaces();
+                    lexer.pass(':');
+                    // Note that comments are not ignored after header items.
+                    lexer.skipSpaces();
+                    processHeader(itemName, lexer.parseRestOfLine());
+                    lexer.passNewline();
                 }
-                seenHeaderLines.add(name);
-                processHeader(name, value);
-            } else {
-                stillInHeader = false;
-                parseLangFileBodyLine(line);
+            } catch (NumberFormatException e) {
+                throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
+            } catch (ControlData.LineParseError e) {
+                throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
             }
+            try {
+                while (!lexer.atEndOfFile()) {
+                    String line = lexer.parseRestOfLine();
+                    parseLangFileBodyLine(line);
+                    lexer.passNewline();
+                }
+            } catch (ControlData.LineParseError e) {
+                throw new DisassemblyTableParseError("error parsing lang description " + name, e);
+            }
+        } finally {
+            reader.close();
         }
     }
 
@@ -153,8 +171,6 @@ final class LangParser {
         minitablesByName.put(tableName, new Integer(minitableCounter));
         minitables[minitableCounter++] = minitable;
     }
-
-    private static final Pattern HEADER_LINE_RE = Pattern.compile("(\\w+(?:-\\w+)*):\\s+(.*?)");
 
     final class DeciphererParser {
         private final String string;
@@ -313,6 +329,10 @@ final class LangParser {
     static final class DisassemblyTableParseError extends Exception {
         DisassemblyTableParseError(String msg) {
             super(msg);
+        }
+
+        public DisassemblyTableParseError(String msg, Exception cause) {
+            super(msg, cause);
         }
     }
 }
