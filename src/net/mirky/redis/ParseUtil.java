@@ -134,6 +134,12 @@ public final class ParseUtil {
             return ParseUtil.parseUnsignedInteger(parseThisWord());
         }
 
+        public final String parseRestOfLine() {
+            String result = line.substring(pos);
+            pos = line.length();
+            return result;
+        }
+
         public final int getPos() {
             return pos;
         }
@@ -399,6 +405,11 @@ public final class ParseUtil {
                 complain("expected indent");
             }
             skipThisIndent();
+        }
+
+        public final String parseRestOfLine() throws ControlData.LineParseError, IOException {
+            ensureCurrentLine();
+            return lineLexer.parseRestOfLine();
         }
     }
 
