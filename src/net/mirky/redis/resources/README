@@ -1,4 +1,16 @@
 This directory contains the resources that come with Redis.
 
-There is a GitHub wiki page on the struct description language; see
-<https://github.com/digwuren/redis/wiki/Struct-description>.
+The type of each resource file can be deduced from its filename suffix:
+
+*.decoding
+    describe decoding 8-bit char encodings into Unicode
+
+*.lang
+    describe disassembling binary machine codes;
+
+*.api
+    describe provided APIs for the disassembler
+
+*.struct
+    describe binary data structures; see
+    <https://github.com/digwuren/redis/wiki/Struct-description>
