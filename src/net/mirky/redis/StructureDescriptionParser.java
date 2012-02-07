@@ -195,45 +195,43 @@ abstract class StructureDescriptionParser {
             @Override
             final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
-                ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
                 lexer.passNewline();
                 lexer.passIndent();
                 
                 while (!lexer.atDedent()) {
                     lexer.noIndent();
-                    boolean haveFields = false;
-                    do {
+                    if (lexer.at('@')) {
+                        Step seek = parseThisSeek(lexer);
+                        steps.add(seek);
                         lexer.skipSpaces();
-                        boolean parsedSomething = false;
-                        if (lexer.at('@')) {
-                            Step seek = parseThisSeek(lexer);
-                            lineSteps.add(seek);
-                            lexer.skipSpaces();
-                            parsedSomething = true;
-                        }
-                        if (lexer.atWord()) {
+                    }
+                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                        ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
+                        while (true) {
                             String fieldName = lexer.parseDashedWord("field name");
-                            lexer.skipSpaces();
                             lineSteps.add(new Step.Pass(fieldName, null));
-                            haveFields = true;
-                            parsedSomething = true;
+                            lexer.skipSpaces();
+                            if (!lexer.at(',')) {
+                                break;
+                            }
+                            lexer.skipChar();
+                            lexer.skipSpaces();
+                            if (lexer.at('@')) {
+                                Step seek = parseThisSeek(lexer);
+                                lineSteps.add(seek);
+                                lexer.skipSpaces();
+                            }
                         }
-                        if (!parsedSomething) {
-                            lexer.complain("expected field name or seek");
-                        }
-                    } while (lexer.passOpt(','));
-                    if (haveFields) {
                         lexer.pass(':');
                         lexer.skipSpaces();
                         BinaryElementType fieldType = parseType(lexer);
                         for (Step step : lineSteps) {
                             step.setType(fieldType);
                         }
+                        steps.addAll(lineSteps);
                     } else {
                         lexer.passNewline();
                     }
-                    steps.addAll(lineSteps);
-                    lineSteps.clear();
                 }
                 lexer.skipThisDedent();
                 if (!lexer.atEndOfFile()) {
