@@ -1,5 +1,5 @@
 Default-countdown: 1
-Trivial!
+Trivial: true
 
 [0x00] 1 NEXT without FOR
 [0x01] 2 Variable not found

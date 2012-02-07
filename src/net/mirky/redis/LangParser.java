@@ -56,16 +56,25 @@ final class LangParser {
                     dispatchSuboffset = Integer.parseInt(value);
                 } else if (name.equals("Default-countdown")) {
                     defaultCountdown = Integer.parseInt(value);
+                } else if (name.equals("Trivial")) {
+                    trivial = parseBoolean(value);
                 } else {
                     throw new DisassemblyTableParseError("unknown lang file header item " + name);
                 }
-            } else if (line.equals("Trivial!")) {
-                trivial = true;
-                // no duplicity check
             } else {
                 parseLangFileBodyLine(line);
             }
         }
+    }
+
+    private static final boolean parseBoolean(String value) throws DisassemblyTableParseError {
+        if (value.equalsIgnoreCase("true")) {
+            return true;
+        }
+        if (value.equalsIgnoreCase("false")) {
+            return false;
+        }
+        throw new DisassemblyTableParseError("not a Boolean value: " + value);
     }
 
     private final void parseLangFileBodyLine(String line) throws RuntimeException, DisassemblyTableParseError {
