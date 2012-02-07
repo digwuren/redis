@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 final class LangParser {
     final byte[][] decipherers;
@@ -37,7 +39,7 @@ final class LangParser {
         trivial = false; // by default, not trivial
     }
 
-    final void parse(BufferedReader reader) throws IOException {
+    final void parse(BufferedReader reader) throws IOException, DisassemblyTableParseError {
         String line;
         while ((line = reader.readLine()) != null) {
             if (line.length() == 0 || line.charAt(0) == '#') {
@@ -47,23 +49,26 @@ final class LangParser {
         }
     }
 
-    final void parseDitLine(String line) throws RuntimeException {
-        String dispatchSuboffsetDeclarator = "Dispatch-suboffset:";
-        String defaultCountdownDeclarator = "Default-countdown:";
-        if (line.startsWith(dispatchSuboffsetDeclarator)) {
-            String parameter = line.substring(dispatchSuboffsetDeclarator.length()).trim();
-            if (dispatchSuboffsetDeclared) {
-                throw new RuntimeException("duplicate Dispatch-suboffset: declaration in lang file");
+    final void parseDitLine(String line) throws DisassemblyTableParseError {
+        Matcher headerLineMatcher = HEADER_LINE_RE.matcher(line);
+        if (headerLineMatcher.matches()) {
+            String name = headerLineMatcher.group(1);
+            String value = headerLineMatcher.group(2);
+            if (name.equals("Dispatch-suboffset")) {
+                if (dispatchSuboffsetDeclared) {
+                    throw new DisassemblyTableParseError("duplicate Dispatch-suboffset: declaration in lang file");
+                }
+                dispatchSuboffset = Integer.parseInt(value);
+                dispatchSuboffsetDeclared = true;
+            } else if (name.equals("Default-countdown")) {
+                if (defaultCountdownDeclared) {
+                    throw new DisassemblyTableParseError("duplicate Default-countdown: declaration in lang file");
+                }
+                defaultCountdown = Integer.parseInt(value);
+                defaultCountdownDeclared = true;
+            } else {
+                throw new DisassemblyTableParseError("unknown lang file header item " + name);
             }
-            dispatchSuboffset = Integer.parseInt(parameter);
-            dispatchSuboffsetDeclared = true;
-        } else if (line.startsWith(defaultCountdownDeclarator)) {
-            String parameter = line.substring(defaultCountdownDeclarator.length()).trim();
-            if (defaultCountdownDeclared) {
-                throw new RuntimeException("duplicate Default-countdown: declaration in lang file");
-            }
-            defaultCountdown = Integer.parseInt(parameter);
-            defaultCountdownDeclared = true;
         } else if (line.equals("Trivial!")) {
             trivial = true;
             // no duplicity check
@@ -80,19 +85,15 @@ final class LangParser {
             String tableName = line.substring(0, leftBracket).trim();
             String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
             String content = line.substring(rightBracket + 1).trim();
-            try {
-                if (tableName.length() != 0) {
-                    // minitable line
-                    if (setSpec.length() != 0) {
-                        throw new RuntimeException("invalid lang file line: " + line);
-                    }
-                    parseMinitableLine(tableName, content);
-                } else {
-                    // decipherer line
-                    parseDeciphererLine(setSpec, content);
+            if (tableName.length() != 0) {
+                // minitable line
+                if (setSpec.length() != 0) {
+                    throw new DisassemblyTableParseError("invalid lang file line: " + line);
                 }
-            } catch (DisassemblyTableParseError e) {
-                throw new RuntimeException("invalid lang file line: " + line, e);
+                parseMinitableLine(tableName, content);
+            } else {
+                // decipherer line
+                parseDeciphererLine(setSpec, content);
             }
         }
     }
@@ -140,6 +141,8 @@ final class LangParser {
         minitablesByName.put(tableName, new Integer(minitableCounter));
         minitables[minitableCounter++] = minitable;
     }
+
+    private static final Pattern HEADER_LINE_RE = Pattern.compile("(\\w+(?:-\\w+)*):\\s+(.*?)");
 
     final class DeciphererParser {
         private final String string;
