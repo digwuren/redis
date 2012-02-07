@@ -10,12 +10,12 @@ public final class Cursor {
         this.pos = pos;
     }
 
-    public final void seek(int newOffset) throws ImageError {
-        assert newOffset >= 0;
-        if (newOffset > data.length) {
+    public final void seek(int newPos) throws ImageError {
+        assert newPos >= 0;
+        if (newPos > data.length) {
             throw new ImageError("cursor outside image");
         }
-        pos = newOffset;
+        pos = newPos;
     }
 
     // Note that negative advances are permitted.
@@ -103,7 +103,13 @@ public final class Cursor {
         return getBytes(offset, end - offset);
     }
 
-    public byte[] getBytes(int offset, int count) throws ImageError {
+    public final byte[] passPaddedBytes(int size, byte padding) throws ImageError {
+        byte[] bytes = getPaddedBytes(0, size, padding);
+        advance(size);
+        return bytes;
+    }
+
+    public final byte[] getBytes(int offset, int count) throws ImageError {
         byte[] buffer = new byte[count];
         getBytes(offset, count, buffer, 0);
         return buffer;

@@ -38,8 +38,7 @@ public abstract class BinaryElementType {
         public final void pass(Cursor cursor, String indentation, String itemName, Decoding decoding,
                 PrintStream port) throws ImageError {
             int pos = cursor.tell();
-            byte[] bytes = cursor.getPaddedBytes(0, size, padding);
-            cursor.advance(size);
+            byte[] bytes = cursor.passPaddedBytes(size, padding);
             port.print(Hex.t(pos) + ": [...]   " + indentation + itemName + ": ");
             decoding.displayForeignStringAsLiteral(bytes, port);
             port.println();
