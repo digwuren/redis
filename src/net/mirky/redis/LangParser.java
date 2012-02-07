@@ -2,7 +2,9 @@ package net.mirky.redis;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -67,8 +69,35 @@ final class LangParser {
             }
             try {
                 while (!lexer.atEndOfFile()) {
-                    String line = lexer.parseRestOfLine();
-                    parseLangFileBodyLine(line);
+                    lexer.noIndent();
+                    if (lexer.passOptDashedWord("minitable")) {
+                        lexer.skipSpaces();
+                        String tableName = lexer.parseDashedWord("minitable name");
+                        if (minitablesByName.containsKey(tableName)) {
+                            lexer.complain("duplicate minitable name");
+                        }
+                        lexer.skipSpaces();
+                        lexer.pass(':');
+                        lexer.skipSpaces();
+                        List<String> minitable = new ArrayList<String>();
+                        while (lexer.atWord()) {
+                            minitable.add(lexer.parseThisDashedWord());
+                            lexer.skipSpaces();
+                        }
+                        // minitable size must be a power of two
+                        // (so that we can mask off excess high bits meaningfully)
+                        if (minitable.size() == 0 || (minitable.size() & (minitable.size() - 1)) != 0) {
+                            throw new DisassemblyTableParseError("invalid minitable size for " + tableName);
+                        }
+                        if (minitableCounter >= Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
+                            throw new RuntimeException("too many minitables");
+                        }
+                        minitablesByName.put(tableName, new Integer(minitableCounter));
+                        minitables[minitableCounter++] = minitable.toArray(new String[0]);
+                    } else {
+                        String line = lexer.parseRestOfLine();
+                        parseLangFileBodyLine(line);
+                    }
                     lexer.passNewline();
                 }
             } catch (ControlData.LineParseError e) {
