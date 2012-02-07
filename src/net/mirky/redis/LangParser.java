@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,9 +18,7 @@ final class LangParser {
     final Map<String, Integer> referredLanguagesByName;
     int referredLanguageCounter;
     int dispatchSuboffset;
-    private boolean dispatchSuboffsetDeclared;
     int defaultCountdown;
-    private boolean defaultCountdownDeclared;
     boolean trivial;
 
     LangParser() {
@@ -33,68 +33,63 @@ final class LangParser {
         referredLanguagesByName = new HashMap<String, Integer>();
         referredLanguageCounter = 0;
         dispatchSuboffset = 0;
-        dispatchSuboffsetDeclared = false;
         defaultCountdown = 0; // by default, no default countdown
-        defaultCountdownDeclared = false;
         trivial = false; // by default, not trivial
     }
 
     final void parse(BufferedReader reader) throws IOException, DisassemblyTableParseError {
         String line;
+        Set<String> seenHeaderLines = new TreeSet<String>();
         while ((line = reader.readLine()) != null) {
             if (line.length() == 0 || line.charAt(0) == '#') {
                 continue;
             }
-            parseDitLine(line);
+            Matcher headerLineMatcher = HEADER_LINE_RE.matcher(line);
+            if (headerLineMatcher.matches()) {
+                String name = headerLineMatcher.group(1);
+                String value = headerLineMatcher.group(2);
+                if (seenHeaderLines.contains(name)) {
+                    throw new DisassemblyTableParseError("duplicate lang header item " + name);
+                }
+                seenHeaderLines.add(name);
+                if (name.equals("Dispatch-suboffset")) {
+                    dispatchSuboffset = Integer.parseInt(value);
+                } else if (name.equals("Default-countdown")) {
+                    defaultCountdown = Integer.parseInt(value);
+                } else {
+                    throw new DisassemblyTableParseError("unknown lang file header item " + name);
+                }
+            } else if (line.equals("Trivial!")) {
+                trivial = true;
+                // no duplicity check
+            } else {
+                parseLangFileBodyLine(line);
+            }
         }
     }
 
-    final void parseDitLine(String line) throws DisassemblyTableParseError {
-        Matcher headerLineMatcher = HEADER_LINE_RE.matcher(line);
-        if (headerLineMatcher.matches()) {
-            String name = headerLineMatcher.group(1);
-            String value = headerLineMatcher.group(2);
-            if (name.equals("Dispatch-suboffset")) {
-                if (dispatchSuboffsetDeclared) {
-                    throw new DisassemblyTableParseError("duplicate Dispatch-suboffset: declaration in lang file");
-                }
-                dispatchSuboffset = Integer.parseInt(value);
-                dispatchSuboffsetDeclared = true;
-            } else if (name.equals("Default-countdown")) {
-                if (defaultCountdownDeclared) {
-                    throw new DisassemblyTableParseError("duplicate Default-countdown: declaration in lang file");
-                }
-                defaultCountdown = Integer.parseInt(value);
-                defaultCountdownDeclared = true;
-            } else {
-                throw new DisassemblyTableParseError("unknown lang file header item " + name);
+    private final void parseLangFileBodyLine(String line) throws RuntimeException, DisassemblyTableParseError {
+        // Besides the metadata, a lang file has lines of two
+        // types:
+        // [mask] decipherer
+        // minitable[] value, value, ...
+        int leftBracket = line.indexOf('[');
+        int rightBracket = line.indexOf(']', leftBracket + 1);
+        if (leftBracket == -1 || rightBracket == -1) {
+            throw new RuntimeException("invalid lang file line: " + line);
+        }
+        String tableName = line.substring(0, leftBracket).trim();
+        String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
+        String content = line.substring(rightBracket + 1).trim();
+        if (tableName.length() != 0) {
+            // minitable line
+            if (setSpec.length() != 0) {
+                throw new DisassemblyTableParseError("invalid lang file line: " + line);
             }
-        } else if (line.equals("Trivial!")) {
-            trivial = true;
-            // no duplicity check
+            parseMinitableLine(tableName, content);
         } else {
-            // Besides the metadata, a lang file has lines of two
-            // types:
-            // [mask] decipherer
-            // minitable[] value, value, ...
-            int leftBracket = line.indexOf('[');
-            int rightBracket = line.indexOf(']', leftBracket + 1);
-            if (leftBracket == -1 || rightBracket == -1) {
-                throw new RuntimeException("invalid lang file line: " + line);
-            }
-            String tableName = line.substring(0, leftBracket).trim();
-            String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
-            String content = line.substring(rightBracket + 1).trim();
-            if (tableName.length() != 0) {
-                // minitable line
-                if (setSpec.length() != 0) {
-                    throw new DisassemblyTableParseError("invalid lang file line: " + line);
-                }
-                parseMinitableLine(tableName, content);
-            } else {
-                // decipherer line
-                parseDeciphererLine(setSpec, content);
-            }
+            // decipherer line
+            parseDeciphererLine(setSpec, content);
         }
     }
 
