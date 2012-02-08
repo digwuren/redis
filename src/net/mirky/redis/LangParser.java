@@ -133,24 +133,16 @@ final class LangParser {
     }
 
     private final void parseLangFileBodyLine(String line) throws RuntimeException, DisassemblyTableParseError {
-        // Besides the metadata, a lang file has lines of two
-        // types:
-        // [mask] decipherer
-        // minitable[] value, value, ...
         int leftBracket = line.indexOf('[');
         int rightBracket = line.indexOf(']', leftBracket + 1);
         if (leftBracket == -1 || rightBracket == -1) {
-            throw new RuntimeException("invalid lang file line: " + line);
+            throw new DisassemblyTableParseError("invalid lang file line: " + line);
         }
         String tableName = line.substring(0, leftBracket).trim();
         String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
         String content = line.substring(rightBracket + 1).trim();
         if (tableName.length() != 0) {
-            // minitable line
-            if (setSpec.length() != 0) {
-                throw new DisassemblyTableParseError("invalid lang file line: " + line);
-            }
-            parseMinitableLine(tableName, content);
+            throw new DisassemblyTableParseError("invalid lang file line: " + line);
         } else {
             // decipherer line
             parseDeciphererLine(setSpec, content);
@@ -182,23 +174,6 @@ final class LangParser {
      */
     final byte[] parseDecipherer(String s) {
         return new DeciphererParser(s).parse();
-    }
-
-    final void parseMinitableLine(String tableName, String content) throws RuntimeException {
-        String[] minitable = Disassembler.Lang.Tabular.SPACED_COMMA.split(content, -1);
-        // minitable size must be a power of two
-        // (so that we can mask off excess high bits meaningfully)
-        if (minitable.length == 0 || (minitable.length & (minitable.length - 1)) != 0) {
-            throw new RuntimeException("invalid minitable size");
-        }
-        if (minitablesByName.containsKey(tableName)) {
-            throw new RuntimeException("duplicate minitable name: " + tableName);
-        }
-        if (minitableCounter >= Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-            throw new RuntimeException("too many minitables");
-        }
-        minitablesByName.put(tableName, new Integer(minitableCounter));
-        minitables[minitableCounter++] = minitable;
     }
 
     final class DeciphererParser {
