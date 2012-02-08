@@ -783,7 +783,7 @@ public final class Disassembler {
             static final Pattern SPACED_COMMA = Pattern.compile("\\s*,\\s*");
 
             private final boolean trivial;
-            private final LangParser.Linkage linkage;
+            private final Tabular.Linkage linkage;
             private final byte[] bytecode;
             private final int[] bytecodeIndex;
             /*
@@ -797,7 +797,7 @@ public final class Disassembler {
 
             @SuppressWarnings("synthetic-access")
             private Tabular(String name, int defaultCountdown, boolean trivial, byte[][] decipherers,
-                    LangParser.Linkage linkage, LangParser parser) {
+                    Tabular.Linkage linkage, LangParser parser) {
                 super(name, defaultCountdown);
                 assert decipherers.length == 256;
                 assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
@@ -1063,6 +1063,16 @@ public final class Disassembler {
 
                 final int currentPosition() {
                     return steps.size();
+                }
+            }
+
+            static final class Linkage {
+                final String[][] minitables;
+                final String[] referredLanguages;
+                
+                Linkage() {
+                    minitables = new String[Disassembler.Bytecode.MAX_MINITABLE_COUNT][];
+                    referredLanguages = new String[Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
                 }
             }
         }

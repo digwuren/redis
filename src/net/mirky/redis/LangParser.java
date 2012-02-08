@@ -9,11 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import net.mirky.redis.Disassembler.Bytecode;
-
 final class LangParser {
     final byte[][] decipherers;
-    final Linkage linkage;
+    final Disassembler.Lang.Tabular.Linkage linkage;
     final Map<String, Integer> minitablesByName;
     private int minitableCounter;
     final Map<String, Integer> referredLanguagesByName;
@@ -27,7 +25,7 @@ final class LangParser {
         for (int i = 0; i < 256; i++) {
             decipherers[i] = null;
         }
-        linkage = new Linkage();
+        linkage = new Disassembler.Lang.Tabular.Linkage();
         minitablesByName = new HashMap<String, Integer>();
         minitableCounter = 0;
         referredLanguagesByName = new HashMap<String, Integer>();
@@ -306,7 +304,7 @@ final class LangParser {
             }
             probe = string.length();
             passLiteralText();
-            coll.add(Bytecode.COMPLETE);
+            coll.add(Disassembler.Bytecode.COMPLETE);
             byte[] bytecode = coll.finish();
             for (MinitableReferencePatch patch : minitableReferencePatches) {
                 patch.apply(bytecode, minitablesByName);
@@ -328,7 +326,7 @@ final class LangParser {
                     throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
                 }
                 int minitableNumber = minitablesByName.get(minitableName).intValue();
-                assert minitableNumber < Bytecode.MAX_MINITABLE_COUNT;
+                assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
                 bytecode[position] += minitableNumber;
             }
         }
@@ -349,16 +347,6 @@ final class LangParser {
 
         public DisassemblyTableParseError(String msg, Exception cause) {
             super(msg, cause);
-        }
-    }
-    
-    static final class Linkage {
-        final String[][] minitables;
-        final String[] referredLanguages;
-        
-        Linkage() {
-            minitables = new String[Disassembler.Bytecode.MAX_MINITABLE_COUNT][];
-            referredLanguages = new String[Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
         }
     }
 }
