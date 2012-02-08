@@ -783,8 +783,7 @@ public final class Disassembler {
             static final Pattern SPACED_COMMA = Pattern.compile("\\s*,\\s*");
 
             private final boolean trivial;
-            final String[][] minitables;
-            final String[] referredLanguages;
+            private final LangParser.Linkage linkage;
             private final byte[] bytecode;
             private final int[] bytecodeIndex;
             /*
@@ -798,13 +797,12 @@ public final class Disassembler {
 
             @SuppressWarnings("synthetic-access")
             private Tabular(String name, int defaultCountdown, boolean trivial, byte[][] decipherers,
-                    String[][] minitables, String[] referredLanguages, LangParser parser) {
+                    LangParser.Linkage linkage, LangParser parser) {
                 super(name, defaultCountdown);
                 assert decipherers.length == 256;
-                assert minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
+                assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
                 this.trivial = trivial;
-                this.minitables = minitables;
-                this.referredLanguages = referredLanguages;
+                this.linkage = linkage;
                 this.dispatchSuboffset = parser.dispatchSuboffset;
 
                 int totalBytecodeSize = 0;
@@ -830,7 +828,7 @@ public final class Disassembler {
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
                 LangParser parser = new LangParser();
                 parser.parse(name, reader);
-                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.linkage.minitables, parser.linkage.referredLanguages, parser);
+                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.linkage, parser);
             }
 
             @Override
@@ -839,7 +837,7 @@ public final class Disassembler {
                 if (bytecodeIndex[opcode] == -1) {
                     throw new Lang.UnknownOpcode(this);
                 }
-                disassembler.decipher(bytecode, bytecodeIndex[opcode], minitables, referredLanguages, sb);
+                disassembler.decipher(bytecode, bytecodeIndex[opcode], linkage.minitables, linkage.referredLanguages, sb);
             }
 
             @Override
@@ -855,8 +853,8 @@ public final class Disassembler {
                 if (trivial) {
                     port.println("Trivial: true");
                 }
-                for (int i = 0; i < minitables.length; i++) {
-                    String[] minitable = minitables[i];
+                for (int i = 0; i < linkage.minitables.length; i++) {
+                    String[] minitable = linkage.minitables[i];
                     if (minitable != null) {
                         port.print("minitable minitable#" + i + ":");
                         for (int j = 0; j < minitable.length; j++) {
@@ -866,9 +864,9 @@ public final class Disassembler {
                         port.println();
                     }
                 }
-                for (int i = 0; i < referredLanguages.length; i++) {
-                    if (referredLanguages[i] != null) {
-                        port.println("# referred lang " + i + " is " + referredLanguages[i]);
+                for (int i = 0; i < linkage.referredLanguages.length; i++) {
+                    if (linkage.referredLanguages[i] != null) {
+                        port.println("# referred lang " + i + " is " + linkage.referredLanguages[i]);
                     }
                 }
                 for (int i = 0; i < 256; i++) {
@@ -903,7 +901,7 @@ public final class Disassembler {
                             } else if (bytecode[k] >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
                                     && bytecode[k] < Disassembler.Bytecode.MINITABLE_LOOKUP_0
                                             + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-                                String[] minitable = minitables[bytecode[k]
+                                String[] minitable = linkage.minitables[bytecode[k]
                                         - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
                                 if (minitable == null) {
                                     break;
