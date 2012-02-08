@@ -1040,7 +1040,6 @@ public final class Disassembler {
                 }
 
                 final byte[] finish() {
-                    add(Bytecode.COMPLETE);
                     byte[] bytecode = new byte[steps.size()];
                     for (int i = 0; i < bytecode.length; i++) {
                         bytecode[i] = steps.get(i).byteValue();

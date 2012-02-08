@@ -310,6 +310,7 @@ final class LangParser {
             }
             probe = string.length();
             passLiteralText();
+            coll.add(Bytecode.COMPLETE);
             byte[] bytecode = coll.finish();
             for (MinitableReferencePatch patch : minitableReferencePatches) {
                 patch.apply(bytecode, minitablesByName);
