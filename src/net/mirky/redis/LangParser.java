@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.mirky.redis.Disassembler.Bytecode;
+import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
+
 final class LangParser {
     final byte[][] decipherers;
     final String[][] minitables;
@@ -172,7 +175,7 @@ final class LangParser {
      * with fixed and very particular parameters, and not very
      * informative error messages.
      */
-    final byte[] parseDecipherer(String s) {
+    final byte[] parseDecipherer(String s) throws DisassemblyTableParseError {
         return new DeciphererParser(s).parse();
     }
 
@@ -182,6 +185,7 @@ final class LangParser {
         private int probe;
         private int size;
         private final Disassembler.Lang.Tabular.BytecodeCollector coll;
+        private final List<MinitableReferencePatch> minitableReferencePatches;
 
         DeciphererParser(String string) {
             this.string = string;
@@ -189,6 +193,7 @@ final class LangParser {
             probe = 0;
             size = 0;
             coll = new Disassembler.Lang.Tabular.BytecodeCollector();
+            minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
         }
 
         final void parseProcessingStep(String step) throws DisassemblyTableParseError, RuntimeException {
@@ -248,13 +253,12 @@ final class LangParser {
                         coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
                         size = 0;
                     } else {
-                        if (!minitablesByName.containsKey(step)) {
-                            throw new DisassemblyTableParseError("unknown processing step: " + step);
-                        }
-                        int minitableNumber = minitablesByName.get(step).intValue();
-                        assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
-                        coll.add((byte) (Disassembler.Bytecode.MINITABLE_LOOKUP_0 | minitableNumber));
+                        int position = coll.currentPosition();
+                        coll.add((Disassembler.Bytecode.MINITABLE_LOOKUP_0));
                         size = 0;
+                        
+                        MinitableReferencePatch patch = new MinitableReferencePatch(position, step);
+                        minitableReferencePatches.add(patch);
                     }
                 }
             }
@@ -291,7 +295,7 @@ final class LangParser {
             }
         }
 
-        final byte[] parse() throws RuntimeException {
+        final byte[] parse() throws RuntimeException, DisassemblyTableParseError {
             while ((probe = string.indexOf('<', veil)) != -1) {
                 int rightBroket = string.indexOf('>', probe);
                 if (rightBroket == -1) {
@@ -319,7 +323,29 @@ final class LangParser {
             }
             probe = string.length();
             passLiteralText();
+            for (MinitableReferencePatch patch : minitableReferencePatches) {
+                patch.apply(coll, minitablesByName);
+            }
             return coll.finish();
+        }
+
+        class MinitableReferencePatch {
+            public final int position;
+            public final String minitableName;
+            
+            public MinitableReferencePatch(int position, String minitableName) {
+                this.position = position;
+                this.minitableName = minitableName;
+            }
+        
+            public final void apply(BytecodeCollector coll, Map<String, Integer> minitablesByName) throws DisassemblyTableParseError {
+                if (!minitablesByName.containsKey(minitableName)) {
+                    throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
+                }
+                int minitableNumber = minitablesByName.get(minitableName).intValue();
+                assert minitableNumber < Bytecode.MAX_MINITABLE_COUNT;
+                coll.increase(position, (byte) minitableNumber);
+            }
         }
     }
 

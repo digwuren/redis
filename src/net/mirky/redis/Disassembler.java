@@ -1047,6 +1047,16 @@ public final class Disassembler {
                     }
                     return bytecode;
                 }
+
+                final int currentPosition() {
+                    return steps.size();
+                }
+                
+                final void increase(int position, byte delta) {
+                    assert position >= 0;
+                    assert position < steps.size();
+                    steps.set(position, new Byte((byte) (steps.get(position).byteValue() + delta)));
+                }
             }
         }
 
