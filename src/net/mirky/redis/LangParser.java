@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import net.mirky.redis.Disassembler.Bytecode;
-import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
-import net.mirky.redis.LangParser.DeciphererParser;
 
 final class LangParser {
     final byte[][] decipherers;

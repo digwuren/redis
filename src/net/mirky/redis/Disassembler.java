@@ -863,9 +863,9 @@ public final class Disassembler {
                     byte[] decipherer = decipherers[i];
                     if (decipherer != null) {
                         boolean broketed = false;
-                        DECIPHERER_LOOP : for (int j = 0; j < decipherer.length; j++) {
+                        DECIPHERER_LOOP : for (int j = 0;; j++) {
                             byte b = decipherer[j];
-                            if (b == Disassembler.Bytecode.COMPLETE && j == decipherer.length - 1) {
+                            if (b == Disassembler.Bytecode.COMPLETE) {
                                 break;
                             }
                             if (b == Disassembler.Bytecode.GET_BYTE_0 + dispatchSuboffset) {
