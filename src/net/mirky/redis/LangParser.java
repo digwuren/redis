@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import net.mirky.redis.Disassembler.Bytecode;
 import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
+import net.mirky.redis.LangParser.DeciphererParser;
 
 final class LangParser {
     final byte[][] decipherers;
@@ -154,7 +155,7 @@ final class LangParser {
 
     final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
         Disassembler.Lang.Tabular.CodeSet set = Disassembler.Lang.Tabular.CodeSet.parse(setSpec);
-        byte[] decipherer = parseDecipherer(content);
+        byte[] decipherer = new DeciphererParser(content).parse();
         for (int i = 0; i < 256; i++) {
             if (set.matches(i)) {
                 if (decipherers[i] != null) {
@@ -163,20 +164,6 @@ final class LangParser {
                 decipherers[i] = decipherer;
             }
         }
-    }
-
-    /**
-     * Parse a decipherer from a lang file into the internal
-     * bytecode.
-     * 
-     * Note that the lang file syntax is currently not considered a
-     * public interface, so we're not trying to be particularly
-     * user-friendly. We have a whitespace-sensitive syntax, opcodes
-     * with fixed and very particular parameters, and not very
-     * informative error messages.
-     */
-    final byte[] parseDecipherer(String s) throws DisassemblyTableParseError {
-        return new DeciphererParser(s).parse();
     }
 
     final class DeciphererParser {
@@ -323,10 +310,11 @@ final class LangParser {
             }
             probe = string.length();
             passLiteralText();
+            byte[] bytecode = coll.finish();
             for (MinitableReferencePatch patch : minitableReferencePatches) {
-                patch.apply(coll, minitablesByName);
+                patch.apply(bytecode, minitablesByName);
             }
-            return coll.finish();
+            return bytecode;
         }
 
         class MinitableReferencePatch {
@@ -338,13 +326,13 @@ final class LangParser {
                 this.minitableName = minitableName;
             }
         
-            public final void apply(BytecodeCollector coll, Map<String, Integer> minitablesByName) throws DisassemblyTableParseError {
+            public final void apply(byte[] bytecode, Map<String, Integer> minitablesByName) throws DisassemblyTableParseError {
                 if (!minitablesByName.containsKey(minitableName)) {
                     throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
                 }
                 int minitableNumber = minitablesByName.get(minitableName).intValue();
                 assert minitableNumber < Bytecode.MAX_MINITABLE_COUNT;
-                coll.increase(position, (byte) minitableNumber);
+                bytecode[position] += minitableNumber;
             }
         }
     }
