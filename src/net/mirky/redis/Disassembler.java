@@ -783,9 +783,10 @@ public final class Disassembler {
             static final Pattern SPACED_COMMA = Pattern.compile("\\s*,\\s*");
 
             private final boolean trivial;
-            private final byte[][] decipherers;
             final String[][] minitables;
             final String[] referredLanguages;
+            private final byte[] bytecode;
+            private final int[] bytecodeIndex;
             /*
              * Note that the dispatch suboffset declaration is only used for
              * dumping the parsed language table. The actual dispatch key is
@@ -802,10 +803,28 @@ public final class Disassembler {
                 assert decipherers.length == 256;
                 assert minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
                 this.trivial = trivial;
-                this.decipherers = decipherers;
                 this.minitables = minitables;
                 this.referredLanguages = referredLanguages;
                 this.dispatchSuboffset = parser.dispatchSuboffset;
+
+                int totalBytecodeSize = 0;
+                for (int i = 0; i < 256; i++) {
+                    if (decipherers[i] != null) {
+                        totalBytecodeSize += decipherers[i].length;
+                    }
+                }
+                bytecode = new byte[totalBytecodeSize];
+                int bytecodeCursor = 0;
+                bytecodeIndex = new int[256];
+                for (int i = 0; i < 256; i++) {
+                    if (decipherers[i] != null) {
+                        bytecodeIndex[i] = bytecodeCursor;
+                        System.arraycopy(decipherers[i], 0, bytecode, bytecodeCursor, decipherers[i].length);
+                        bytecodeCursor += decipherers[i].length;
+                    } else {
+                        bytecodeIndex[i] = -1;
+                    }
+                }
             }
 
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
@@ -817,11 +836,10 @@ public final class Disassembler {
             @Override
             final void decipher(Disassembler disassembler, int opcode, StringBuilder sb) throws UnknownOpcode,
                     IncompleteInstruction {
-                byte[] bytecode = decipherers[opcode];
-                if (bytecode == null) {
+                if (bytecodeIndex[opcode] == -1) {
                     throw new Lang.UnknownOpcode(this);
                 }
-                disassembler.decipher(bytecode, 0, minitables, referredLanguages, sb);
+                disassembler.decipher(bytecode, bytecodeIndex[opcode], minitables, referredLanguages, sb);
             }
 
             @Override
@@ -858,9 +876,8 @@ public final class Disassembler {
                         port.println();
                     }
                     port.print("0x" + Hex.b(i) + ' ');
-                    byte[] decipherer = decipherers[i];
-                    if (decipherer != null) {
-                        dumpDecipherer(i, decipherer, 0, port);
+                    if (bytecodeIndex[i] != -1) {
+                        dumpDecipherer(i, bytecode, bytecodeIndex[i], port);
                         port.println();
                     } else {
                         port.println('-');
