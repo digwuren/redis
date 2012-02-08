@@ -860,66 +860,67 @@ public final class Disassembler {
                     port.print("0x" + Hex.b(i) + ' ');
                     byte[] decipherer = decipherers[i];
                     if (decipherer != null) {
-                        boolean broketed = false;
-                        DECIPHERER_LOOP : for (int j = 0;; j++) {
-                            byte b = decipherer[j];
-                            if (b == Disassembler.Bytecode.COMPLETE) {
-                                break;
-                            }
-                            if (b == Disassembler.Bytecode.GET_BYTE_0 + dispatchSuboffset) {
-                                int currentValue = i;
-                                for (int k = j + 1; k < decipherer.length; k++) {
-                                    if (decipherer[k] == Disassembler.Bytecode.SHR_3) {
-                                        currentValue >>>= 3;
-                                    } else if (decipherer[k] == Disassembler.Bytecode.SHR_4) {
-                                        currentValue >>>= 4;
-                                    } else if (decipherer[k] == Disassembler.Bytecode.SHR_5) {
-                                        currentValue >>>= 5;
-                                    } else if (decipherer[k] == Disassembler.Bytecode.SHR_6) {
-                                        currentValue >>>= 6;
-                                    } else if (decipherer[k] >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
-                                            && decipherer[k] < Disassembler.Bytecode.MINITABLE_LOOKUP_0
-                                                    + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-                                        String[] minitable = minitables[decipherer[k]
-                                                - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
-                                        if (minitable == null) {
-                                            break;
-                                        }
-                                        if (broketed) {
-                                            port.print('>');
-                                            broketed = false;
-                                        }
-                                        port.print(minitable[currentValue & (minitable.length - 1)]);
-                                        j = k;
-                                        continue DECIPHERER_LOOP;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            }
-                            if (b >= 0x20 && b <= 0x7E) {
-                                if (broketed) {
-                                    port.print('>');
-                                    broketed = false;
-                                }
-                                port.print((char) b);
-                            } else {
-                                if (!broketed) {
-                                    port.print('<');
-                                    broketed = true;
-                                } else {
-                                    port.print(", ");
-                                }
-                                port.print("0x" + Hex.b(b));
-                            }
-                        }
-                        if (broketed) {
-                            port.print('>');
-                        }
+                        dumpDecipherer(i, decipherer, port);
                         port.println();
                     } else {
                         port.println('-');
                     }
+                }
+            }
+
+            private final void dumpDecipherer(int opcode, byte[] decipherer, PrintStream port) {
+                boolean broketed = false;
+                DECIPHERER_LOOP : for (int j = 0; decipherer[j] != Bytecode.COMPLETE; j++) {
+                    byte b = decipherer[j];
+                    if (b == Disassembler.Bytecode.GET_BYTE_0 + dispatchSuboffset) {
+                        int currentValue = opcode;
+                        for (int k = j + 1; k < decipherer.length; k++) {
+                            if (decipherer[k] == Disassembler.Bytecode.SHR_3) {
+                                currentValue >>>= 3;
+                            } else if (decipherer[k] == Disassembler.Bytecode.SHR_4) {
+                                currentValue >>>= 4;
+                            } else if (decipherer[k] == Disassembler.Bytecode.SHR_5) {
+                                currentValue >>>= 5;
+                            } else if (decipherer[k] == Disassembler.Bytecode.SHR_6) {
+                                currentValue >>>= 6;
+                            } else if (decipherer[k] >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
+                                    && decipherer[k] < Disassembler.Bytecode.MINITABLE_LOOKUP_0
+                                            + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
+                                String[] minitable = minitables[decipherer[k]
+                                        - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
+                                if (minitable == null) {
+                                    break;
+                                }
+                                if (broketed) {
+                                    port.print('>');
+                                    broketed = false;
+                                }
+                                port.print(minitable[currentValue & (minitable.length - 1)]);
+                                j = k;
+                                continue DECIPHERER_LOOP;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    if (b >= 0x20 && b <= 0x7E) {
+                        if (broketed) {
+                            port.print('>');
+                            broketed = false;
+                        }
+                        port.print((char) b);
+                    } else {
+                        if (!broketed) {
+                            port.print('<');
+                            broketed = true;
+                        } else {
+                            port.print(", ");
+                        }
+                        port.print("0x" + Hex.b(b));
+                    }
+                }
+                if (broketed) {
+                    port.print('>');
                 }
             }
 
