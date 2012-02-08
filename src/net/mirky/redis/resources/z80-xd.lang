@@ -1,8 +1,8 @@
 Dispatch-suboffset: 1
 
-reg[]  b, c, d, e, h, l, m, a
-alua[]  add, adc, sub, sbb, ana, xra, ora, cmp
-indexreg[]  x, y
+minitable reg: b c d e h l m a
+minitable alua: add adc sub sbb ana xra ora cmp
+minitable indexreg: x y
 
 [0xCB]  <byte 3, dispatch z80-xd-cb>
 
