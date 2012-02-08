@@ -835,16 +835,14 @@ public final class Disassembler {
                 port.println("Dispatch-suboffset: " + dispatchSuboffset);
                 port.println("Default-countdown: " + defaultCountdown);
                 if (trivial) {
-                    port.println("Trivial!");
+                    port.println("Trivial: true");
                 }
                 for (int i = 0; i < minitables.length; i++) {
                     String[] minitable = minitables[i];
                     if (minitable != null) {
-                        port.print("minitable#" + i + "[] ");
+                        port.print("minitable minitable#" + i + ":");
                         for (int j = 0; j < minitable.length; j++) {
-                            if (j != 0) {
-                                port.print(", ");
-                            }
+                            port.print(' ');
                             port.print(minitable[j]);
                         }
                         port.println();
