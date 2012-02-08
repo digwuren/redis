@@ -860,7 +860,7 @@ public final class Disassembler {
                     port.print("0x" + Hex.b(i) + ' ');
                     byte[] decipherer = decipherers[i];
                     if (decipherer != null) {
-                        dumpDecipherer(i, decipherer, port);
+                        dumpDecipherer(i, decipherer, 0, port);
                         port.println();
                     } else {
                         port.println('-');
@@ -868,25 +868,25 @@ public final class Disassembler {
                 }
             }
 
-            private final void dumpDecipherer(int opcode, byte[] decipherer, PrintStream port) {
+            private final void dumpDecipherer(int opcode, byte[] bytecode, int startPosition, PrintStream port) {
                 boolean broketed = false;
-                DECIPHERER_LOOP : for (int j = 0; decipherer[j] != Bytecode.COMPLETE; j++) {
-                    byte b = decipherer[j];
+                DECIPHERER_LOOP : for (int i = startPosition; bytecode[i] != Bytecode.COMPLETE; i++) {
+                    byte b = bytecode[i];
                     if (b == Disassembler.Bytecode.GET_BYTE_0 + dispatchSuboffset) {
                         int currentValue = opcode;
-                        for (int k = j + 1; k < decipherer.length; k++) {
-                            if (decipherer[k] == Disassembler.Bytecode.SHR_3) {
+                        for (int k = i + 1; k < bytecode.length; k++) {
+                            if (bytecode[k] == Disassembler.Bytecode.SHR_3) {
                                 currentValue >>>= 3;
-                            } else if (decipherer[k] == Disassembler.Bytecode.SHR_4) {
+                            } else if (bytecode[k] == Disassembler.Bytecode.SHR_4) {
                                 currentValue >>>= 4;
-                            } else if (decipherer[k] == Disassembler.Bytecode.SHR_5) {
+                            } else if (bytecode[k] == Disassembler.Bytecode.SHR_5) {
                                 currentValue >>>= 5;
-                            } else if (decipherer[k] == Disassembler.Bytecode.SHR_6) {
+                            } else if (bytecode[k] == Disassembler.Bytecode.SHR_6) {
                                 currentValue >>>= 6;
-                            } else if (decipherer[k] >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
-                                    && decipherer[k] < Disassembler.Bytecode.MINITABLE_LOOKUP_0
+                            } else if (bytecode[k] >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
+                                    && bytecode[k] < Disassembler.Bytecode.MINITABLE_LOOKUP_0
                                             + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-                                String[] minitable = minitables[decipherer[k]
+                                String[] minitable = minitables[bytecode[k]
                                         - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
                                 if (minitable == null) {
                                     break;
@@ -896,7 +896,7 @@ public final class Disassembler {
                                     broketed = false;
                                 }
                                 port.print(minitable[currentValue & (minitable.length - 1)]);
-                                j = k;
+                                i = k;
                                 continue DECIPHERER_LOOP;
                             } else {
                                 break;
