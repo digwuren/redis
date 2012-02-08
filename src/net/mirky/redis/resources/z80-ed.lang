@@ -1,7 +1,7 @@
 Dispatch-suboffset: 1
 
-reg[]  b, c, d, e, h, l, m, a
-rp[]  bc, de, hl, sp
+minitable reg: b c d e h l m a
+minitable rp: bc de hl sp
 
 [0x57]  ldai
 [0x5F]  ldar
