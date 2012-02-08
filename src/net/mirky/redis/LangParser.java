@@ -13,10 +13,9 @@ import net.mirky.redis.Disassembler.Bytecode;
 
 final class LangParser {
     final byte[][] decipherers;
-    final String[][] minitables;
+    final Linkage linkage;
     final Map<String, Integer> minitablesByName;
     private int minitableCounter;
-    final String[] referredLanguages; // note the late binding
     final Map<String, Integer> referredLanguagesByName;
     int referredLanguageCounter;
     int dispatchSuboffset;
@@ -28,10 +27,9 @@ final class LangParser {
         for (int i = 0; i < 256; i++) {
             decipherers[i] = null;
         }
-        minitables = new String[Disassembler.Bytecode.MAX_MINITABLE_COUNT][];
+        linkage = new Linkage();
         minitablesByName = new HashMap<String, Integer>();
         minitableCounter = 0;
-        referredLanguages = new String[Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
         referredLanguagesByName = new HashMap<String, Integer>();
         referredLanguageCounter = 0;
         dispatchSuboffset = 0;
@@ -95,7 +93,7 @@ final class LangParser {
                             throw new RuntimeException("too many minitables");
                         }
                         minitablesByName.put(tableName, new Integer(minitableCounter));
-                        minitables[minitableCounter++] = minitable.toArray(new String[0]);
+                        linkage.minitables[minitableCounter++] = minitable.toArray(new String[0]);
                     } else {
                         String line = lexer.parseRestOfLine();
                         parseLangFileBodyLine(line);
@@ -261,7 +259,7 @@ final class LangParser {
                 if (referredLanguageCounter >= Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                     throw new RuntimeException("too many referred languages");
                 }
-                referredLanguages[referredLanguageCounter] = newLangName;
+                linkage.referredLanguages[referredLanguageCounter] = newLangName;
                 referredLanguagesByName.put(newLangName, index);
                 return referredLanguageCounter++;
             } else {
@@ -351,6 +349,16 @@ final class LangParser {
 
         public DisassemblyTableParseError(String msg, Exception cause) {
             super(msg, cause);
+        }
+    }
+    
+    static final class Linkage {
+        final String[][] minitables;
+        final String[] referredLanguages;
+        
+        Linkage() {
+            minitables = new String[Disassembler.Bytecode.MAX_MINITABLE_COUNT][];
+            referredLanguages = new String[Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
         }
     }
 }
