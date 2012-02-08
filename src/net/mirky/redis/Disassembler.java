@@ -400,10 +400,10 @@ public final class Disassembler {
     // necessarily dispatch by the first byte in this instruction; some
     // languages have instructions
     // with multiple dispatches).
-    final void decipher(byte[] code, String[][] minitables, String[] referredLanguages, StringBuilder sb) throws RuntimeException,
+    final void decipher(byte[] code, int startPosition, String[][] minitables, String[] referredLanguages, StringBuilder sb) throws RuntimeException,
             IncompleteInstruction, Lang.UnknownOpcode {
         currentValue = 0; // just in case
-        for (int i = 0;; i++) {
+        for (int i = startPosition;; i++) {
             byte step = code[i];
             if (step >= 0x20 && step <= 0x7E) {
                 sb.append((char) step);
@@ -821,7 +821,7 @@ public final class Disassembler {
                 if (bytecode == null) {
                     throw new Lang.UnknownOpcode(this);
                 }
-                disassembler.decipher(bytecode, minitables, referredLanguages, sb);
+                disassembler.decipher(bytecode, 0, minitables, referredLanguages, sb);
             }
 
             @Override
