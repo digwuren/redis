@@ -210,12 +210,7 @@ final class LangParser {
                     if (size == 0) {
                         throw new DisassemblyTableParseError("attempt to process void value");
                     }
-                    if (minitablesByName.containsKey(step)) {
-                        int minitableNumber = minitablesByName.get(step).intValue();
-                        assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
-                        coll.add((byte) (Disassembler.Bytecode.MINITABLE_LOOKUP_0 | minitableNumber));
-                        size = 0;
-                    } else if (step.equals("unsigned")) {
+                    if (step.equals("unsigned")) {
                         switch (size) {
                             case 1:
                                 coll.add(Disassembler.Bytecode.UNSIGNED_BYTE);
@@ -253,7 +248,13 @@ final class LangParser {
                         coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
                         size = 0;
                     } else {
-                        throw new DisassemblyTableParseError("unknown processing step: " + step);
+                        if (!minitablesByName.containsKey(step)) {
+                            throw new DisassemblyTableParseError("unknown processing step: " + step);
+                        }
+                        int minitableNumber = minitablesByName.get(step).intValue();
+                        assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
+                        coll.add((byte) (Disassembler.Bytecode.MINITABLE_LOOKUP_0 | minitableNumber));
+                        size = 0;
                     }
                 }
             }
