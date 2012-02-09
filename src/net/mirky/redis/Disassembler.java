@@ -810,26 +810,7 @@ public final class Disassembler {
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
                 LangParser parser = new LangParser();
                 parser.parse(name, reader);
-                
-                int totalBytecodeSize = 0;
-                for (int i = 0; i < 256; i++) {
-                    if (parser.decipherers[i] != null) {
-                        totalBytecodeSize += parser.decipherers[i].length;
-                    }
-                }
-                byte[] bytecode = new byte[totalBytecodeSize];
-                int bytecodeCursor = 0;
-                int[] dispatchTable = new int[256];
-                for (int i = 0; i < 256; i++) {
-                    if (parser.decipherers[i] != null) {
-                        dispatchTable[i] = bytecodeCursor;
-                        System.arraycopy(parser.decipherers[i], 0, bytecode, bytecodeCursor, parser.decipherers[i].length);
-                        bytecodeCursor += parser.decipherers[i].length;
-                    } else {
-                        dispatchTable[i] = -1;
-                    }
-                }
-                return new Tabular(name, parser.defaultCountdown, parser.trivial, bytecode, dispatchTable, parser.linkage, parser);
+                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
             }
 
             @Override

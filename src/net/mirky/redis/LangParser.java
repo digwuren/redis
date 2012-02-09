@@ -10,7 +10,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 final class LangParser {
-    final byte[][] decipherers;
+    private final byte[][] decipherers;
+    byte[] bytecode;
+    int[] dispatchTable;
     final Disassembler.Lang.Tabular.Linkage linkage;
     final Map<String, Integer> minitablesByName;
     private int minitableCounter;
@@ -103,6 +105,25 @@ final class LangParser {
             }
         } finally {
             reader.close();
+        }
+        
+        int totalBytecodeSize = 0;
+        for (int i = 0; i < 256; i++) {
+            if (decipherers[i] != null) {
+                totalBytecodeSize += decipherers[i].length;
+            }
+        }
+        bytecode = new byte[totalBytecodeSize];
+        int bytecodeCursor = 0;
+        dispatchTable = new int[256];
+        for (int i = 0; i < 256; i++) {
+            if (decipherers[i] != null) {
+                dispatchTable[i] = bytecodeCursor;
+                System.arraycopy(decipherers[i], 0, bytecode, bytecodeCursor, decipherers[i].length);
+                bytecodeCursor += decipherers[i].length;
+            } else {
+                dispatchTable[i] = -1;
+            }
         }
     }
 
