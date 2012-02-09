@@ -11,43 +11,46 @@ abstract class CodeSet {
     abstract boolean matches(int candidate);
 
     private static final CodeSet.Masked parseMasked(String s) {
-        int i = 0;
+        ParseUtil.LineLexer lexer = new ParseUtil.LineLexer(s);
         int bits = 0;
         int mask = ~0;
         int digitWidth;
         int base;
-        if (s.startsWith("0x")) {
-            i = 2;
+        if (lexer.at("0x")) {
+            lexer.skipChar();
+            lexer.skipChar();
             digitWidth = 4;
             base = 16;
-        } else if (s.startsWith("0o")) {
-            i = 2;
+        } else if (lexer.at("0o")) {
+            lexer.skipChar();
+            lexer.skipChar();
             digitWidth = 3;
             base = 8;
-        } else if (s.startsWith("0b")) {
-            i = 2;
+        } else if (lexer.at("0b")) {
+            lexer.skipChar();
+            lexer.skipChar();
             digitWidth = 1;
             base = 2;
         } else {
             throw new RuntimeException("invalid masked value " + s);
         }
-        while (i < s.length()) {
-            if (s.charAt(i) == '?') {
+        while (!lexer.atEndOfLine()) {
+            if (lexer.at('?')) {
                 bits <<= digitWidth;
                 mask <<= digitWidth;
-            } else if (s.charAt(i) == '_') {
+            } else if (lexer.at('_')) {
                 // ignore
             } else {
                 try {
                     bits <<= digitWidth;
                     mask <<= digitWidth;
-                    bits |= Integer.parseInt(s.substring(i, i + 1), base);
+                    bits |= Integer.parseInt(Character.toString(lexer.peekChar()), base);
                     mask |= (1 << digitWidth) - 1;
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("invalid masked value " + s);
                 }
             }
-            i++;
+            lexer.skipChar();
         }
         return new Masked(bits, mask);
     }
