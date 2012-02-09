@@ -400,7 +400,7 @@ public final class Disassembler {
     // necessarily dispatch by the first byte in this instruction; some
     // languages have instructions
     // with multiple dispatches).
-    final void decipher(byte[] code, int startPosition, String[][] minitables, String[] referredLanguages, StringBuilder sb) throws RuntimeException,
+    final void decipher(byte[] code, int startPosition, Lang.Tabular.Linkage linkage, StringBuilder sb) throws RuntimeException,
             IncompleteInstruction, Lang.UnknownOpcode {
         currentValue = 0; // just in case
         for (int i = startPosition;; i++) {
@@ -409,7 +409,7 @@ public final class Disassembler {
                 sb.append((char) step);
             } else if (step >= Bytecode.MINITABLE_LOOKUP_0
                     && step < Bytecode.MINITABLE_LOOKUP_0 + Bytecode.MAX_MINITABLE_COUNT) {
-                String[] minitable = minitables[step - Bytecode.MINITABLE_LOOKUP_0];
+                String[] minitable = linkage.minitables[step - Bytecode.MINITABLE_LOOKUP_0];
                 // note that we're checking this at the minitable construction
                 // time
                 assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
@@ -417,7 +417,7 @@ public final class Disassembler {
                 sb.append(minitable[currentValue & (minitable.length - 1)]);
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                String newLangName = referredLanguages[step - Bytecode.DISPATCH_0];
+                String newLangName = linkage.referredLanguages[step - Bytecode.DISPATCH_0];
                 // note the late binding
                 try {
                     Lang.MANAGER.get(newLangName).decipher(this, currentValue, sb);
@@ -426,7 +426,7 @@ public final class Disassembler {
                 }
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                String newLangName = referredLanguages[step - Bytecode.TEMPSWITCH_0];
+                String newLangName = linkage.referredLanguages[step - Bytecode.TEMPSWITCH_0];
                 // note the late binding
                 try {
                     sequencer.switchTemporarily(Lang.MANAGER.get(newLangName));
@@ -837,7 +837,7 @@ public final class Disassembler {
                 if (bytecodeIndex[opcode] == -1) {
                     throw new Lang.UnknownOpcode(this);
                 }
-                disassembler.decipher(bytecode, bytecodeIndex[opcode], linkage.minitables, linkage.referredLanguages, sb);
+                disassembler.decipher(bytecode, bytecodeIndex[opcode], linkage, sb);
             }
 
             @Override
