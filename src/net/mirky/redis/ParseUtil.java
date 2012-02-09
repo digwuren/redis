@@ -89,6 +89,10 @@ public final class ParseUtil {
             return pos < line.length() && line.charAt(pos) == etalon;
         }
 
+        public final boolean at(String etalon) {
+            return pos + etalon.length() < line.length() && line.substring(pos, pos + etalon.length()).equals(etalon);
+        }
+
         public final boolean atEndOfLine() {
             return pos >= line.length();
         }
@@ -146,6 +150,11 @@ public final class ParseUtil {
 
         public static final boolean isWordChar(char c) {
             return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+        }
+
+        public final char peekChar() {
+            assert !atEndOfLine();
+            return line.charAt(pos);
         }
     }
 
