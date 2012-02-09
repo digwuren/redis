@@ -10,15 +10,6 @@ package net.mirky.redis;
 abstract class CodeSet {
     abstract boolean matches(int candidate);
 
-    private static final CodeSet.Masked parseMasked(String s) {
-        ParseUtil.LineLexer lexer = new ParseUtil.LineLexer(s);
-        CodeSet.Masked result = parseMasked(lexer);
-        if (!lexer.atEndOfLine()) {
-            throw new RuntimeException("invalid masked value " + s);
-        }
-        return result;
-    }
-
     public static final CodeSet.Masked parseMasked(ParseUtil.LineLexer lexer) throws RuntimeException {
         int bits = 0;
         int mask = ~0;
@@ -78,25 +69,27 @@ abstract class CodeSet {
     }
 
     static final CodeSet parse(String s) {
-        CodeSet soFar = null;
-        int veil = 0;
-        int probe;
-        while ((probe = s.indexOf('-', veil)) != -1) {
-            soFar = parseStep(soFar, s.substring(veil, probe));
-            veil = probe + 1;
+        ParseUtil.LineLexer lexer = new ParseUtil.LineLexer(s);
+        CodeSet result = parse(lexer);
+        if (!lexer.atEndOfLine()) {
+            throw new RuntimeException("invalid codeset " + s);
         }
-        return parseStep(soFar, s.substring(veil));
+        return result;
     }
 
-    private static final CodeSet parseStep(CodeSet soFar, String item) {
-        CodeSet.Masked parsedRight = CodeSet.parseMasked(item);
-        if (soFar == null) {
-            return parsedRight;
-        } else {
-            return new Difference(soFar, parsedRight);
+    // Also eats up the whitespace immediately following the set.
+    static final CodeSet parse(ParseUtil.LineLexer lexer) {
+        CodeSet soFar = parseMasked(lexer);
+        lexer.skipSpaces();
+        while (lexer.at('-')) {
+            lexer.skipChar();
+            lexer.skipSpaces();
+            soFar = new Difference(soFar, parseMasked(lexer));
+            lexer.skipSpaces();
         }
+        return soFar;
     }
-
+    
     static final class Masked extends CodeSet {
         private final int bits;
         private final int mask;
