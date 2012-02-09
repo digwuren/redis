@@ -875,7 +875,7 @@ public final class Disassembler {
                     }
                     port.print("0x" + Hex.b(i) + ' ');
                     if (bytecodeIndex[i] != -1) {
-                        dumpDecipherer(i, bytecode, bytecodeIndex[i], port);
+                        dumpDecipherer(i, bytecodeIndex[i], port);
                         port.println();
                     } else {
                         port.println('-');
@@ -883,7 +883,7 @@ public final class Disassembler {
                 }
             }
 
-            private final void dumpDecipherer(int opcode, byte[] bytecode, int startPosition, PrintStream port) {
+            private final void dumpDecipherer(int opcode, int startPosition, PrintStream port) {
                 boolean broketed = false;
                 DECIPHERER_LOOP : for (int i = startPosition; bytecode[i] != Bytecode.COMPLETE; i++) {
                     byte b = bytecode[i];
