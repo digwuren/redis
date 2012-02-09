@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Vector;
 
+import net.mirky.redis.ControlData.LineParseError;
+
 public final class ParseUtil {
     private ParseUtil() {
         // not a real constructor
@@ -242,6 +244,16 @@ public final class ParseUtil {
         public final boolean at(char c) throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             return dent == 0 && !eof && lineLexer.at(c);
+        }
+
+        public final boolean at(String s) throws ControlData.LineParseError, IOException {
+            ensureCurrentLine();
+            return dent == 0 && !eof && lineLexer.at(s);
+        }
+
+        public final boolean atAnyOf(String charset) throws ControlData.LineParseError, IOException {
+            ensureCurrentLine();
+            return dent == 0 && !eof && lineLexer.atAnyOf(charset);
         }
 
         public final void skipThisIndent() {
