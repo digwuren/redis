@@ -2,13 +2,6 @@
 # Notation is mostly Intel's, except we spell register pair names fully out
 # (f. e., dad bc, not dad b)
 
-minitable reg: b c d e h l m a
-minitable rp: bc de hl sp
-minitable strp: bc de hl psw
-minitable cond: nz z nc c po pe p m
-minitable alua: add adc sub sbb ana xra ora cmp
-minitable aluimm: adi aci sui sbi ani xri ori cpi
-
 [0o1??-0x76]  mov <byte 0, shr 3, reg>, <byte 0, reg>
 [0o0?6]       mvi <byte 0, shr 3, reg>, <byte 1, unsigned>
 
@@ -78,3 +71,10 @@ minitable aluimm: adi aci sui sbi ani xri ori cpi
 
 [0xDB]        in <byte 1, unsigned>
 [0xD3]        out <byte 1, unsigned>
+
+minitable reg: b c d e h l m a
+minitable rp: bc de hl sp
+minitable strp: bc de hl psw
+minitable cond: nz z nc c po pe p m
+minitable alua: add adc sub sbb ana xra ora cmp
+minitable aluimm: adi aci sui sbi ani xri ori cpi

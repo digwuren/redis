@@ -6,13 +6,6 @@
 # The notation we use for indexed addressing is displacement[basereg] (TDL ZASM uses round parens).
 # We don't want to overburden round parens with nontrivial semantics.
 
-minitable reg: b c d e h l m a
-minitable rp: bc de hl sp
-minitable strp: bc de hl psw
-minitable cond: nz z nc c po pe p m
-minitable alua: add adc sub sbb ana xra ora cmp
-minitable aluimm: adi aci sui sbi ani xri ori cpi
-
 [0o1??-0x76]  mov <byte 0, shr 3, reg>, <byte 0, reg>
 [0o0?6]       mvi <byte 0, shr 3, reg>, <byte 1, unsigned>
 
@@ -98,3 +91,10 @@ minitable aluimm: adi aci sui sbi ani xri ori cpi
 [0b001??000]  jr<byte 0, shr 3, and 3, cond> <byte 1, signedrel 2, entry, unsigned>
 
 [0x10]        djnz <byte 1, signedrel 2, entry, unsigned>
+
+minitable reg: b c d e h l m a
+minitable rp: bc de hl sp
+minitable strp: bc de hl psw
+minitable cond: nz z nc c po pe p m
+minitable alua: add adc sub sbb ana xra ora cmp
+minitable aluimm: adi aci sui sbi ani xri ori cpi
