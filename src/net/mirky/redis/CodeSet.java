@@ -12,45 +12,67 @@ abstract class CodeSet {
 
     private static final CodeSet.Masked parseMasked(String s) {
         ParseUtil.LineLexer lexer = new ParseUtil.LineLexer(s);
+        CodeSet.Masked result = parseMasked(lexer);
+        if (!lexer.atEndOfLine()) {
+            throw new RuntimeException("invalid masked value " + s);
+        }
+        return result;
+    }
+
+    public static final CodeSet.Masked parseMasked(ParseUtil.LineLexer lexer) throws RuntimeException {
         int bits = 0;
         int mask = ~0;
         int digitWidth;
         int base;
+        String digits;
         if (lexer.at("0x")) {
             lexer.skipChar();
             lexer.skipChar();
             digitWidth = 4;
             base = 16;
+            digits = "0123456789abcdefABCDEF";
         } else if (lexer.at("0o")) {
             lexer.skipChar();
             lexer.skipChar();
             digitWidth = 3;
             base = 8;
+            digits = "01234567";
         } else if (lexer.at("0b")) {
             lexer.skipChar();
             lexer.skipChar();
             digitWidth = 1;
             base = 2;
+            digits = "01";
         } else {
-            throw new RuntimeException("invalid masked value " + s);
+            throw new RuntimeException("invalid masked value");
         }
-        while (!lexer.atEndOfLine()) {
+        while (true) {
             if (lexer.at('?')) {
                 bits <<= digitWidth;
                 mask <<= digitWidth;
+                lexer.skipChar();
+                continue;
             } else if (lexer.at('_')) {
                 // ignore
-            } else {
+                lexer.skipChar();
+                continue;
+            } else if (lexer.atAnyOf(digits)) {
                 try {
                     bits <<= digitWidth;
                     mask <<= digitWidth;
                     bits |= Integer.parseInt(Character.toString(lexer.peekChar()), base);
                     mask |= (1 << digitWidth) - 1;
                 } catch (NumberFormatException e) {
-                    throw new RuntimeException("invalid masked value " + s);
+                    throw new RuntimeException("bug detected");
                 }
+                lexer.skipChar();
+                continue;
+            } else {
+                break;
             }
-            lexer.skipChar();
+        }
+        if (lexer.atWord()) {
+            throw new RuntimeException("not a base " + base + " digit");
         }
         return new Masked(bits, mask);
     }
