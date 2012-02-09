@@ -1043,6 +1043,12 @@ public final class Disassembler {
                     steps.add(new Byte(code));
                 }
 
+                final void add(byte[] code) {
+                    for (byte b : code) {
+                        add(b);
+                    }
+                }
+
                 final byte[] finish() {
                     byte[] bytecode = new byte[steps.size()];
                     for (int i = 0; i < bytecode.length; i++) {

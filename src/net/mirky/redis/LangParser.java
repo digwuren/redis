@@ -9,10 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
+
 final class LangParser {
-    private final byte[][] decipherers;
     byte[] bytecode;
-    int[] dispatchTable;
+    private final BytecodeCollector globalBytecodeCollector;
+    final int[] dispatchTable;
     final Disassembler.Lang.Tabular.Linkage linkage;
     final Map<String, Integer> minitablesByName;
     private int minitableCounter;
@@ -23,10 +25,11 @@ final class LangParser {
     boolean trivial;
 
     LangParser() {
-        decipherers = new byte[256][];
+        dispatchTable = new int[256];
         for (int i = 0; i < 256; i++) {
-            decipherers[i] = null;
+            dispatchTable[i] = -1;
         }
+        globalBytecodeCollector = new BytecodeCollector();
         linkage = new Disassembler.Lang.Tabular.Linkage();
         minitablesByName = new HashMap<String, Integer>();
         minitableCounter = 0;
@@ -107,24 +110,7 @@ final class LangParser {
             reader.close();
         }
         
-        int totalBytecodeSize = 0;
-        for (int i = 0; i < 256; i++) {
-            if (decipherers[i] != null) {
-                totalBytecodeSize += decipherers[i].length;
-            }
-        }
-        bytecode = new byte[totalBytecodeSize];
-        int bytecodeCursor = 0;
-        dispatchTable = new int[256];
-        for (int i = 0; i < 256; i++) {
-            if (decipherers[i] != null) {
-                dispatchTable[i] = bytecodeCursor;
-                System.arraycopy(decipherers[i], 0, bytecode, bytecodeCursor, decipherers[i].length);
-                bytecodeCursor += decipherers[i].length;
-            } else {
-                dispatchTable[i] = -1;
-            }
-        }
+        bytecode = globalBytecodeCollector.finish();
     }
 
     // Called by {@code parse(...)} for each header name-value pair. Guaranteed
@@ -170,15 +156,16 @@ final class LangParser {
 
     final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
         Disassembler.Lang.Tabular.CodeSet set = Disassembler.Lang.Tabular.CodeSet.parse(setSpec);
-        byte[] decipherer = new DeciphererParser(content).parse();
         for (int i = 0; i < 256; i++) {
             if (set.matches(i)) {
-                if (decipherers[i] != null) {
+                if (dispatchTable[i] != -1) {
                     throw new DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
                 }
-                decipherers[i] = decipherer;
+                dispatchTable[i] = globalBytecodeCollector.currentPosition();
             }
         }
+        byte[] decipherer = new DeciphererParser(content).parse();
+        globalBytecodeCollector.add(decipherer);
     }
 
     final class DeciphererParser {
