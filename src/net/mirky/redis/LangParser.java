@@ -114,7 +114,7 @@ final class LangParser {
         
         bytecode = coll.finish();
         for (DeciphererParser.MinitableReferencePatch patch : minitableReferencePatches) {
-            patch.apply(bytecode, minitablesByName);
+            patch.apply();
         }
     }
 
@@ -185,6 +185,7 @@ final class LangParser {
             size = 0;
         }
 
+        @SuppressWarnings("synthetic-access")
         final void parseProcessingStep(String step) throws DisassemblyTableParseError, RuntimeException {
             Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveInitialStep(step);
             if (resolvedStep != null) {
@@ -284,7 +285,7 @@ final class LangParser {
             }
         }
 
-        final void parse() throws RuntimeException, DisassemblyTableParseError {
+        final void parse() throws RuntimeException {
             while ((probe = string.indexOf('<', veil)) != -1) {
                 int rightBroket = string.indexOf('>', probe);
                 if (rightBroket == -1) {
@@ -324,7 +325,7 @@ final class LangParser {
                 this.minitableName = minitableName;
             }
         
-            public final void apply(byte[] bytecode, Map<String, Integer> minitablesByName) throws DisassemblyTableParseError {
+            public final void apply() throws DisassemblyTableParseError {
                 if (!minitablesByName.containsKey(minitableName)) {
                     throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
                 }
