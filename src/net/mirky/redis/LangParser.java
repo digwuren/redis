@@ -23,7 +23,7 @@ final class LangParser {
     int dispatchSuboffset;
     int defaultCountdown;
     boolean trivial;
-    private final List<DeciphererParser.MinitableReferencePatch> minitableReferencePatches;
+    private final List<MinitableReferencePatch> minitableReferencePatches;
 
     LangParser() {
         dispatchTable = new int[256];
@@ -39,7 +39,7 @@ final class LangParser {
         dispatchSuboffset = 0;
         defaultCountdown = 0; // by default, no default countdown
         trivial = false; // by default, not trivial
-        minitableReferencePatches = new ArrayList<DeciphererParser.MinitableReferencePatch>();
+        minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
     }
 
     final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError, RuntimeException {
@@ -113,7 +113,7 @@ final class LangParser {
         }
         
         bytecode = coll.finish();
-        for (DeciphererParser.MinitableReferencePatch patch : minitableReferencePatches) {
+        for (MinitableReferencePatch patch : minitableReferencePatches) {
             patch.apply();
         }
     }
@@ -315,24 +315,24 @@ final class LangParser {
             passLiteralText();
             coll.add(Disassembler.Bytecode.COMPLETE);
         }
+    }
 
-        class MinitableReferencePatch {
-            public final int position;
-            public final String minitableName;
-            
-            public MinitableReferencePatch(int position, String minitableName) {
-                this.position = position;
-                this.minitableName = minitableName;
-            }
+    class MinitableReferencePatch {
+        public final int position;
+        public final String minitableName;
         
-            public final void apply() throws DisassemblyTableParseError {
-                if (!minitablesByName.containsKey(minitableName)) {
-                    throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
-                }
-                int minitableNumber = minitablesByName.get(minitableName).intValue();
-                assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
-                bytecode[position] += minitableNumber;
+        public MinitableReferencePatch(int position, String minitableName) {
+            this.position = position;
+            this.minitableName = minitableName;
+        }
+    
+        public final void apply() throws DisassemblyTableParseError {
+            if (!minitablesByName.containsKey(minitableName)) {
+                throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
             }
+            int minitableNumber = minitablesByName.get(minitableName).intValue();
+            assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
+            bytecode[position] += minitableNumber;
         }
     }
 
