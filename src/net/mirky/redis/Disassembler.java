@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import net.mirky.redis.ResourceManager.ResolutionError;
 import net.mirky.redis.analysers.ZXSBasicProgramAnalyser;
 
 public final class Disassembler {
@@ -857,11 +858,18 @@ public final class Disassembler {
                     }
                     port.print("0x" + Hex.b(i) + ' ');
                     if (dispatchTable[i] != -1) {
+                        port.print("(@" + dispatchTable[i] + ") ");
                         dumpDecipherer(i, dispatchTable[i], port);
                         port.println();
                     } else {
                         port.println('-');
                     }
+                }
+                port.println();
+                try {
+                    Hex.dump(bytecode, 0, Decoding.MANAGER.get("ascii"), port);
+                } catch (ResolutionError e) {
+                    throw new RuntimeException("The ASCII decoding is missing?");
                 }
             }
 
