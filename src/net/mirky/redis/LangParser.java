@@ -168,7 +168,7 @@ final class LangParser {
     }
 
     final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
-        Disassembler.Lang.Tabular.CodeSet set = Disassembler.Lang.Tabular.CodeSet.parse(setSpec);
+        CodeSet set = CodeSet.parse(setSpec);
         for (int i = 0; i < 256; i++) {
             if (set.matches(i)) {
                 if (dispatchTable[i] != -1) {
