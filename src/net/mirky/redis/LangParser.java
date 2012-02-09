@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
 
 final class LangParser {
@@ -74,15 +75,7 @@ final class LangParser {
             }
             try {
                 lexer.passDashedWord("dispatch");
-                lexer.passNewline();
-                lexer.passIndent();
-                while (!lexer.atDedent()) {
-                    lexer.noIndent();
-                    String line = lexer.parseRestOfLine();
-                    parseLangFileBodyLine(line);
-                    lexer.passNewline();
-                }
-                lexer.skipThisDedent();
+                parseDispatchTable(lexer);
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     if (lexer.passOptDashedWord("minitable")) {
@@ -149,6 +142,19 @@ final class LangParser {
             return false;
         }
         throw new DisassemblyTableParseError("not a Boolean value: " + value);
+    }
+
+    private final void parseDispatchTable(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError, IOException,
+            RuntimeException, DisassemblyTableParseError {
+        lexer.passNewline();
+        lexer.passIndent();
+        while (!lexer.atDedent()) {
+            lexer.noIndent();
+            String line = lexer.parseRestOfLine();
+            parseLangFileBodyLine(line);
+            lexer.passNewline();
+        }
+        lexer.skipThisDedent();
     }
 
     private final void parseLangFileBodyLine(String line) throws RuntimeException, DisassemblyTableParseError {
