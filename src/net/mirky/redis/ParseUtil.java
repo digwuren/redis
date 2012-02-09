@@ -481,4 +481,30 @@ public final class ParseUtil {
             return filename + ':' + lineno;
         }
     }
+    
+    public static final class SingleLineLexer extends IndentationSensitiveLexer {
+        private final String line;
+        private boolean lineGotten;
+        
+        public SingleLineLexer(String line, char commentChar) {
+            super(commentChar);
+            this.line = line;
+            lineGotten = false;
+        }
+        
+        @Override
+        protected final String getNextLine() {
+            if (!lineGotten) {
+                lineGotten = true;
+                return line;
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        protected final String getLineLoc() {
+            return "<string>:" + (lineGotten ? 2 : 1);
+        }
+    }
 }
