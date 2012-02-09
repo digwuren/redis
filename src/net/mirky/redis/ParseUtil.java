@@ -89,6 +89,10 @@ public final class ParseUtil {
             return pos < line.length() && line.charAt(pos) == etalon;
         }
 
+        public final boolean atAnyOf(String charset) {
+            return pos < line.length() && charset.indexOf(line.charAt(pos)) != -1;
+        }
+
         public final boolean at(String etalon) {
             return pos + etalon.length() < line.length() && line.substring(pos, pos + etalon.length()).equals(etalon);
         }
