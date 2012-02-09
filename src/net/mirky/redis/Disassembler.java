@@ -215,6 +215,9 @@ public final class Disassembler {
                                                    // instruction is complete.
         // (Note that TERMINATE does not imply COMPLETE.)
 
+        // Reserved placeholder code
+        static final byte INVALID = (byte) 0xFF;
+        
         private static final Map<String, StepDeclaration> initialSteps = new HashMap<String, StepDeclaration>();
 
         static {

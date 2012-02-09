@@ -153,10 +153,9 @@ final class LangParser {
         String content = line.substring(rightBracket + 1).trim();
         if (tableName.length() != 0) {
             throw new DisassemblyTableParseError("invalid lang file line: " + line);
-        } else {
-            // decipherer line
-            parseDeciphererLine(setSpec, content);
         }
+        // decipherer line
+        parseDeciphererLine(setSpec, content);
     }
 
     final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
@@ -244,7 +243,7 @@ final class LangParser {
                         size = 0;
                     } else {
                         int position = coll.currentPosition();
-                        coll.add((Disassembler.Bytecode.MINITABLE_LOOKUP_0));
+                        coll.add((Disassembler.Bytecode.INVALID));
                         size = 0;
                         
                         MinitableReferencePatch patch = new MinitableReferencePatch(position, step);
@@ -327,12 +326,15 @@ final class LangParser {
         }
     
         public final void apply() throws DisassemblyTableParseError {
+            if (bytecode[position] != Disassembler.Bytecode.INVALID) {
+                throw new RuntimeException("bug detected");
+            }
             if (!minitablesByName.containsKey(minitableName)) {
                 throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
             }
             int minitableNumber = minitablesByName.get(minitableName).intValue();
             assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
-            bytecode[position] += minitableNumber;
+            bytecode[position] = (byte) (Disassembler.Bytecode.MINITABLE_LOOKUP_0 + minitableNumber);
         }
     }
 
