@@ -17,8 +17,7 @@
 
 # The analysis comes largely from <http://www.llx.com/~nparker/a2/opcodes.html>.
 
-# the cc=01 instructions
-minitable op01: ora and eor adc sta lda cmp sbc
+# the cc=01 instructions (see minitable op01)
 [0b???_000_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[x,zp][]
 [0b???_001_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[zp]
 [0b???_010_01-0x89]  <byte 0, shr 5, op01> #<byte 1, unsigned>
@@ -28,8 +27,7 @@ minitable op01: ora and eor adc sta lda cmp sbc
 [0b???_110_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[y]
 [0b???_111_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[x]
 
-# the cc=10 instructions
-minitable op10: asl rol lsr ror stx ldx dec inc
+# the cc=10 instructions (see minitable op10)
 [0xA2]  <byte 0, shr 5, op10> #<byte 1, unsigned>
 [0b???_001_10]  <byte 0, shr 5, op10> <byte 1, unsigned>[zp]
 [0b0??_010_10]  <byte 0, shr 5, op10> a
@@ -41,8 +39,7 @@ minitable op10: asl rol lsr ror stx ldx dec inc
 [0xB6]  ldx <byte 1, unsigned>[y,zp]
 [0xBE]  ldx <lewyde 1, unsigned>[y]
 
-# the cc=00 instructions
-minitable op00: error bit error error sty ldy cpy cpx
+# the cc=00 instructions (see minitable op00)
 [0b1??_000_00-0x80]  <byte 0, shr 5, op00> #<byte 1, unsigned>
 [0b???_001_00-0x04-0x44-0x64]  <byte 0, shr 5, op00> <byte 1, unsigned>[zp]
 [0b???_011_00-0x0C-0x4C-0x6C]  <byte 0, shr 5, op00> <lewyde 1, unsigned>[]
@@ -53,7 +50,6 @@ minitable op00: error bit error error sty ldy cpy cpx
 [0x6C]  jmp <lewyde 1, entry, unsigned>[]<terminate>
 
 # the conditional branches
-minitable cond: pl mi vc vs cc cs ne eq
 [0b???_100_00]  b<byte 0, shr 5, cond> <byte 1, signedrel 2, entry, unsigned>
 
 # interrupt and subroutine routines
@@ -87,3 +83,8 @@ minitable cond: pl mi vc vs cc cs ne eq
 [0xBA] tsx
 [0xCA] dex
 [0xEA] nop
+
+minitable op00: error bit error error sty ldy cpy cpx
+minitable op01: ora and eor adc sta lda cmp sbc
+minitable op10: asl rol lsr ror stx ldx dec inc
+minitable cond: pl mi vc vs cc cs ne eq
