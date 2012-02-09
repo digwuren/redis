@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
+import net.mirky.redis.LangParser.DisassemblyTableParseError;
 
 final class LangParser {
     byte[] bytecode;
@@ -151,26 +152,22 @@ final class LangParser {
         while (!lexer.atDedent()) {
             lexer.noIndent();
             String line = lexer.parseRestOfLine();
-            parseLangFileBodyLine(line);
+            int leftBracket = line.indexOf('[');
+            int rightBracket = line.indexOf(']', leftBracket + 1);
+            if (leftBracket == -1 || rightBracket == -1) {
+                throw new DisassemblyTableParseError("invalid lang file line: " + line);
+            }
+            String tableName = line.substring(0, leftBracket).trim();
+            String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
+            String content = line.substring(rightBracket + 1).trim();
+            if (tableName.length() != 0) {
+                throw new DisassemblyTableParseError("invalid lang file line: " + line);
+            }
+            // decipherer line
+            parseDeciphererLine(setSpec, content);
             lexer.passNewline();
         }
         lexer.skipThisDedent();
-    }
-
-    private final void parseLangFileBodyLine(String line) throws RuntimeException, DisassemblyTableParseError {
-        int leftBracket = line.indexOf('[');
-        int rightBracket = line.indexOf(']', leftBracket + 1);
-        if (leftBracket == -1 || rightBracket == -1) {
-            throw new DisassemblyTableParseError("invalid lang file line: " + line);
-        }
-        String tableName = line.substring(0, leftBracket).trim();
-        String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
-        String content = line.substring(rightBracket + 1).trim();
-        if (tableName.length() != 0) {
-            throw new DisassemblyTableParseError("invalid lang file line: " + line);
-        }
-        // decipherer line
-        parseDeciphererLine(setSpec, content);
     }
 
     final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
