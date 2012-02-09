@@ -13,7 +13,7 @@ import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
 
 final class LangParser {
     byte[] bytecode;
-    private final BytecodeCollector globalBytecodeCollector;
+    private final BytecodeCollector coll;
     final int[] dispatchTable;
     final Disassembler.Lang.Tabular.Linkage linkage;
     final Map<String, Integer> minitablesByName;
@@ -23,13 +23,14 @@ final class LangParser {
     int dispatchSuboffset;
     int defaultCountdown;
     boolean trivial;
+    private final List<DeciphererParser.MinitableReferencePatch> minitableReferencePatches;
 
     LangParser() {
         dispatchTable = new int[256];
         for (int i = 0; i < 256; i++) {
             dispatchTable[i] = -1;
         }
-        globalBytecodeCollector = new BytecodeCollector();
+        coll = new BytecodeCollector();
         linkage = new Disassembler.Lang.Tabular.Linkage();
         minitablesByName = new HashMap<String, Integer>();
         minitableCounter = 0;
@@ -38,6 +39,7 @@ final class LangParser {
         dispatchSuboffset = 0;
         defaultCountdown = 0; // by default, no default countdown
         trivial = false; // by default, not trivial
+        minitableReferencePatches = new ArrayList<DeciphererParser.MinitableReferencePatch>();
     }
 
     final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError, RuntimeException {
@@ -110,7 +112,10 @@ final class LangParser {
             reader.close();
         }
         
-        bytecode = globalBytecodeCollector.finish();
+        bytecode = coll.finish();
+        for (DeciphererParser.MinitableReferencePatch patch : minitableReferencePatches) {
+            patch.apply(bytecode, minitablesByName);
+        }
     }
 
     // Called by {@code parse(...)} for each header name-value pair. Guaranteed
@@ -161,11 +166,10 @@ final class LangParser {
                 if (dispatchTable[i] != -1) {
                     throw new DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
                 }
-                dispatchTable[i] = globalBytecodeCollector.currentPosition();
+                dispatchTable[i] = coll.currentPosition();
             }
         }
-        byte[] decipherer = new DeciphererParser(content).parse();
-        globalBytecodeCollector.add(decipherer);
+        new DeciphererParser(content).parse();
     }
 
     final class DeciphererParser {
@@ -173,16 +177,12 @@ final class LangParser {
         private int veil;
         private int probe;
         private int size;
-        private final Disassembler.Lang.Tabular.BytecodeCollector coll;
-        private final List<MinitableReferencePatch> minitableReferencePatches;
 
         DeciphererParser(String string) {
             this.string = string;
             veil = 0;
             probe = 0;
             size = 0;
-            coll = new Disassembler.Lang.Tabular.BytecodeCollector();
-            minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
         }
 
         final void parseProcessingStep(String step) throws DisassemblyTableParseError, RuntimeException {
@@ -284,7 +284,7 @@ final class LangParser {
             }
         }
 
-        final byte[] parse() throws RuntimeException, DisassemblyTableParseError {
+        final void parse() throws RuntimeException, DisassemblyTableParseError {
             while ((probe = string.indexOf('<', veil)) != -1) {
                 int rightBroket = string.indexOf('>', probe);
                 if (rightBroket == -1) {
@@ -313,11 +313,6 @@ final class LangParser {
             probe = string.length();
             passLiteralText();
             coll.add(Disassembler.Bytecode.COMPLETE);
-            byte[] bytecode = coll.finish();
-            for (MinitableReferencePatch patch : minitableReferencePatches) {
-                patch.apply(bytecode, minitablesByName);
-            }
-            return bytecode;
         }
 
         class MinitableReferencePatch {
