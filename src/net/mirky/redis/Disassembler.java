@@ -796,39 +796,40 @@ public final class Disassembler {
             private final int dispatchSuboffset;
 
             @SuppressWarnings("synthetic-access")
-            private Tabular(String name, int defaultCountdown, boolean trivial, byte[][] decipherers,
-                    Tabular.Linkage linkage, LangParser parser) {
+            private Tabular(String name, int defaultCountdown, boolean trivial, byte[] bytecode, int[] bytecodeIndex, Tabular.Linkage linkage, LangParser parser) {
                 super(name, defaultCountdown);
-                assert decipherers.length == 256;
+                assert bytecodeIndex.length == 256;
                 assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
                 this.trivial = trivial;
                 this.linkage = linkage;
                 this.dispatchSuboffset = parser.dispatchSuboffset;
-
-                int totalBytecodeSize = 0;
-                for (int i = 0; i < 256; i++) {
-                    if (decipherers[i] != null) {
-                        totalBytecodeSize += decipherers[i].length;
-                    }
-                }
-                bytecode = new byte[totalBytecodeSize];
-                int bytecodeCursor = 0;
-                bytecodeIndex = new int[256];
-                for (int i = 0; i < 256; i++) {
-                    if (decipherers[i] != null) {
-                        bytecodeIndex[i] = bytecodeCursor;
-                        System.arraycopy(decipherers[i], 0, bytecode, bytecodeCursor, decipherers[i].length);
-                        bytecodeCursor += decipherers[i].length;
-                    } else {
-                        bytecodeIndex[i] = -1;
-                    }
-                }
+                this.bytecode = bytecode;
+                this.bytecodeIndex = bytecodeIndex;
             }
 
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
                 LangParser parser = new LangParser();
                 parser.parse(name, reader);
-                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.decipherers, parser.linkage, parser);
+                
+                int totalBytecodeSize = 0;
+                for (int i = 0; i < 256; i++) {
+                    if (parser.decipherers[i] != null) {
+                        totalBytecodeSize += parser.decipherers[i].length;
+                    }
+                }
+                byte[] bytecode = new byte[totalBytecodeSize];
+                int bytecodeCursor = 0;
+                int[] bytecodeIndex = new int[256];
+                for (int i = 0; i < 256; i++) {
+                    if (parser.decipherers[i] != null) {
+                        bytecodeIndex[i] = bytecodeCursor;
+                        System.arraycopy(parser.decipherers[i], 0, bytecode, bytecodeCursor, parser.decipherers[i].length);
+                        bytecodeCursor += parser.decipherers[i].length;
+                    } else {
+                        bytecodeIndex[i] = -1;
+                    }
+                }
+                return new Tabular(name, parser.defaultCountdown, parser.trivial, bytecode, bytecodeIndex, parser.linkage, parser);
             }
 
             @Override
