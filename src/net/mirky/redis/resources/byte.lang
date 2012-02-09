@@ -1,4 +1,5 @@
 Default-countdown: 1
 Trivial: true
 
-[0x??]  byte <byte 0, unsigned>
+dispatch
+    [0x??]  byte <byte 0, unsigned>

@@ -1,68 +1,69 @@
-[0x57]  ldai
-[0x5F]  ldar
-[0x47]  stai
-[0x4F]  star
+dispatch
+    [0x57]  ldai
+    [0x5F]  ldar
+    [0x47]  stai
+    [0x4F]  star
 
-[0x4B]  lbcd <lewyde 2, entry lewyde, unsigned>
-[0x5B]  lded <lewyde 2, entry lewyde, unsigned>
-[0x7B]  lspd <lewyde 2, entry lewyde, unsigned>
+    [0x4B]  lbcd <lewyde 2, entry lewyde, unsigned>
+    [0x5B]  lded <lewyde 2, entry lewyde, unsigned>
+    [0x7B]  lspd <lewyde 2, entry lewyde, unsigned>
 
-[0x43]  sbcd <lewyde 2, entry lewyde, unsigned>
-[0x53]  sded <lewyde 2, entry lewyde, unsigned>
-[0x73]  sspd <lewyde 2, entry lewyde, unsigned>
+    [0x43]  sbcd <lewyde 2, entry lewyde, unsigned>
+    [0x53]  sded <lewyde 2, entry lewyde, unsigned>
+    [0x73]  sspd <lewyde 2, entry lewyde, unsigned>
 
-[0xA0]  ldi
-[0xB0]  ldir
-[0xA8]  ldd
-[0xB8]  lddr
+    [0xA0]  ldi
+    [0xB0]  ldir
+    [0xA8]  ldd
+    [0xB8]  lddr
 
-# Zilog uses CPI, but that's taken for ComPare Immediate by Intel
-[0xA1]  cci
-[0xB1]  ccir
-[0xA9]  ccd
-[0xB9]  ccdr
+    # Zilog uses CPI, but that's taken for ComPare Immediate by Intel
+    [0xA1]  cci
+    [0xB1]  ccir
+    [0xA9]  ccd
+    [0xB9]  ccdr
 
-[0x44]  neg
+    [0x44]  neg
 
-[0x46]  im0
-[0x56]  im1
-[0x5E]  im2
+    [0x46]  im0
+    [0x56]  im1
+    [0x5E]  im2
 
-[0b01??1010]  dadc <byte 1, shr 4, rp>
-[0b01??0010]  dsbc <byte 1, shr 4, rp>
+    [0b01??1010]  dadc <byte 1, shr 4, rp>
+    [0b01??0010]  dsbc <byte 1, shr 4, rp>
 
-# Note that rld and rrd work differently on z180 than on z80.
-[0x6F]  rld
-[0x67]  rrd
+    # Note that rld and rrd work differently on z180 than on z80.
+    [0x6F]  rld
+    [0x67]  rrd
 
-[0x4D]  reti<terminate>
-[0x45]  retn<terminate>
+    [0x4D]  reti<terminate>
+    [0x45]  retn<terminate>
 
-[0o1?0-0o160]  inp <byte 1, shr 3, reg>
-[0xA2]  ini
-[0xB2]  inir
-[0xAA]  ind
-[0xBA]  indr
+    [0o1?0-0o160]  inp <byte 1, shr 3, reg>
+    [0xA2]  ini
+    [0xB2]  inir
+    [0xAA]  ind
+    [0xBA]  indr
 
-[0o1?1-0o161]  outp <byte 1, shr 3, reg>
-[0xA3]  outi
-[0xB3]  outir
-[0xAB]  outd
-[0xBB]  outdr
+    [0o1?1-0o161]  outp <byte 1, shr 3, reg>
+    [0xA3]  outi
+    [0xB3]  outir
+    [0xAB]  outd
+    [0xBB]  outdr
 
-# Z180 specific instructions
+    # Z180 specific instructions
 
-[0x76]  slp
-[0x01??1100]  mult <byte 1, shr 4, rp>
-[0o0?0-0o060]  in0 <byte 1, shr 3, reg>, <byte 2, unsigned>
-[0o0?1-0o061]  out0 <byte 1, shr 3, reg>, <byte 2, unsigned>
-[0x83]  outim
-[0x93]  outimr
-[0x8B]  outdm
-[0x9B]  outdmr
-[0x74]  tstio <byte 2, unsigned>
-[0o0?4]  tst <byte 1, shr 3, reg>
-[0x64]  tsti <byte 2, unsigned>
+    [0x76]  slp
+    [0x01??1100]  mult <byte 1, shr 4, rp>
+    [0o0?0-0o060]  in0 <byte 1, shr 3, reg>, <byte 2, unsigned>
+    [0o0?1-0o061]  out0 <byte 1, shr 3, reg>, <byte 2, unsigned>
+    [0x83]  outim
+    [0x93]  outimr
+    [0x8B]  outdm
+    [0x9B]  outdmr
+    [0x74]  tstio <byte 2, unsigned>
+    [0o0?4]  tst <byte 1, shr 3, reg>
+    [0x64]  tsti <byte 2, unsigned>
 
 minitable reg: b c d e h l m a
 minitable rp: bc de hl sp

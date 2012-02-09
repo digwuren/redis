@@ -1,15 +1,16 @@
 Dispatch-suboffset: 1
 
-[0o00?]  rlcr <byte 1, reg>
-[0o01?]  rrcr <byte 1, reg>
-[0o02?]  ralr <byte 1, reg>
-[0o03?]  rarr <byte 1, reg>
-[0o04?]  slar <byte 1, reg>
-[0o05?]  srar <byte 1, reg>
-[0o07?]  srlr <byte 1, reg>
+dispatch
+    [0o00?]  rlcr <byte 1, reg>
+    [0o01?]  rrcr <byte 1, reg>
+    [0o02?]  ralr <byte 1, reg>
+    [0o03?]  rarr <byte 1, reg>
+    [0o04?]  slar <byte 1, reg>
+    [0o05?]  srar <byte 1, reg>
+    [0o07?]  srlr <byte 1, reg>
 
-[0o1??]  bit <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
-[0o2??]  res <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
-[0o3??]  set <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
+    [0o1??]  bit <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
+    [0o2??]  res <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
+    [0o3??]  set <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
 
 minitable reg: b c d e h l m a

@@ -412,6 +412,13 @@ public final class ParseUtil {
             return lineLexer.parseRestOfLine();
         }
 
+        public final void passDashedWord(String etalon) throws ControlData.LineParseError, IOException {
+            if (!atWord() || !peekThisDashedWord().equals(etalon)) {
+                complain("expected '" + etalon + "'");
+            }
+            parseThisDashedWord();
+        }
+
         public final boolean passOptDashedWord(String etalon) throws ControlData.LineParseError, IOException {
             if (atWord() && peekThisDashedWord().equals(etalon)) {
                 parseThisDashedWord();

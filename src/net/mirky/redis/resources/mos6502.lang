@@ -17,72 +17,73 @@
 
 # The analysis comes largely from <http://www.llx.com/~nparker/a2/opcodes.html>.
 
-# the cc=01 instructions (see minitable op01)
-[0b???_000_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[x,zp][]
-[0b???_001_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[zp]
-[0b???_010_01-0x89]  <byte 0, shr 5, op01> #<byte 1, unsigned>
-[0b???_011_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[]
-[0b???_100_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[zp][y]
-[0b???_101_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[x,zp]
-[0b???_110_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[y]
-[0b???_111_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[x]
+dispatch
+    # the cc=01 instructions (see minitable op01)
+    [0b???_000_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[x,zp][]
+    [0b???_001_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[zp]
+    [0b???_010_01-0x89]  <byte 0, shr 5, op01> #<byte 1, unsigned>
+    [0b???_011_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[]
+    [0b???_100_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[zp][y]
+    [0b???_101_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[x,zp]
+    [0b???_110_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[y]
+    [0b???_111_01]  <byte 0, shr 5, op01> <lewyde 1, unsigned>[x]
 
-# the cc=10 instructions (see minitable op10)
-[0xA2]  <byte 0, shr 5, op10> #<byte 1, unsigned>
-[0b???_001_10]  <byte 0, shr 5, op10> <byte 1, unsigned>[zp]
-[0b0??_010_10]  <byte 0, shr 5, op10> a
-[0b???_011_10]  <byte 0, shr 5, op10> <lewyde 1, unsigned>[]
-[0b???_101_10-0b10?_101_10]  <byte 0, shr 5, op10> <byte 1, unsigned>[x,zp]
-[0b???_111_10-0b10?_111_10]  <byte 0, shr 5, op10> <lewyde 1, unsigned>[x]
+    # the cc=10 instructions (see minitable op10)
+    [0xA2]  <byte 0, shr 5, op10> #<byte 1, unsigned>
+    [0b???_001_10]  <byte 0, shr 5, op10> <byte 1, unsigned>[zp]
+    [0b0??_010_10]  <byte 0, shr 5, op10> a
+    [0b???_011_10]  <byte 0, shr 5, op10> <lewyde 1, unsigned>[]
+    [0b???_101_10-0b10?_101_10]  <byte 0, shr 5, op10> <byte 1, unsigned>[x,zp]
+    [0b???_111_10-0b10?_111_10]  <byte 0, shr 5, op10> <lewyde 1, unsigned>[x]
 
-[0x96]  stx <byte 1, unsigned>[y,zp]
-[0xB6]  ldx <byte 1, unsigned>[y,zp]
-[0xBE]  ldx <lewyde 1, unsigned>[y]
+    [0x96]  stx <byte 1, unsigned>[y,zp]
+    [0xB6]  ldx <byte 1, unsigned>[y,zp]
+    [0xBE]  ldx <lewyde 1, unsigned>[y]
 
-# the cc=00 instructions (see minitable op00)
-[0b1??_000_00-0x80]  <byte 0, shr 5, op00> #<byte 1, unsigned>
-[0b???_001_00-0x04-0x44-0x64]  <byte 0, shr 5, op00> <byte 1, unsigned>[zp]
-[0b???_011_00-0x0C-0x4C-0x6C]  <byte 0, shr 5, op00> <lewyde 1, unsigned>[]
-[0b10?_101_00]  <byte 0, shr 5, op00> <byte 1, unsigned>[x,zp]
-[0b101_111_00]  <byte 0, shr 5, op00> <lewyde 1, unsigned>[x]
+    # the cc=00 instructions (see minitable op00)
+    [0b1??_000_00-0x80]  <byte 0, shr 5, op00> #<byte 1, unsigned>
+    [0b???_001_00-0x04-0x44-0x64]  <byte 0, shr 5, op00> <byte 1, unsigned>[zp]
+    [0b???_011_00-0x0C-0x4C-0x6C]  <byte 0, shr 5, op00> <lewyde 1, unsigned>[]
+    [0b10?_101_00]  <byte 0, shr 5, op00> <byte 1, unsigned>[x,zp]
+    [0b101_111_00]  <byte 0, shr 5, op00> <lewyde 1, unsigned>[x]
 
-[0x4C]  jmp <lewyde 1, entry, unsigned><terminate>
-[0x6C]  jmp <lewyde 1, entry, unsigned>[]<terminate>
+    [0x4C]  jmp <lewyde 1, entry, unsigned><terminate>
+    [0x6C]  jmp <lewyde 1, entry, unsigned>[]<terminate>
 
-# the conditional branches
-[0b???_100_00]  b<byte 0, shr 5, cond> <byte 1, signedrel 2, entry, unsigned>
+    # the conditional branches
+    [0b???_100_00]  b<byte 0, shr 5, cond> <byte 1, signedrel 2, entry, unsigned>
 
-# interrupt and subroutine routines
-[0x00]  brk
-[0x20]  jsr <lewyde 1, subrentry, unsigned>
-[0x40]  rti<terminate>
-[0x60]  rts<terminate>
+    # interrupt and subroutine routines
+    [0x00]  brk
+    [0x20]  jsr <lewyde 1, subrentry, unsigned>
+    [0x40]  rti<terminate>
+    [0x60]  rts<terminate>
 
-# other single-byte instructions
-[0x08] php
-[0x28] plp
-[0x48] pha
-[0x68] pla
-[0x88] dey
-[0xA8] tay
-[0xC8] iny
-[0xE8] inx
+    # other single-byte instructions
+    [0x08] php
+    [0x28] plp
+    [0x48] pha
+    [0x68] pla
+    [0x88] dey
+    [0xA8] tay
+    [0xC8] iny
+    [0xE8] inx
 
-[0x18] clc
-[0x38] sec
-[0x58] cli
-[0x78] sei
-[0x98] tya
-[0xB8] clv
-[0xD8] cld
-[0xF8] sed
+    [0x18] clc
+    [0x38] sec
+    [0x58] cli
+    [0x78] sei
+    [0x98] tya
+    [0xB8] clv
+    [0xD8] cld
+    [0xF8] sed
 
-[0x8A] txa
-[0x9A] txs
-[0xAA] tax
-[0xBA] tsx
-[0xCA] dex
-[0xEA] nop
+    [0x8A] txa
+    [0x9A] txs
+    [0xAA] tax
+    [0xBA] tsx
+    [0xCA] dex
+    [0xEA] nop
 
 minitable op00: error bit error error sty ldy cpy cpx
 minitable op01: ora and eor adc sta lda cmp sbc

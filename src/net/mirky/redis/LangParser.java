@@ -73,6 +73,16 @@ final class LangParser {
                 throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
             }
             try {
+                lexer.passDashedWord("dispatch");
+                lexer.passNewline();
+                lexer.passIndent();
+                while (!lexer.atDedent()) {
+                    lexer.noIndent();
+                    String line = lexer.parseRestOfLine();
+                    parseLangFileBodyLine(line);
+                    lexer.passNewline();
+                }
+                lexer.skipThisDedent();
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     if (lexer.passOptDashedWord("minitable")) {
@@ -99,11 +109,10 @@ final class LangParser {
                         }
                         minitablesByName.put(tableName, new Integer(minitableCounter));
                         linkage.minitables[minitableCounter++] = minitable.toArray(new String[0]);
+                        lexer.passNewline();
                     } else {
-                        String line = lexer.parseRestOfLine();
-                        parseLangFileBodyLine(line);
+                        lexer.complain("expected end of file");
                     }
-                    lexer.passNewline();
                 }
             } catch (ControlData.LineParseError e) {
                 throw new DisassemblyTableParseError("error parsing lang description " + name, e);
