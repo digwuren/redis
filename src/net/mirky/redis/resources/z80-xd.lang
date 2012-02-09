@@ -1,9 +1,5 @@
 Dispatch-suboffset: 1
 
-minitable reg: b c d e h l m a
-minitable alua: add adc sub sbb ana xra ora cmp
-minitable indexreg: x y
-
 [0xCB]  <byte 3, dispatch z80-xd-cb>
 
 [0o1?6-0o166]  mov <byte 1, shr 3, reg>, <byte 2, signed>[i<byte 0, shr 5, indexreg>]
@@ -36,3 +32,7 @@ minitable indexreg: x y
 [0x2B]  dcx i<byte 0, shr 5, indexreg>
 
 [0xE9]  pci<byte 0, shr 5, indexreg><terminate>
+
+minitable reg: b c d e h l m a
+minitable alua: add adc sub sbb ana xra ora cmp
+minitable indexreg: x y

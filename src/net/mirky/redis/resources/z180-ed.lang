@@ -1,6 +1,3 @@
-minitable reg: b c d e h l m a
-minitable rp: bc de hl sp
-
 [0x57]  ldai
 [0x5F]  ldar
 [0x47]  stai
@@ -66,3 +63,6 @@ minitable rp: bc de hl sp
 [0x74]  tstio <byte 2, unsigned>
 [0o0?4]  tst <byte 1, shr 3, reg>
 [0x64]  tsti <byte 2, unsigned>
+
+minitable reg: b c d e h l m a
+minitable rp: bc de hl sp

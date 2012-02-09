@@ -1,7 +1,5 @@
 Dispatch-suboffset: 1
 
-minitable reg: b c d e h l m a
-
 [0o00?]  rlcr <byte 1, reg>
 [0o01?]  rrcr <byte 1, reg>
 [0o02?]  ralr <byte 1, reg>
@@ -13,3 +11,5 @@ minitable reg: b c d e h l m a
 [0o1??]  bit <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
 [0o2??]  res <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
 [0o3??]  set <byte 1, shr 3, and 7, decimal>, <byte 1, reg>
+
+minitable reg: b c d e h l m a

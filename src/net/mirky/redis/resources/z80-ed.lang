@@ -1,8 +1,5 @@
 Dispatch-suboffset: 1
 
-minitable reg: b c d e h l m a
-minitable rp: bc de hl sp
-
 [0x57]  ldai
 [0x5F]  ldar
 [0x47]  stai
@@ -53,3 +50,6 @@ minitable rp: bc de hl sp
 [0xB3]  outir
 [0xAB]  outd
 [0xBB]  outdr
+
+minitable reg: b c d e h l m a
+minitable rp: bc de hl sp
