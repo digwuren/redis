@@ -785,7 +785,7 @@ public final class Disassembler {
             private final boolean trivial;
             private final Tabular.Linkage linkage;
             private final byte[] bytecode;
-            private final int[] bytecodeIndex;
+            private final int[] dispatchTable;
             /*
              * Note that the dispatch suboffset declaration is only used for
              * dumping the parsed language table. The actual dispatch key is
@@ -796,15 +796,15 @@ public final class Disassembler {
             private final int dispatchSuboffset;
 
             @SuppressWarnings("synthetic-access")
-            private Tabular(String name, int defaultCountdown, boolean trivial, byte[] bytecode, int[] bytecodeIndex, Tabular.Linkage linkage, LangParser parser) {
+            private Tabular(String name, int defaultCountdown, boolean trivial, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
                 super(name, defaultCountdown);
-                assert bytecodeIndex.length == 256;
+                assert dispatchTable.length == 256;
                 assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
                 this.trivial = trivial;
                 this.linkage = linkage;
                 this.dispatchSuboffset = parser.dispatchSuboffset;
                 this.bytecode = bytecode;
-                this.bytecodeIndex = bytecodeIndex;
+                this.dispatchTable = dispatchTable;
             }
 
             static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
@@ -819,26 +819,26 @@ public final class Disassembler {
                 }
                 byte[] bytecode = new byte[totalBytecodeSize];
                 int bytecodeCursor = 0;
-                int[] bytecodeIndex = new int[256];
+                int[] dispatchTable = new int[256];
                 for (int i = 0; i < 256; i++) {
                     if (parser.decipherers[i] != null) {
-                        bytecodeIndex[i] = bytecodeCursor;
+                        dispatchTable[i] = bytecodeCursor;
                         System.arraycopy(parser.decipherers[i], 0, bytecode, bytecodeCursor, parser.decipherers[i].length);
                         bytecodeCursor += parser.decipherers[i].length;
                     } else {
-                        bytecodeIndex[i] = -1;
+                        dispatchTable[i] = -1;
                     }
                 }
-                return new Tabular(name, parser.defaultCountdown, parser.trivial, bytecode, bytecodeIndex, parser.linkage, parser);
+                return new Tabular(name, parser.defaultCountdown, parser.trivial, bytecode, dispatchTable, parser.linkage, parser);
             }
 
             @Override
             final void decipher(Disassembler disassembler, int opcode, StringBuilder sb) throws UnknownOpcode,
                     IncompleteInstruction {
-                if (bytecodeIndex[opcode] == -1) {
+                if (dispatchTable[opcode] == -1) {
                     throw new Lang.UnknownOpcode(this);
                 }
-                disassembler.decipher(bytecode, bytecodeIndex[opcode], linkage, sb);
+                disassembler.decipher(bytecode, dispatchTable[opcode], linkage, sb);
             }
 
             @Override
@@ -875,8 +875,8 @@ public final class Disassembler {
                         port.println();
                     }
                     port.print("0x" + Hex.b(i) + ' ');
-                    if (bytecodeIndex[i] != -1) {
-                        dumpDecipherer(i, bytecodeIndex[i], port);
+                    if (dispatchTable[i] != -1) {
+                        dumpDecipherer(i, dispatchTable[i], port);
                         port.println();
                     } else {
                         port.println('-');
