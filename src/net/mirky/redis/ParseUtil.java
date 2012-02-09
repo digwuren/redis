@@ -452,6 +452,11 @@ public final class ParseUtil {
                 return false;
             }
         }
+
+        public final char peekChar() throws LineParseError, IOException {
+            assert !atEndOfLine();
+            return lineLexer.peekChar();
+        }
     }
 
     public static final class IndentationSensitiveFileLexer extends IndentationSensitiveLexer {

@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
+import net.mirky.redis.LangParser.DeciphererParser;
 import net.mirky.redis.LangParser.DisassemblyTableParseError;
 
 final class LangParser {
@@ -151,36 +152,25 @@ final class LangParser {
         lexer.passIndent();
         while (!lexer.atDedent()) {
             lexer.noIndent();
-            String line = lexer.parseRestOfLine();
-            int leftBracket = line.indexOf('[');
-            int rightBracket = line.indexOf(']', leftBracket + 1);
-            if (leftBracket == -1 || rightBracket == -1) {
-                throw new DisassemblyTableParseError("invalid lang file line: " + line);
+            lexer.pass('[');
+            lexer.skipSpaces();
+            CodeSet set = CodeSet.parse(lexer);
+            lexer.skipSpaces();
+            lexer.pass(']');
+            lexer.skipSpaces();
+            for (int i = 0; i < 256; i++) {
+                if (set.matches(i)) {
+                    if (dispatchTable[i] != -1) {
+                        throw new DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
+                    }
+                    dispatchTable[i] = coll.currentPosition();
+                }
             }
-            String tableName = line.substring(0, leftBracket).trim();
-            String setSpec = line.substring(leftBracket + 1, rightBracket).trim();
-            String content = line.substring(rightBracket + 1).trim();
-            if (tableName.length() != 0) {
-                throw new DisassemblyTableParseError("invalid lang file line: " + line);
-            }
-            // decipherer line
-            parseDeciphererLine(setSpec, content);
+            String content = lexer.parseRestOfLine();
+            new DeciphererParser(content).parse();
             lexer.passNewline();
         }
         lexer.skipThisDedent();
-    }
-
-    final void parseDeciphererLine(String setSpec, String content) throws RuntimeException, DisassemblyTableParseError {
-        CodeSet set = CodeSet.parse(setSpec);
-        for (int i = 0; i < 256; i++) {
-            if (set.matches(i)) {
-                if (dispatchTable[i] != -1) {
-                    throw new DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
-                }
-                dispatchTable[i] = coll.currentPosition();
-            }
-        }
-        new DeciphererParser(content).parse();
     }
 
     final class DeciphererParser {
