@@ -11,8 +11,6 @@ import java.util.TreeSet;
 
 import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
-import net.mirky.redis.LangParser.DeciphererParser;
-import net.mirky.redis.LangParser.DisassemblyTableParseError;
 
 final class LangParser {
     byte[] bytecode;
@@ -275,45 +273,41 @@ final class LangParser {
             }
         }
 
-        final void passLiteralText() throws RuntimeException {
-            while (veil < probe) {
-                char c = string.charAt(veil);
-                if (c < 0x20 || c > 0x7E) {
-                    throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
-                }
-                coll.add((byte) c);
-                veil++;
-            }
-        }
-
         final void parse() throws RuntimeException {
-            while ((probe = string.indexOf('<', veil)) != -1) {
-                int rightBroket = string.indexOf('>', probe);
-                if (rightBroket == -1) {
-                    throw new RuntimeException("error parsing opcode decipherer " + string);
+            while (veil < string.length()) {
+                char c = string.charAt(veil);
+                if (c != '<') {
+                    if (c < 0x20 || c > 0x7E) {
+                        throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
+                    }
+                    coll.add((byte) c);
+                    veil++;
+                } else {
+                    probe = veil;
+                    int rightBroket = string.indexOf('>', probe);
+                    if (rightBroket == -1) {
+                        throw new RuntimeException("error parsing opcode decipherer " + string);
+                    }
+                    String broketedPart = string.substring(probe + 1, rightBroket);
+                    String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
+                    try {
+                        if (stepSpecs.length == 0) {
+                            throw new DisassemblyTableParseError("empty broketed part");
+                        }
+                        size = 0;
+                        for (int i = 0; i < stepSpecs.length; i++) {
+                            parseProcessingStep(stepSpecs[i]);
+                        }
+                        if (size != 0) {
+                            throw new DisassemblyTableParseError("final step missing");
+                        }
+                    } catch (DisassemblyTableParseError e) {
+                        throw new RuntimeException("error parsing opcode decipherer broketed part <"
+                                + broketedPart + ">", e);
+                    }
+                    veil = rightBroket + 1;
                 }
-                passLiteralText();
-                String broketedPart = string.substring(probe + 1, rightBroket);
-                String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
-                try {
-                    if (stepSpecs.length == 0) {
-                        throw new DisassemblyTableParseError("empty broketed part");
-                    }
-                    size = 0;
-                    for (int i = 0; i < stepSpecs.length; i++) {
-                        parseProcessingStep(stepSpecs[i]);
-                    }
-                    if (size != 0) {
-                        throw new DisassemblyTableParseError("final step missing");
-                    }
-                } catch (DisassemblyTableParseError e) {
-                    throw new RuntimeException("error parsing opcode decipherer broketed part <"
-                            + broketedPart + ">", e);
-                }
-                veil = rightBroket + 1;
             }
-            probe = string.length();
-            passLiteralText();
             coll.add(Disassembler.Bytecode.COMPLETE);
         }
     }
