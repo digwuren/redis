@@ -174,13 +174,11 @@ final class LangParser {
     final class DeciphererParser {
         private final String string;
         private int veil;
-        private int probe;
         private int size;
 
         DeciphererParser(String string) {
             this.string = string;
             veil = 0;
-            probe = 0;
             size = 0;
         }
 
@@ -283,12 +281,11 @@ final class LangParser {
                     coll.add((byte) c);
                     veil++;
                 } else {
-                    probe = veil;
-                    int rightBroket = string.indexOf('>', probe);
+                    int rightBroket = string.indexOf('>', veil);
                     if (rightBroket == -1) {
                         throw new RuntimeException("error parsing opcode decipherer " + string);
                     }
-                    String broketedPart = string.substring(probe + 1, rightBroket);
+                    String broketedPart = string.substring(veil + 1, rightBroket);
                     String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
                     try {
                         if (stepSpecs.length == 0) {
