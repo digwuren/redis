@@ -165,7 +165,42 @@ final class LangParser {
                 }
             }
             String content = lexer.parseRestOfLine();
-            new DeciphererParser(content).parse();
+            int pos = 0;
+            int size = 0;
+            while (pos < content.length()) {
+                char c = content.charAt(pos);
+                if (c != '<') {
+                    if (c < 0x20 || c > 0x7E) {
+                        throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
+                    }
+                    coll.add((byte) c);
+                    pos++;
+                } else {
+                    int rightBroket = content.indexOf('>', pos);
+                    if (rightBroket == -1) {
+                        throw new RuntimeException("error parsing opcode decipherer " + content);
+                    }
+                    String broketedPart = content.substring(pos + 1, rightBroket);
+                    String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
+                    try {
+                        if (stepSpecs.length == 0) {
+                            throw new DisassemblyTableParseError("empty broketed part");
+                        }
+                        size = 0;
+                        for (int i = 0; i < stepSpecs.length; i++) {
+                            size = parseProcessingStep(stepSpecs[i], size);
+                        }
+                        if (size != 0) {
+                            throw new DisassemblyTableParseError("final step missing");
+                        }
+                    } catch (DisassemblyTableParseError e) {
+                        throw new RuntimeException("error parsing opcode decipherer broketed part <"
+                                + broketedPart + ">", e);
+                    }
+                    pos = rightBroket + 1;
+                }
+            }
+            coll.add(Disassembler.Bytecode.COMPLETE);
             lexer.passNewline();
         }
         lexer.skipThisDedent();
@@ -191,7 +226,6 @@ final class LangParser {
         }
     }
 
-    @SuppressWarnings("synthetic-access")
     final int parseProcessingStep(String step, int size) throws DisassemblyTableParseError, RuntimeException {
         Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveInitialStep(step);
         if (resolvedStep != null) {
@@ -259,55 +293,6 @@ final class LangParser {
             }
         }
         return size;
-    }
-
-    final class DeciphererParser {
-        private final String string;
-        private int veil;
-        private int size;
-
-        DeciphererParser(String string) {
-            this.string = string;
-            veil = 0;
-            size = 0;
-        }
-
-        final void parse() throws RuntimeException {
-            while (veil < string.length()) {
-                char c = string.charAt(veil);
-                if (c != '<') {
-                    if (c < 0x20 || c > 0x7E) {
-                        throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
-                    }
-                    coll.add((byte) c);
-                    veil++;
-                } else {
-                    int rightBroket = string.indexOf('>', veil);
-                    if (rightBroket == -1) {
-                        throw new RuntimeException("error parsing opcode decipherer " + string);
-                    }
-                    String broketedPart = string.substring(veil + 1, rightBroket);
-                    String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
-                    try {
-                        if (stepSpecs.length == 0) {
-                            throw new DisassemblyTableParseError("empty broketed part");
-                        }
-                        size = 0;
-                        for (int i = 0; i < stepSpecs.length; i++) {
-                            size = parseProcessingStep(stepSpecs[i], size);
-                        }
-                        if (size != 0) {
-                            throw new DisassemblyTableParseError("final step missing");
-                        }
-                    } catch (DisassemblyTableParseError e) {
-                        throw new RuntimeException("error parsing opcode decipherer broketed part <"
-                                + broketedPart + ">", e);
-                    }
-                    veil = rightBroket + 1;
-                }
-            }
-            coll.add(Disassembler.Bytecode.COMPLETE);
-        }
     }
 
     class MinitableReferencePatch {
