@@ -191,6 +191,76 @@ final class LangParser {
         }
     }
 
+    @SuppressWarnings("synthetic-access")
+    final int parseProcessingStep(String step, int size) throws DisassemblyTableParseError, RuntimeException {
+        Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveInitialStep(step);
+        if (resolvedStep != null) {
+            if (!resolvedStep.typeMatches(size)) {
+                throw new DisassemblyTableParseError("type mismatch for step " + step);
+            }
+            coll.add(resolvedStep.code);
+            if (resolvedStep.sizeAfter != -1) {
+                size = resolvedStep.sizeAfter;
+            }
+        } else {
+            if (step.startsWith("tempswitch ")) {
+                String newLangName = step.substring(11).trim();
+                coll.add((byte) (Disassembler.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(newLangName)));
+                size = 0;
+            } else {
+                if (size == 0) {
+                    throw new DisassemblyTableParseError("attempt to process void value");
+                }
+                if (step.equals("unsigned")) {
+                    switch (size) {
+                        case 1:
+                            coll.add(Disassembler.Bytecode.UNSIGNED_BYTE);
+                            break;
+                        case 2:
+                            coll.add(Disassembler.Bytecode.UNSIGNED_WYDE);
+                            break;
+                        default:
+                            throw new RuntimeException("bug detected");
+                    }
+                    size = 0;
+                } else if (step.equals("signed")) {
+                    switch (size) {
+                        case 1:
+                            coll.add(Disassembler.Bytecode.SIGNED_BYTE);
+                            break;
+                        case 2:
+                            coll.add(Disassembler.Bytecode.SIGNED_WYDE);
+                            break;
+                        default:
+                            throw new RuntimeException("bug detected");
+                    }
+                    size = 0;
+                } else if (step.equals("and 0x38")) {
+                    coll.add(Disassembler.Bytecode.AND_0x38);
+                } else if (step.equals("and 3")) {
+                    coll.add(Disassembler.Bytecode.AND_3);
+                } else if (step.equals("and 7")) {
+                    coll.add(Disassembler.Bytecode.AND_7);
+                } else if (step.equals("decimal")) {
+                    coll.add(Disassembler.Bytecode.DECIMAL);
+                    size = 0;
+                } else if (step.startsWith("dispatch ")) {
+                    String newLangName = step.substring(9).trim();
+                    coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
+                    size = 0;
+                } else {
+                    int position = coll.currentPosition();
+                    coll.add((Disassembler.Bytecode.INVALID));
+                    size = 0;
+                    
+                    MinitableReferencePatch patch = new MinitableReferencePatch(position, step);
+                    minitableReferencePatches.add(patch);
+                }
+            }
+        }
+        return size;
+    }
+
     final class DeciphererParser {
         private final String string;
         private int veil;
@@ -200,75 +270,6 @@ final class LangParser {
             this.string = string;
             veil = 0;
             size = 0;
-        }
-
-        @SuppressWarnings("synthetic-access")
-        final void parseProcessingStep(String step) throws DisassemblyTableParseError, RuntimeException {
-            Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveInitialStep(step);
-            if (resolvedStep != null) {
-                if (!resolvedStep.typeMatches(size)) {
-                    throw new DisassemblyTableParseError("type mismatch for step " + step);
-                }
-                coll.add(resolvedStep.code);
-                if (resolvedStep.sizeAfter != -1) {
-                    size = resolvedStep.sizeAfter;
-                }
-            } else {
-                if (step.startsWith("tempswitch ")) {
-                    String newLangName = step.substring(11).trim();
-                    coll.add((byte) (Disassembler.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(newLangName)));
-                    size = 0;
-                } else {
-                    if (size == 0) {
-                        throw new DisassemblyTableParseError("attempt to process void value");
-                    }
-                    if (step.equals("unsigned")) {
-                        switch (size) {
-                            case 1:
-                                coll.add(Disassembler.Bytecode.UNSIGNED_BYTE);
-                                break;
-                            case 2:
-                                coll.add(Disassembler.Bytecode.UNSIGNED_WYDE);
-                                break;
-                            default:
-                                throw new RuntimeException("bug detected");
-                        }
-                        size = 0;
-                    } else if (step.equals("signed")) {
-                        switch (size) {
-                            case 1:
-                                coll.add(Disassembler.Bytecode.SIGNED_BYTE);
-                                break;
-                            case 2:
-                                coll.add(Disassembler.Bytecode.SIGNED_WYDE);
-                                break;
-                            default:
-                                throw new RuntimeException("bug detected");
-                        }
-                        size = 0;
-                    } else if (step.equals("and 0x38")) {
-                        coll.add(Disassembler.Bytecode.AND_0x38);
-                    } else if (step.equals("and 3")) {
-                        coll.add(Disassembler.Bytecode.AND_3);
-                    } else if (step.equals("and 7")) {
-                        coll.add(Disassembler.Bytecode.AND_7);
-                    } else if (step.equals("decimal")) {
-                        coll.add(Disassembler.Bytecode.DECIMAL);
-                        size = 0;
-                    } else if (step.startsWith("dispatch ")) {
-                        String newLangName = step.substring(9).trim();
-                        coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
-                        size = 0;
-                    } else {
-                        int position = coll.currentPosition();
-                        coll.add((Disassembler.Bytecode.INVALID));
-                        size = 0;
-                        
-                        MinitableReferencePatch patch = new MinitableReferencePatch(position, step);
-                        minitableReferencePatches.add(patch);
-                    }
-                }
-            }
         }
 
         final void parse() throws RuntimeException {
@@ -293,7 +294,7 @@ final class LangParser {
                         }
                         size = 0;
                         for (int i = 0; i < stepSpecs.length; i++) {
-                            parseProcessingStep(stepSpecs[i]);
+                            size = parseProcessingStep(stepSpecs[i], size);
                         }
                         if (size != 0) {
                             throw new DisassemblyTableParseError("final step missing");
