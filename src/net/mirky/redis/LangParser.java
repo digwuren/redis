@@ -171,6 +171,26 @@ final class LangParser {
         lexer.skipThisDedent();
     }
 
+    /**
+     * Determines the index of the given referred language. Adds
+     * this language to the referred language list if it is not
+     * already found. Throws an exception if the referred
+     * language list is full.
+     */
+    private final int resolveReferredLanguage(String newLangName) {
+        Integer index = referredLanguagesByName.get(newLangName);
+        if (index == null) {
+            if (referredLanguageCounter >= Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                throw new RuntimeException("too many referred languages");
+            }
+            linkage.referredLanguages[referredLanguageCounter] = newLangName;
+            referredLanguagesByName.put(newLangName, index);
+            return referredLanguageCounter++;
+        } else {
+            return index.intValue();
+        }
+    }
+
     final class DeciphererParser {
         private final String string;
         private int veil;
@@ -248,26 +268,6 @@ final class LangParser {
                         minitableReferencePatches.add(patch);
                     }
                 }
-            }
-        }
-
-        /**
-         * Determines the index of the given referred language. Adds
-         * this language to the referred language list if it is not
-         * already found. Throws an exception if the referred
-         * language list is full.
-         */
-        private final int resolveReferredLanguage(String newLangName) {
-            Integer index = referredLanguagesByName.get(newLangName);
-            if (index == null) {
-                if (referredLanguageCounter >= Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                    throw new RuntimeException("too many referred languages");
-                }
-                linkage.referredLanguages[referredLanguageCounter] = newLangName;
-                referredLanguagesByName.put(newLangName, index);
-                return referredLanguageCounter++;
-            } else {
-                return index.intValue();
             }
         }
 
