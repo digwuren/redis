@@ -45,6 +45,11 @@ public final class ParseUtil {
             }
         }
 
+        public final char getChar() {
+            assert pos < line.length();
+            return line.charAt(pos++);
+        }
+        
         public final void skipChar() {
             if (pos < line.length()) {
                 pos++;
@@ -284,6 +289,12 @@ public final class ParseUtil {
             dent++;
         }
 
+        public final char getChar() throws ControlData.LineParseError, IOException {
+            ensureCurrentLine();
+            assert dent == 0 && !eof;
+            return lineLexer.getChar();
+        }
+        
         public final void skipChar() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
