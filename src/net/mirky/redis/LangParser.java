@@ -169,23 +169,16 @@ final class LangParser {
                     dispatchTable[i] = coll.currentPosition();
                 }
             }
-            String content = lexer.parseRestOfLine();
-            int pos = 0;
             int size = 0;
-            while (pos < content.length()) {
-                char c = content.charAt(pos);
+            while (!lexer.atEndOfLine()) {
+                char c = lexer.getChar();
                 if (c != '<') {
                     if (c < 0x20 || c > 0x7E) {
                         throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
                     }
                     coll.add((byte) c);
-                    pos++;
                 } else {
-                    int rightBroket = content.indexOf('>', pos);
-                    if (rightBroket == -1) {
-                        throw new RuntimeException("error parsing opcode decipherer " + content);
-                    }
-                    String broketedPart = content.substring(pos + 1, rightBroket);
+                    String broketedPart = lexer.passUntilDelimiter(">").trim();
                     String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
                     try {
                         if (stepSpecs.length == 0) {
@@ -202,7 +195,7 @@ final class LangParser {
                         throw new RuntimeException("error parsing opcode decipherer broketed part <"
                                 + broketedPart + ">", e);
                     }
-                    pos = rightBroket + 1;
+                    lexer.pass('>');
                 }
             }
             coll.add(Disassembler.Bytecode.COMPLETE);
