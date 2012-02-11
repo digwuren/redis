@@ -79,30 +79,7 @@ final class LangParser {
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     if (lexer.passOptDashedWord("minitable")) {
-                        lexer.skipSpaces();
-                        String tableName = lexer.parseDashedWord("minitable name");
-                        if (minitablesByName.containsKey(tableName)) {
-                            lexer.complain("duplicate minitable name");
-                        }
-                        lexer.skipSpaces();
-                        lexer.pass(':');
-                        lexer.skipSpaces();
-                        List<String> minitable = new ArrayList<String>();
-                        while (lexer.atWord()) {
-                            minitable.add(lexer.parseThisDashedWord());
-                            lexer.skipSpaces();
-                        }
-                        // minitable size must be a power of two
-                        // (so that we can mask off excess high bits meaningfully)
-                        if (minitable.size() == 0 || (minitable.size() & (minitable.size() - 1)) != 0) {
-                            throw new DisassemblyTableParseError("invalid minitable size for " + tableName);
-                        }
-                        if (minitableCounter >= Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-                            throw new RuntimeException("too many minitables");
-                        }
-                        minitablesByName.put(tableName, new Integer(minitableCounter));
-                        linkage.minitables[minitableCounter++] = minitable.toArray(new String[0]);
-                        lexer.passNewline();
+                        parseMinitableDeclaration(lexer);
                     } else {
                         lexer.complain("expected end of file");
                     }
@@ -142,6 +119,34 @@ final class LangParser {
             return false;
         }
         throw new DisassemblyTableParseError("not a Boolean value: " + value);
+    }
+
+    private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError,
+            IOException, DisassemblyTableParseError {
+        lexer.skipSpaces();
+        String tableName = lexer.parseDashedWord("minitable name");
+        if (minitablesByName.containsKey(tableName)) {
+            lexer.complain("duplicate minitable name");
+        }
+        lexer.skipSpaces();
+        lexer.pass(':');
+        lexer.skipSpaces();
+        List<String> minitable = new ArrayList<String>();
+        while (lexer.atWord()) {
+            minitable.add(lexer.parseThisDashedWord());
+            lexer.skipSpaces();
+        }
+        // minitable size must be a power of two
+        // (so that we can mask off excess high bits meaningfully)
+        if (minitable.size() == 0 || (minitable.size() & (minitable.size() - 1)) != 0) {
+            throw new DisassemblyTableParseError("invalid minitable size for " + tableName);
+        }
+        if (minitableCounter >= Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
+            throw new RuntimeException("too many minitables");
+        }
+        minitablesByName.put(tableName, new Integer(minitableCounter));
+        linkage.minitables[minitableCounter++] = minitable.toArray(new String[0]);
+        lexer.passNewline();
     }
 
     private final void parseDispatchTable(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError, IOException,
