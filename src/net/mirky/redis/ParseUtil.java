@@ -95,6 +95,18 @@ public final class ParseUtil {
             return pos < line.length() && charset.indexOf(line.charAt(pos)) != -1;
         }
 
+        // If any of the delimiters in {@code charset} is not found, pass until end of line.
+        // May return empty string.
+        public final String passUntilDelimiter(String charset) {
+            int endPos = pos;
+            while (endPos < line.length() && charset.indexOf(line.charAt(endPos)) != -1) {
+                endPos++;
+            }
+            String result = line.substring(pos, endPos);
+            pos = endPos;
+            return result;
+        }
+
         public final boolean at(String etalon) {
             return pos + etalon.length() < line.length() && line.substring(pos, pos + etalon.length()).equals(etalon);
         }
@@ -254,6 +266,12 @@ public final class ParseUtil {
         public final boolean atAnyOf(String charset) throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             return dent == 0 && !eof && lineLexer.atAnyOf(charset);
+        }
+        
+        // If any of the delimiters in {@code charset} is not found, pass until end of line.
+        public final String passUntilDelimiter(String charset) throws LineParseError, IOException {
+            ensureCurrentLine();
+            return lineLexer.passUntilDelimiter(charset);
         }
 
         public final void skipThisIndent() {
