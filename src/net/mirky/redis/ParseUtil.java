@@ -104,7 +104,7 @@ public final class ParseUtil {
         // May return empty string.
         public final String passUntilDelimiter(String charset) {
             int endPos = pos;
-            while (endPos < line.length() && charset.indexOf(line.charAt(endPos)) != -1) {
+            while (endPos < line.length() && charset.indexOf(line.charAt(endPos)) == -1) {
                 endPos++;
             }
             String result = line.substring(pos, endPos);
