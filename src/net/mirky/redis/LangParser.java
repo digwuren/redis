@@ -178,24 +178,23 @@ final class LangParser {
                     }
                     coll.add((byte) c);
                 } else {
-                    String broketedPart = lexer.passUntilDelimiter(">").trim();
-                    String[] stepSpecs = Disassembler.Lang.Tabular.SPACED_COMMA.split(broketedPart, -1);
                     try {
-                        if (stepSpecs.length == 0) {
-                            throw new DisassemblyTableParseError("empty broketed part");
-                        }
                         size = 0;
-                        for (int i = 0; i < stepSpecs.length; i++) {
-                            size = parseProcessingStep(stepSpecs[i], size);
-                        }
+                        do {
+                            lexer.skipSpaces();
+                            if (lexer.atEndOfLine()) {
+                                lexer.complain("missing '>'");
+                            }
+                            String step = lexer.passUntilDelimiter(">,").trim();
+                            size = parseProcessingStep(step, size);
+                        } while (lexer.passOpt(','));
+                        lexer.pass('>');
                         if (size != 0) {
                             throw new DisassemblyTableParseError("final step missing");
                         }
                     } catch (DisassemblyTableParseError e) {
-                        throw new RuntimeException("error parsing opcode decipherer broketed part <"
-                                + broketedPart + ">", e);
+                        throw new RuntimeException("error parsing opcode decipherer", e);
                     }
-                    lexer.pass('>');
                 }
             }
             coll.add(Disassembler.Bytecode.COMPLETE);
