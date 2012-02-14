@@ -53,7 +53,7 @@ abstract class StructureDescriptionParser {
     
         @Override
         final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
             lexer.passNewline();
             lexer.passIndent();
             ArrayList<BinaryElementType.SlicedInteger.Slice> slices = new ArrayList<BinaryElementType.SlicedInteger.Slice>();
@@ -72,7 +72,7 @@ abstract class StructureDescriptionParser {
         lexer.pass('@');
         lexer.pass('.');
         int rightShift = lexer.parseUnsignedInteger("right shift");
-        lexer.skipSpaces();
+        lexer.hor.skipSpaces();
         BinaryElementType.SlicedInteger.Slice slice;
         if (lexer.hor.atDigit()) {
             // it's a basic slice; the field width (in bits) comes next
@@ -82,7 +82,7 @@ abstract class StructureDescriptionParser {
             }
             List<String> meanings = new ArrayList<String>();
             while (true) {
-                lexer.skipSpaces();
+                lexer.hor.skipSpaces();
                 if (!lexer.hor.at('"')) {
                     break;
                 }
@@ -97,11 +97,11 @@ abstract class StructureDescriptionParser {
             } else {
                 setFlagName = null;
             }
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
             String clearFlagName;
             if (lexer.hor.at('/')) {
                 lexer.hor.skipChar();
-                lexer.skipSpaces();
+                lexer.hor.skipSpaces();
                 clearFlagName = lexer.parseString("cleared flag meaning");
             } else {
                 clearFlagName = null;
@@ -178,9 +178,9 @@ abstract class StructureDescriptionParser {
         KNOWN_FIELD_TYPES.put("padded-string", new ParameterParser() {
             @Override
             final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-                lexer.skipSpaces();
+                lexer.hor.skipSpaces();
                 int size = lexer.parseUnsignedInteger("string length");
-                lexer.skipSpaces();
+                lexer.hor.skipSpaces();
                 int padding = lexer.parseUnsignedInteger("char code");
                 if (padding >= 0x100) {
                     lexer.complain("value too high to be a char code");
@@ -202,27 +202,27 @@ abstract class StructureDescriptionParser {
                     if (lexer.hor.at('@')) {
                         Step seek = parseThisSeek(lexer);
                         steps.add(seek);
-                        lexer.skipSpaces();
+                        lexer.hor.skipSpaces();
                     }
                     if (!(lexer.hor.atEndOfLine() || lexer.atCommentChar())) {
                         ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
                         while (true) {
                             String fieldName = lexer.parseDashedWord("field name");
                             lineSteps.add(new Step.Pass(fieldName, null));
-                            lexer.skipSpaces();
+                            lexer.hor.skipSpaces();
                             if (!lexer.hor.at(',')) {
                                 break;
                             }
                             lexer.hor.skipChar();
-                            lexer.skipSpaces();
+                            lexer.hor.skipSpaces();
                             if (lexer.hor.at('@')) {
                                 Step seek = parseThisSeek(lexer);
                                 lineSteps.add(seek);
-                                lexer.skipSpaces();
+                                lexer.hor.skipSpaces();
                             }
                         }
                         lexer.pass(':');
-                        lexer.skipSpaces();
+                        lexer.hor.skipSpaces();
                         BinaryElementType fieldType = parseType(lexer);
                         for (Step step : lineSteps) {
                             step.setType(fieldType);

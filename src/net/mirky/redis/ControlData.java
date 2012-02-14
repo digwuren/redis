@@ -40,12 +40,12 @@ public final class ControlData {
                         lexer.complain("key expected");
                     }
                     int key = lexer.hor.parseThisUnsignedInteger();
-                    lexer.skipSpaces();
+                    lexer.hor.skipSpaces();
                     if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
                     }
                     lexer.hor.skipChar();
-                    lexer.skipSpaces();
+                    lexer.hor.skipSpaces();
                     if (!lexer.hor.at('"')) {
                         lexer.complain("wrong value type");
                     }
@@ -88,12 +88,12 @@ public final class ControlData {
                         lexer.complain("key expected");
                     }
                     String key = lexer.hor.parseThisString();
-                    lexer.skipSpaces();
+                    lexer.hor.skipSpaces();
                     if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
                     }
                     lexer.hor.skipChar();
-                    lexer.skipSpaces();
+                    lexer.hor.skipSpaces();
                     if (!lexer.hor.at('"')) {
                         lexer.complain("missing value");
                     }

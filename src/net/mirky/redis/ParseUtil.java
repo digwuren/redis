@@ -315,17 +315,6 @@ public final class ParseUtil {
             dent++;
         }
 
-        /**
-         * Skip horizontal whitespace. If there's any unprocessing indent or
-         * dedent, it will be cleared.
-         */
-        public final void skipSpaces() {
-            dent = 0;
-            if (!eof) {
-                hor.skipSpaces();
-            }
-        }
-
         public final String parseDashedWord(String significance) throws ControlData.LineParseError {
             if (!hor.atAlphanumeric()) {
                 complain("expected " + significance + ", a word (dashes permitted)");
@@ -430,7 +419,7 @@ public final class ParseUtil {
         }
 
         public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
-            skipSpaces();
+            hor.skipSpaces();
             if (!(hor.atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");
             }

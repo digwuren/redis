@@ -71,12 +71,12 @@ abstract class CodeSet {
     // Also eats up the whitespace immediately following the set.
     static final CodeSet parse(ParseUtil.IndentationSensitiveLexer lexer) {
         CodeSet soFar = parseMasked(lexer);
-        lexer.skipSpaces();
+        lexer.hor.skipSpaces();
         while (lexer.hor.at('-')) {
             lexer.hor.skipChar();
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
             soFar = new Difference(soFar, parseMasked(lexer));
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
         }
         return soFar;
     }

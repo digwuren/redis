@@ -61,10 +61,10 @@ final class LangParser {
                     }
                     seenHeaderLines.add(itemName);
                     lexer.hor.parseThisDashedWord();
-                    lexer.skipSpaces();
+                    lexer.hor.skipSpaces();
                     lexer.pass(':');
                     // Note that comments are not ignored after header items.
-                    lexer.skipSpaces();
+                    lexer.hor.skipSpaces();
                     processHeader(itemName, lexer.parseRestOfLine());
                     lexer.passNewline();
                 }
@@ -123,18 +123,18 @@ final class LangParser {
 
     private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError,
             IOException, DisassemblyTableParseError {
-        lexer.skipSpaces();
+        lexer.hor.skipSpaces();
         String tableName = lexer.parseDashedWord("minitable name");
         if (minitablesByName.containsKey(tableName)) {
             lexer.complain("duplicate minitable name");
         }
-        lexer.skipSpaces();
+        lexer.hor.skipSpaces();
         lexer.pass(':');
-        lexer.skipSpaces();
+        lexer.hor.skipSpaces();
         List<String> minitable = new ArrayList<String>();
         while (lexer.hor.atAlphanumeric()) {
             minitable.add(lexer.hor.parseThisDashedWord());
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
         }
         // minitable size must be a power of two
         // (so that we can mask off excess high bits meaningfully)
@@ -156,11 +156,11 @@ final class LangParser {
         while (!lexer.atDedent()) {
             lexer.noIndent();
             lexer.pass('[');
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
             CodeSet set = CodeSet.parse(lexer);
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
             lexer.pass(']');
-            lexer.skipSpaces();
+            lexer.hor.skipSpaces();
             for (int i = 0; i < 256; i++) {
                 if (set.matches(i)) {
                     if (dispatchTable[i] != -1) {
@@ -181,7 +181,7 @@ final class LangParser {
                     try {
                         size = 0;
                         do {
-                            lexer.skipSpaces();
+                            lexer.hor.skipSpaces();
                             if (lexer.hor.atEndOfLine()) {
                                 lexer.complain("missing '>'");
                             }
