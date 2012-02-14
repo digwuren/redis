@@ -147,7 +147,7 @@ abstract class StructureDescriptionParser {
         return type;
     }
 
-    public static final Step parseThisSeek(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+    public static final Step parseThisSeek(IndentationSensitiveLexer lexer) throws LineParseError {
         assert lexer.at('@');
         lexer.skipChar();
         int sign;

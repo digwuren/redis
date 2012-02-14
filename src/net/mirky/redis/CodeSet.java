@@ -1,10 +1,5 @@
 package net.mirky.redis;
 
-import java.io.IOException;
-
-import net.mirky.redis.ControlData.LineParseError;
-import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
-
 /**
  * A CodeSet instance represents a particular set of integer codes,
  * typically in the range of 0-255. We have two kinds of CodeSet:s,
@@ -15,7 +10,7 @@ import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 abstract class CodeSet {
     abstract boolean matches(int candidate);
 
-    public static final CodeSet.Masked parseMasked(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+    public static final CodeSet.Masked parseMasked(ParseUtil.IndentationSensitiveLexer lexer) {
         int bits = 0;
         int mask = ~0;
         int digitWidth;
@@ -74,7 +69,7 @@ abstract class CodeSet {
     }
 
     // Also eats up the whitespace immediately following the set.
-    static final CodeSet parse(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+    static final CodeSet parse(ParseUtil.IndentationSensitiveLexer lexer) {
         CodeSet soFar = parseMasked(lexer);
         lexer.skipSpaces();
         while (lexer.at('-')) {

@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ResourceManager.ResolutionError;
 import net.mirky.redis.analysers.ZXSBasicProgramAnalyser;
 
@@ -811,7 +812,7 @@ public final class Disassembler {
                 this.dispatchTable = dispatchTable;
             }
 
-            static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
+            static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError, LineParseError {
                 LangParser parser = new LangParser();
                 parser.parse(name, reader);
                 return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
@@ -973,6 +974,8 @@ public final class Disassembler {
                 try {
                     return Tabular.loadTabular(name, reader);
                 } catch (LangParser.DisassemblyTableParseError e) {
+                    throw new RuntimeException("parse error reading lang " + name, e);
+                } catch (LineParseError e) {
                     throw new RuntimeException("parse error reading lang " + name, e);
                 }
             }

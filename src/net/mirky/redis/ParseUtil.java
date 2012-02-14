@@ -235,9 +235,10 @@ public final class ParseUtil {
         private int dent; // +1 for indent, negative for dedent, the absolute
                           // value indicates the count of remaining dedents
 
-        public IndentationSensitiveLexer(LineSource lineSource, char commentChar) {
+        public IndentationSensitiveLexer(LineSource lineSource, char commentChar) throws LineParseError, IOException {
             this.lineSource = lineSource;
             this.commentChar = commentChar;
+            advanceVertically();
         }
 
         public final void advanceVertically() throws ControlData.LineParseError, IOException {
@@ -267,7 +268,7 @@ public final class ParseUtil {
                             .intValue();
                 }
                 if (lineLexer.getPos() != threshold) {
-                    complain("invalid dedent");
+                    error("invalid dedent");
                 }
             }
         }
@@ -277,23 +278,15 @@ public final class ParseUtil {
          * actually advanced vertically past the final interesting line in this
          * file *and* having zero dent. Standing at the end of the last line
          * does not count as standing at the end of the file.
-         * 
-         * @throws IOException
-         * @throws LineParseError
          */
-        public final boolean atEndOfFile() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean atEndOfFile() {
             return dent == 0 && eof;
         }
 
         /**
          * Check whether we're at the end of a physical line.
-         * 
-         * @throws IOException
-         * @throws LineParseError
          */
-        public final boolean atEndOfLine() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean atEndOfLine() {
             return dent == 0 && (eof || lineLexer.atEndOfLine());
         }
 
@@ -305,24 +298,20 @@ public final class ParseUtil {
             return dent < 0;
         }
 
-        public final boolean at(char c) throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean at(char c) {
             return dent == 0 && !eof && lineLexer.at(c);
         }
 
-        public final boolean at(String s) throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean at(String s) {
             return dent == 0 && !eof && lineLexer.at(s);
         }
 
-        public final boolean atAnyOf(String charset) throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean atAnyOf(String charset) {
             return dent == 0 && !eof && lineLexer.atAnyOf(charset);
         }
         
         // If any of the delimiters in {@code charset} is not found, pass until end of line.
-        public final String passUntilDelimiter(String charset) throws LineParseError, IOException {
-            ensureCurrentLine();
+        public final String passUntilDelimiter(String charset) {
             return lineLexer.readUntilDelimiter(charset);
         }
 
@@ -336,32 +325,25 @@ public final class ParseUtil {
             dent++;
         }
 
-        public final char getChar() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final char getChar() {
             assert dent == 0 && !eof;
             return lineLexer.readChar();
         }
         
-        public final void skipChar() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final void skipChar() {
             assert dent == 0 && !eof;
             lineLexer.skipChar();
         }
 
-        public final boolean atUnsignedInteger() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean atUnsignedInteger() {
             return dent == 0 && !eof && lineLexer.atDigit();
         }
 
         /**
          * Parse the unsigned integer starting from the cursor. Programming
          * error if the cursor is not at an unsigned integer.
-         * 
-         * @throws LineParseError
-         * @throws IOException
          */
-        public final int parseThisUnsignedInteger() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final int parseThisUnsignedInteger() {
             assert dent == 0 && !eof;
             return lineLexer.parseThisUnsignedInteger();
         }
@@ -369,65 +351,64 @@ public final class ParseUtil {
         /**
          * Skip horizontal whitespace. If there's any unprocessing indent or
          * dedent, it will be cleared.
-         * 
-         * @throws IOException
-         * @throws LineParseError
          */
-        public final void skipSpaces() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final void skipSpaces() {
             dent = 0;
             if (!eof) {
                 lineLexer.skipSpaces();
             }
         }
 
-        public final String parseThisString() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final String parseThisString() {
             assert dent == 0 && !eof;
             return lineLexer.parseThisString();
         }
 
-        public final boolean atWord() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean atWord() {
             return dent == 0 && !eof && lineLexer.atAlphanumeric();
         }
         
-        public final String parseThisDashedWord() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final String parseThisDashedWord() {
             assert dent == 0 && !eof;
             return lineLexer.parseThisDashedWord();
         }
 
-        public final String peekThisDashedWord() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final String peekThisDashedWord() {
             assert dent == 0 && !eof;
             return lineLexer.peekThisDashedWord();
         }
 
-        public final String parseDashedWord(String significance) throws ControlData.LineParseError, IOException {
+        public final String parseDashedWord(String significance) throws ControlData.LineParseError {
             if (!atWord()) {
                 complain("expected " + significance + ", a word (dashes permitted)");
             }
             return parseThisDashedWord();
         }
 
-        public final boolean atCommentChar() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final boolean atCommentChar() {
             return at(commentChar);
         }
         
-        private final void ensureCurrentLine() throws ControlData.LineParseError, IOException {
-            if (lineLexer == null && !eof) {
-                advanceVertically();
-            }
-        }
-
+        @Deprecated // in favour of {@link #error(String)}
         public final void complain(String message) throws ControlData.LineParseError {
             if (!eof) {
                 throw new ControlData.LineParseError(lineSource.getLineLoc() + ':' + (lineLexer.getPos() + 1) + ": " + message, lineLexer.line);
             } else {
                 throw new ControlData.LineParseError(lineSource.getLineLoc() + ": " + message, "");
             }
+        }
+        
+        public final void error(String message) throws ControlData.LineParseError {
+            String loc;
+            String line;
+            if (!eof) {
+                loc = lineSource.getLineLoc() + '.' + (lineLexer.getPos() + 1);
+                line = lineLexer.line;
+            } else {
+                loc = lineSource.getLineLoc();
+                line = "";
+            }
+            throw new ControlData.LineParseError(loc + ": " + message, line);
         }
 
         public final void noIndent() throws ControlData.LineParseError {
@@ -436,14 +417,14 @@ public final class ParseUtil {
             }
         }
 
-        public final void pass(char c) throws ControlData.LineParseError, IOException {
+        public final void pass(char c) throws ControlData.LineParseError {
             if (!at(c)) {
                 complain("expected '" + c + "'");
             }
             skipChar();
         }
 
-        public final boolean passOpt(char c) throws ControlData.LineParseError, IOException {
+        public final boolean passOpt(char c) {
             boolean result = at(c);
             if (result) {
                 skipChar();
@@ -457,18 +438,15 @@ public final class ParseUtil {
          * missing unsined integer.
          * 
          * @throws LineParseError
-         * @throws IOException
          */
-        public final int parseUnsignedInteger(String significance) throws ControlData.LineParseError,
-                IOException {
+        public final int parseUnsignedInteger(String significance) throws ControlData.LineParseError {
             if (!atUnsignedInteger()) {
                 complain("expected " + significance + ", an unsigned integer");
             }
             return parseThisUnsignedInteger();
         }
 
-        public final String parseString(String significance) throws ControlData.LineParseError,
-                IOException {
+        public final String parseString(String significance) throws ControlData.LineParseError {
             if (!at('"')) {
                 complain("expected " + significance + ", a string");
             }
@@ -489,19 +467,18 @@ public final class ParseUtil {
             skipThisIndent();
         }
 
-        public final String parseRestOfLine() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
+        public final String parseRestOfLine() {
             return lineLexer.parseRestOfLine();
         }
 
-        public final void passDashedWord(String etalon) throws ControlData.LineParseError, IOException {
+        public final void passDashedWord(String etalon) throws ControlData.LineParseError {
             if (!atWord() || !peekThisDashedWord().equals(etalon)) {
                 complain("expected '" + etalon + "'");
             }
             parseThisDashedWord();
         }
 
-        public final boolean passOptDashedWord(String etalon) throws ControlData.LineParseError, IOException {
+        public final boolean passOptDashedWord(String etalon) {
             if (atWord() && peekThisDashedWord().equals(etalon)) {
                 parseThisDashedWord();
                 return true;
@@ -510,13 +487,12 @@ public final class ParseUtil {
             }
         }
 
-        public final char peekChar() throws LineParseError, IOException {
+        public final char peekChar() {
             assert !atEndOfLine();
             return lineLexer.peekChar();
         }
 
-        public final void expectLogicalEndOfLine() throws ControlData.LineParseError,
-                IOException {
+        public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
             skipSpaces();
             if (!(atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");

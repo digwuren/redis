@@ -43,7 +43,7 @@ final class LangParser {
         minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
     }
 
-    final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError, RuntimeException {
+    final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError, LineParseError {
         Set<String> knownHeaderItems = new TreeSet<String>();
         // note that the membership is checked with a downcased specimen
         knownHeaderItems.add("dispatch-suboffset");
