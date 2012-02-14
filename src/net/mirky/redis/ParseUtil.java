@@ -317,11 +317,6 @@ public final class ParseUtil {
             return dent < 0;
         }
 
-        // If any of the delimiters in {@code charset} is not found, pass until end of line.
-        public final String passUntilDelimiter(String charset) {
-            return hor.readUntilDelimiter(charset);
-        }
-
         /**
          * Discard one indentation level. Error if there is no non-discarded
          * indentation on this line.

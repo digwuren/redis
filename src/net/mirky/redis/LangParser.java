@@ -185,7 +185,7 @@ final class LangParser {
                             if (lexer.hor.atEndOfLine()) {
                                 lexer.complain("missing '>'");
                             }
-                            String step = lexer.passUntilDelimiter(">,").trim();
+                            String step = lexer.hor.readUntilDelimiter(">,").trim();
                             size = parseProcessingStep(step, size);
                         } while (lexer.hor.passOpt(','));
                         lexer.pass('>');
