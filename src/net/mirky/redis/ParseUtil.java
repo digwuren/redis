@@ -31,45 +31,103 @@ public final class ParseUtil {
     }
 
     public static final class LineLexer {
-        public final String line;
+        private String line;
         private int pos;
 
         public LineLexer(String line) {
-            this.line = line;
-            pos = 0;
+            reset(line);
         }
 
+        public final void reset(String newLine) {
+            this.line = newLine;
+            pos = 0;
+        }
+        
+        /**
+         * Skip over zero or more space characters.
+         */
         public final void skipSpaces() {
-            while (pos < line.length() && line.charAt(pos) == ' ') {
+            while (at(' ')) {
                 pos++;
             }
         }
 
-        public final char getChar() {
+        /**
+         * Extract the character at cursor and move the cursor over it. Error if
+         * the cursor has reached the end of line.
+         */
+        public final char readChar() {
             assert pos < line.length();
             return line.charAt(pos++);
         }
-        
+
+        /**
+         * Extract the character at cursor but leave the cursor unmoved. Error
+         * if the cursor has reached the end of line.
+         */
+        public final char peekChar() {
+            assert pos < line.length();
+            return line.charAt(pos);
+        }
+
+        /**
+         * Advance the cursor by one character. Error if the cursor has reached
+         * the end of line.
+         */
         public final void skipChar() {
-            if (pos < line.length()) {
-                pos++;
-            }
+            assert pos < line.length();
+            pos++;
         }
 
-        public final boolean atUnsignedInteger() {
-            if (pos >= line.length()) {
-                return false;
-            }
-            char c = line.charAt(pos);
-            return c >= '0' && c <= '9';
+        /**
+         * Check whether the cursor is at a character that equals the given
+         * character.
+         */
+        public final boolean at(char etalon) {
+            return pos < line.length() && line.charAt(pos) == etalon;
         }
 
-        public final boolean atString() {
-            return at('"');
+        /**
+         * Check whether the cursor is at a sequence of characters that equals
+         * the given string.
+         */
+        public final boolean at(String etalon) {
+            return pos + etalon.length() < line.length() && line.substring(pos, pos + etalon.length()).equals(etalon);
+        }
+
+        /**
+         * Check whether the cursor is at a character of the given charset.
+         * 
+         * @param charset
+         *            a {@link String} enumerating matching characters
+         */
+        public final boolean atAnyOf(String charset) {
+            return pos < line.length() && charset.indexOf(line.charAt(pos)) != -1;
+        }
+
+        /**
+         * Check whether the cursor is at a decimal digit.
+         */
+        public final boolean atDigit() {
+            return pos < line.length() && isDigit(line.charAt(pos));
+        }
+
+        /**
+         * Check whether the cursor is at an ASCII standard alphanumeric character.
+         */
+        public final boolean atAlphanumeric() {
+            return pos < line.length() && isAlphanumeric(line.charAt(pos));
+        }
+
+        /**
+         * Check whether the cursor is at the end of line.
+         */
+        public final boolean atEndOfLine() {
+            return pos >= line.length();
         }
 
         public final String parseThisString() {
-            assert atString();
+            assert at('"');
             StringBuilder sb = new StringBuilder();
             for (int cur = pos + 1; cur < line.length(); cur++) {
                 if (line.charAt(cur) == '"') {
@@ -92,17 +150,13 @@ public final class ParseUtil {
             throw new RuntimeException("string not terminated");
         }
 
-        public final boolean at(char etalon) {
-            return pos < line.length() && line.charAt(pos) == etalon;
-        }
-
-        public final boolean atAnyOf(String charset) {
-            return pos < line.length() && charset.indexOf(line.charAt(pos)) != -1;
-        }
-
-        // If any of the delimiters in {@code charset} is not found, pass until end of line.
-        // May return empty string.
-        public final String passUntilDelimiter(String charset) {
+        /**
+         * Read characters until a delimiter listed in {@code charset} is seen,
+         * or the line ends, and return them as a {@link String}. Leave the
+         * cursor at the delimiter or at the end of line. May return an empty
+         * string, if the cursor is already at a listed delimiter
+         */
+        public final String readUntilDelimiter(String charset) {
             int endPos = pos;
             while (endPos < line.length() && charset.indexOf(line.charAt(endPos)) == -1) {
                 endPos++;
@@ -112,31 +166,19 @@ public final class ParseUtil {
             return result;
         }
 
-        public final boolean at(String etalon) {
-            return pos + etalon.length() < line.length() && line.substring(pos, pos + etalon.length()).equals(etalon);
-        }
-
-        public final boolean atEndOfLine() {
-            return pos >= line.length();
-        }
-
-        public final boolean atWord() {
-            return pos < line.length() && isWordChar(line.charAt(pos));
-        }
-
         public final String parseThisWord() {
-            assert atWord();
+            assert atAlphanumeric();
             int begin = pos;
-            while (atWord()) {
+            while (atAlphanumeric()) {
                 pos++;
             }
             return line.substring(begin, pos);
         }
 
         public final String parseThisDashedWord() {
-            assert atWord();
+            assert atAlphanumeric();
             int begin = pos;
-            while (atWord() || (pos != begin && at('-') && pos + 1 < line.length() && isWordChar(line.charAt(pos + 1)))) {
+            while (atAlphanumeric() || (pos != begin && at('-') && pos + 1 < line.length() && isAlphanumeric(line.charAt(pos + 1)))) {
                 pos++;
             }
             return line.substring(begin, pos);
@@ -157,7 +199,7 @@ public final class ParseUtil {
          * @throws IOException
          */
         public final int parseThisUnsignedInteger() throws NumberFormatException {
-            assert atUnsignedInteger();
+            assert atDigit();
             return ParseUtil.parseUnsignedInteger(parseThisWord());
         }
 
@@ -171,13 +213,16 @@ public final class ParseUtil {
             return pos;
         }
 
-        public static final boolean isWordChar(char c) {
-            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
+        public static final boolean isDigit(char c) {
+            return c >= '0' && c <= '9';
         }
 
-        public final char peekChar() {
-            assert !atEndOfLine();
-            return line.charAt(pos);
+        public static final boolean isLetter(char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        }
+
+        public static final boolean isAlphanumeric(char c) {
+            return isLetter(c) || isDigit(c);
         }
     }
 
@@ -276,7 +321,7 @@ public final class ParseUtil {
         // If any of the delimiters in {@code charset} is not found, pass until end of line.
         public final String passUntilDelimiter(String charset) throws LineParseError, IOException {
             ensureCurrentLine();
-            return lineLexer.passUntilDelimiter(charset);
+            return lineLexer.readUntilDelimiter(charset);
         }
 
         public final void skipThisIndent() {
@@ -292,7 +337,7 @@ public final class ParseUtil {
         public final char getChar() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
-            return lineLexer.getChar();
+            return lineLexer.readChar();
         }
         
         public final void skipChar() throws ControlData.LineParseError, IOException {
@@ -303,7 +348,7 @@ public final class ParseUtil {
 
         public final boolean atUnsignedInteger() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
-            return dent == 0 && !eof && lineLexer.atUnsignedInteger();
+            return dent == 0 && !eof && lineLexer.atDigit();
         }
 
         /**
@@ -336,7 +381,7 @@ public final class ParseUtil {
 
         public final boolean atString() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
-            return dent == 0 && !eof && lineLexer.atString();
+            return dent == 0 && !eof && lineLexer.at('"');
         }
 
         public final String parseThisString() throws ControlData.LineParseError, IOException {
@@ -347,7 +392,7 @@ public final class ParseUtil {
 
         public final boolean atWord() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
-            return dent == 0 && !eof && lineLexer.atWord();
+            return dent == 0 && !eof && lineLexer.atAlphanumeric();
         }
         
         public final String parseThisDashedWord() throws ControlData.LineParseError, IOException {
@@ -485,6 +530,14 @@ public final class ParseUtil {
         public final char peekChar() throws LineParseError, IOException {
             assert !atEndOfLine();
             return lineLexer.peekChar();
+        }
+
+        public final void expectLogicalEndOfLine() throws ControlData.LineParseError,
+                IOException {
+            skipSpaces();
+            if (!(atEndOfLine() || atCommentChar())) {
+                complain("expected end of line");
+            }
         }
     }
 

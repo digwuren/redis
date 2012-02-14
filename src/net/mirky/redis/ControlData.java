@@ -50,10 +50,7 @@ public final class ControlData {
                         lexer.complain("wrong value type");
                     }
                     String value = lexer.parseThisString();
-                    lexer.skipSpaces();
-                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                        lexer.complain("missing end of line");
-                    }
+                    lexer.expectLogicalEndOfLine();
                     if (key < 0 || key >= arraySize) {
                         throw new RuntimeException("key " + key + " out of bounds in " + filename);
                     }
@@ -101,10 +98,7 @@ public final class ControlData {
                         lexer.complain("missing value");
                     }
                     String value = lexer.parseThisString();
-                    lexer.skipSpaces();
-                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
-                        lexer.complain("missing end of line");
-                    }
+                    lexer.expectLogicalEndOfLine();
                     ArrayList<String> list = map.get(key);
                     if (list == null) {
                         list = new ArrayList<String>();
