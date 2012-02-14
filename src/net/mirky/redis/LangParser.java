@@ -55,12 +55,12 @@ final class LangParser {
         String itemName = null;
         try {
             try {
-                while (lexer.atWord() && knownHeaderItems.contains((itemName = lexer.peekThisDashedWord()).toLowerCase())) {
+                while (lexer.hor.atAlphanumeric() && knownHeaderItems.contains((itemName = lexer.hor.peekThisDashedWord()).toLowerCase())) {
                     if (seenHeaderLines.contains(itemName)) {
                         throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
                     }
                     seenHeaderLines.add(itemName);
-                    lexer.parseThisDashedWord();
+                    lexer.hor.parseThisDashedWord();
                     lexer.skipSpaces();
                     lexer.pass(':');
                     // Note that comments are not ignored after header items.
@@ -132,8 +132,8 @@ final class LangParser {
         lexer.pass(':');
         lexer.skipSpaces();
         List<String> minitable = new ArrayList<String>();
-        while (lexer.atWord()) {
-            minitable.add(lexer.parseThisDashedWord());
+        while (lexer.hor.atAlphanumeric()) {
+            minitable.add(lexer.hor.parseThisDashedWord());
             lexer.skipSpaces();
         }
         // minitable size must be a power of two

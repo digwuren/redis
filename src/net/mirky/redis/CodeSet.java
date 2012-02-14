@@ -62,7 +62,7 @@ abstract class CodeSet {
                 break;
             }
         }
-        if (lexer.atWord()) {
+        if (lexer.hor.atAlphanumeric()) {
             throw new RuntimeException("not a base " + base + " digit");
         }
         return new Masked(bits, mask);

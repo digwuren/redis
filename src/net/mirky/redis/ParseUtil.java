@@ -354,25 +354,11 @@ public final class ParseUtil {
             return hor.parseThisString();
         }
 
-        public final boolean atWord() {
-            return dent == 0 && !eof && hor.atAlphanumeric();
-        }
-        
-        public final String parseThisDashedWord() {
-            assert dent == 0 && !eof;
-            return hor.parseThisDashedWord();
-        }
-
-        public final String peekThisDashedWord() {
-            assert dent == 0 && !eof;
-            return hor.peekThisDashedWord();
-        }
-
         public final String parseDashedWord(String significance) throws ControlData.LineParseError {
-            if (!atWord()) {
+            if (!hor.atAlphanumeric()) {
                 complain("expected " + significance + ", a word (dashes permitted)");
             }
-            return parseThisDashedWord();
+            return hor.parseThisDashedWord();
         }
 
         public final boolean atCommentChar() {
@@ -459,15 +445,15 @@ public final class ParseUtil {
         }
 
         public final void passDashedWord(String etalon) throws ControlData.LineParseError {
-            if (!atWord() || !peekThisDashedWord().equals(etalon)) {
+            if (!hor.atAlphanumeric() || !hor.peekThisDashedWord().equals(etalon)) {
                 complain("expected '" + etalon + "'");
             }
-            parseThisDashedWord();
+            hor.parseThisDashedWord();
         }
 
         public final boolean passOptDashedWord(String etalon) {
-            if (atWord() && peekThisDashedWord().equals(etalon)) {
-                parseThisDashedWord();
+            if (hor.atAlphanumeric() && hor.peekThisDashedWord().equals(etalon)) {
+                hor.parseThisDashedWord();
                 return true;
             } else {
                 return false;
