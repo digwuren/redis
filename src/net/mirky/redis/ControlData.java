@@ -41,12 +41,12 @@ public final class ControlData {
                     }
                     int key = lexer.parseThisUnsignedInteger();
                     lexer.skipSpaces();
-                    if (!lexer.at(':')) {
+                    if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
                     }
                     lexer.skipChar();
                     lexer.skipSpaces();
-                    if (!lexer.at('"')) {
+                    if (!lexer.hor.at('"')) {
                         lexer.complain("wrong value type");
                     }
                     String value = lexer.parseThisString();
@@ -84,17 +84,17 @@ public final class ControlData {
                     if (lexer.atDedent()) {
                         lexer.complain("unexpected dedentation");
                     }
-                    if (!lexer.at('"')) {
+                    if (!lexer.hor.at('"')) {
                         lexer.complain("key expected");
                     }
                     String key = lexer.parseThisString();
                     lexer.skipSpaces();
-                    if (!lexer.at(':')) {
+                    if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
                     }
                     lexer.skipChar();
                     lexer.skipSpaces();
-                    if (!lexer.at('"')) {
+                    if (!lexer.hor.at('"')) {
                         lexer.complain("missing value");
                     }
                     String value = lexer.parseThisString();

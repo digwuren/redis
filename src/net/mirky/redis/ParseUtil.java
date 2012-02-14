@@ -292,10 +292,6 @@ public final class ParseUtil {
             return dent < 0;
         }
 
-        public final boolean at(char c) {
-            return dent == 0 && !eof && hor.at(c);
-        }
-
         public final boolean at(String s) {
             return dent == 0 && !eof && hor.at(s);
         }
@@ -380,7 +376,7 @@ public final class ParseUtil {
         }
 
         public final boolean atCommentChar() {
-            return at(commentChar);
+            return hor.at(commentChar);
         }
         
         @Deprecated // in favour of {@link #error(String)}
@@ -409,14 +405,14 @@ public final class ParseUtil {
         }
 
         public final void pass(char c) throws ControlData.LineParseError {
-            if (!at(c)) {
+            if (!hor.at(c)) {
                 complain("expected '" + c + "'");
             }
             skipChar();
         }
 
         public final boolean passOpt(char c) {
-            boolean result = at(c);
+            boolean result = hor.at(c);
             if (result) {
                 skipChar();
             }
@@ -438,7 +434,7 @@ public final class ParseUtil {
         }
 
         public final String parseString(String significance) throws ControlData.LineParseError {
-            if (!at('"')) {
+            if (!hor.at('"')) {
                 complain("expected " + significance + ", a string");
             }
             return parseThisString();

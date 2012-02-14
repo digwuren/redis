@@ -83,7 +83,7 @@ abstract class StructureDescriptionParser {
             List<String> meanings = new ArrayList<String>();
             while (true) {
                 lexer.skipSpaces();
-                if (!lexer.at('"')) {
+                if (!lexer.hor.at('"')) {
                     break;
                 }
                 meanings.add(lexer.parseThisString());
@@ -92,14 +92,14 @@ abstract class StructureDescriptionParser {
         } else {
             // it's a flag slice; the field width is implicitly one
             String setFlagName;
-            if (lexer.at('"')) {
+            if (lexer.hor.at('"')) {
                 setFlagName = lexer.parseThisString();
             } else {
                 setFlagName = null;
             }
             lexer.skipSpaces();
             String clearFlagName;
-            if (lexer.at('/')) {
+            if (lexer.hor.at('/')) {
                 lexer.skipChar();
                 lexer.skipSpaces();
                 clearFlagName = lexer.parseString("cleared flag meaning");
@@ -148,13 +148,13 @@ abstract class StructureDescriptionParser {
     }
 
     public static final Step parseThisSeek(IndentationSensitiveLexer lexer) throws LineParseError {
-        assert lexer.at('@');
+        assert lexer.hor.at('@');
         lexer.skipChar();
         int sign;
-        if (lexer.at('+')) {
+        if (lexer.hor.at('+')) {
             lexer.skipChar();
             sign = +1;
-        } else if (lexer.at('-')) {
+        } else if (lexer.hor.at('-')) {
             lexer.skipChar();
             sign = -1;
         } else {
@@ -199,7 +199,7 @@ abstract class StructureDescriptionParser {
                 
                 while (!lexer.atDedent()) {
                     lexer.noIndent();
-                    if (lexer.at('@')) {
+                    if (lexer.hor.at('@')) {
                         Step seek = parseThisSeek(lexer);
                         steps.add(seek);
                         lexer.skipSpaces();
@@ -210,12 +210,12 @@ abstract class StructureDescriptionParser {
                             String fieldName = lexer.parseDashedWord("field name");
                             lineSteps.add(new Step.Pass(fieldName, null));
                             lexer.skipSpaces();
-                            if (!lexer.at(',')) {
+                            if (!lexer.hor.at(',')) {
                                 break;
                             }
                             lexer.skipChar();
                             lexer.skipSpaces();
-                            if (lexer.at('@')) {
+                            if (lexer.hor.at('@')) {
                                 Step seek = parseThisSeek(lexer);
                                 lineSteps.add(seek);
                                 lexer.skipSpaces();

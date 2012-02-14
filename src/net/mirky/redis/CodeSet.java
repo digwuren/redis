@@ -38,12 +38,12 @@ abstract class CodeSet {
             throw new RuntimeException("invalid masked value");
         }
         while (true) {
-            if (lexer.at('?')) {
+            if (lexer.hor.at('?')) {
                 bits <<= digitWidth;
                 mask <<= digitWidth;
                 lexer.skipChar();
                 continue;
-            } else if (lexer.at('_')) {
+            } else if (lexer.hor.at('_')) {
                 // ignore
                 lexer.skipChar();
                 continue;
@@ -72,7 +72,7 @@ abstract class CodeSet {
     static final CodeSet parse(ParseUtil.IndentationSensitiveLexer lexer) {
         CodeSet soFar = parseMasked(lexer);
         lexer.skipSpaces();
-        while (lexer.at('-')) {
+        while (lexer.hor.at('-')) {
             lexer.skipChar();
             lexer.skipSpaces();
             soFar = new Difference(soFar, parseMasked(lexer));
