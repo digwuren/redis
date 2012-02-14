@@ -187,7 +187,7 @@ final class LangParser {
                             }
                             String step = lexer.passUntilDelimiter(">,").trim();
                             size = parseProcessingStep(step, size);
-                        } while (lexer.passOpt(','));
+                        } while (lexer.hor.passOpt(','));
                         lexer.pass('>');
                         if (size != 0) {
                             throw new DisassemblyTableParseError("final step missing");

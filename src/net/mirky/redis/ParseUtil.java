@@ -126,6 +126,14 @@ public final class ParseUtil {
             return pos >= line.length();
         }
 
+        public final boolean passOpt(char c) {
+            boolean result = at(c);
+            if (result) {
+                skipChar();
+            }
+            return result;
+        }
+
         public final String parseThisString() {
             assert at('"');
             StringBuilder sb = new StringBuilder();
@@ -359,14 +367,6 @@ public final class ParseUtil {
                 complain("expected '" + c + "'");
             }
             hor.skipChar();
-        }
-
-        public final boolean passOpt(char c) {
-            boolean result = hor.at(c);
-            if (result) {
-                hor.skipChar();
-            }
-            return result;
         }
 
         /**
