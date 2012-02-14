@@ -229,7 +229,7 @@ public final class ParseUtil {
     public static final class IndentationSensitiveLexer {
         private final LineSource lineSource;
         private final char commentChar;
-        private LineLexer lineLexer = null;
+        private final LineLexer hor;
         private boolean eof = false;
         private final Vector<Integer> indentationStack = new Vector<Integer>();
         private int dent; // +1 for indent, negative for dedent, the absolute
@@ -238,6 +238,7 @@ public final class ParseUtil {
         public IndentationSensitiveLexer(LineSource lineSource, char commentChar) throws LineParseError, IOException {
             this.lineSource = lineSource;
             this.commentChar = commentChar;
+            hor = new LineLexer(null);
             advanceVertically();
         }
 
@@ -245,29 +246,29 @@ public final class ParseUtil {
             do {
                 String line = lineSource.getNextLine();
                 if (line == null) {
-                    lineLexer = null;
+                    hor.reset("");
                     eof = true;
                     dent = -indentationStack.size();
                     indentationStack.clear();
                     return;
                 }
-                lineLexer = new LineLexer(line);
-                lineLexer.skipSpaces();
-            } while (lineLexer.atEndOfLine() || lineLexer.at(commentChar));
+                hor.reset(line);
+                hor.skipSpaces();
+            } while (hor.atEndOfLine() || hor.at(commentChar));
             int threshold = indentationStack.isEmpty() ? 0 : indentationStack.get(indentationStack.size() - 1)
                     .intValue();
-            if (lineLexer.getPos() > threshold) {
+            if (hor.getPos() > threshold) {
                 dent = 1;
-                indentationStack.add(new Integer(lineLexer.getPos()));
+                indentationStack.add(new Integer(hor.getPos()));
             } else {
                 dent = 0;
-                while (lineLexer.getPos() < threshold) {
+                while (hor.getPos() < threshold) {
                     dent--;
                     indentationStack.remove(indentationStack.size() - 1);
                     threshold = indentationStack.isEmpty() ? 0 : indentationStack.get(indentationStack.size() - 1)
                             .intValue();
                 }
-                if (lineLexer.getPos() != threshold) {
+                if (hor.getPos() != threshold) {
                     error("invalid dedent");
                 }
             }
@@ -287,7 +288,7 @@ public final class ParseUtil {
          * Check whether we're at the end of a physical line.
          */
         public final boolean atEndOfLine() {
-            return dent == 0 && (eof || lineLexer.atEndOfLine());
+            return dent == 0 && (eof || hor.atEndOfLine());
         }
 
         public final boolean atIndent() {
@@ -299,20 +300,20 @@ public final class ParseUtil {
         }
 
         public final boolean at(char c) {
-            return dent == 0 && !eof && lineLexer.at(c);
+            return dent == 0 && !eof && hor.at(c);
         }
 
         public final boolean at(String s) {
-            return dent == 0 && !eof && lineLexer.at(s);
+            return dent == 0 && !eof && hor.at(s);
         }
 
         public final boolean atAnyOf(String charset) {
-            return dent == 0 && !eof && lineLexer.atAnyOf(charset);
+            return dent == 0 && !eof && hor.atAnyOf(charset);
         }
         
         // If any of the delimiters in {@code charset} is not found, pass until end of line.
         public final String passUntilDelimiter(String charset) {
-            return lineLexer.readUntilDelimiter(charset);
+            return hor.readUntilDelimiter(charset);
         }
 
         public final void skipThisIndent() {
@@ -327,16 +328,16 @@ public final class ParseUtil {
 
         public final char getChar() {
             assert dent == 0 && !eof;
-            return lineLexer.readChar();
+            return hor.readChar();
         }
         
         public final void skipChar() {
             assert dent == 0 && !eof;
-            lineLexer.skipChar();
+            hor.skipChar();
         }
 
         public final boolean atUnsignedInteger() {
-            return dent == 0 && !eof && lineLexer.atDigit();
+            return dent == 0 && !eof && hor.atDigit();
         }
 
         /**
@@ -345,7 +346,7 @@ public final class ParseUtil {
          */
         public final int parseThisUnsignedInteger() {
             assert dent == 0 && !eof;
-            return lineLexer.parseThisUnsignedInteger();
+            return hor.parseThisUnsignedInteger();
         }
         
         /**
@@ -355,27 +356,27 @@ public final class ParseUtil {
         public final void skipSpaces() {
             dent = 0;
             if (!eof) {
-                lineLexer.skipSpaces();
+                hor.skipSpaces();
             }
         }
 
         public final String parseThisString() {
             assert dent == 0 && !eof;
-            return lineLexer.parseThisString();
+            return hor.parseThisString();
         }
 
         public final boolean atWord() {
-            return dent == 0 && !eof && lineLexer.atAlphanumeric();
+            return dent == 0 && !eof && hor.atAlphanumeric();
         }
         
         public final String parseThisDashedWord() {
             assert dent == 0 && !eof;
-            return lineLexer.parseThisDashedWord();
+            return hor.parseThisDashedWord();
         }
 
         public final String peekThisDashedWord() {
             assert dent == 0 && !eof;
-            return lineLexer.peekThisDashedWord();
+            return hor.peekThisDashedWord();
         }
 
         public final String parseDashedWord(String significance) throws ControlData.LineParseError {
@@ -392,7 +393,7 @@ public final class ParseUtil {
         @Deprecated // in favour of {@link #error(String)}
         public final void complain(String message) throws ControlData.LineParseError {
             if (!eof) {
-                throw new ControlData.LineParseError(lineSource.getLineLoc() + ':' + (lineLexer.getPos() + 1) + ": " + message, lineLexer.line);
+                throw new ControlData.LineParseError(lineSource.getLineLoc() + ':' + (hor.getPos() + 1) + ": " + message, hor.line);
             } else {
                 throw new ControlData.LineParseError(lineSource.getLineLoc() + ": " + message, "");
             }
@@ -400,15 +401,12 @@ public final class ParseUtil {
         
         public final void error(String message) throws ControlData.LineParseError {
             String loc;
-            String line;
             if (!eof) {
-                loc = lineSource.getLineLoc() + '.' + (lineLexer.getPos() + 1);
-                line = lineLexer.line;
+                loc = lineSource.getLineLoc() + '.' + (hor.getPos() + 1);
             } else {
                 loc = lineSource.getLineLoc();
-                line = "";
             }
-            throw new ControlData.LineParseError(loc + ": " + message, line);
+            throw new ControlData.LineParseError(loc + ": " + message, hor.line);
         }
 
         public final void noIndent() throws ControlData.LineParseError {
@@ -468,7 +466,7 @@ public final class ParseUtil {
         }
 
         public final String parseRestOfLine() {
-            return lineLexer.parseRestOfLine();
+            return hor.parseRestOfLine();
         }
 
         public final void passDashedWord(String etalon) throws ControlData.LineParseError {
@@ -489,7 +487,7 @@ public final class ParseUtil {
 
         public final char peekChar() {
             assert !atEndOfLine();
-            return lineLexer.peekChar();
+            return hor.peekChar();
         }
 
         public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
