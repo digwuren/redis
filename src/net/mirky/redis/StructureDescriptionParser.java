@@ -204,7 +204,7 @@ abstract class StructureDescriptionParser {
                         steps.add(seek);
                         lexer.skipSpaces();
                     }
-                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
+                    if (!(lexer.hor.atEndOfLine() || lexer.atCommentChar())) {
                         ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
                         while (true) {
                             String fieldName = lexer.parseDashedWord("field name");

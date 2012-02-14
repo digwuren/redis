@@ -170,7 +170,7 @@ final class LangParser {
                 }
             }
             int size = 0;
-            while (!lexer.atEndOfLine()) {
+            while (!lexer.hor.atEndOfLine()) {
                 char c = lexer.getChar();
                 if (c != '<') {
                     if (c < 0x20 || c > 0x7E) {
@@ -182,7 +182,7 @@ final class LangParser {
                         size = 0;
                         do {
                             lexer.skipSpaces();
-                            if (lexer.atEndOfLine()) {
+                            if (lexer.hor.atEndOfLine()) {
                                 lexer.complain("missing '>'");
                             }
                             String step = lexer.passUntilDelimiter(">,").trim();

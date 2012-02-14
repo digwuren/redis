@@ -229,7 +229,7 @@ public final class ParseUtil {
     public static final class IndentationSensitiveLexer {
         private final LineSource lineSource;
         private final char commentChar;
-        private final LineLexer hor;
+        public final LineLexer hor;
         private boolean eof = false;
         private final Vector<Integer> indentationStack = new Vector<Integer>();
         private int dent; // +1 for indent, negative for dedent, the absolute
@@ -282,13 +282,6 @@ public final class ParseUtil {
          */
         public final boolean atEndOfFile() {
             return dent == 0 && eof;
-        }
-
-        /**
-         * Check whether we're at the end of a physical line.
-         */
-        public final boolean atEndOfLine() {
-            return dent == 0 && (eof || hor.atEndOfLine());
         }
 
         public final boolean atIndent() {
@@ -452,7 +445,7 @@ public final class ParseUtil {
         }
 
         public final void passNewline() throws ControlData.LineParseError, IOException {
-            if (!(atEndOfLine() || atCommentChar())) {
+            if (!(hor.atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");
             }
             advanceVertically();
@@ -486,13 +479,13 @@ public final class ParseUtil {
         }
 
         public final char peekChar() {
-            assert !atEndOfLine();
+            assert !hor.atEndOfLine();
             return hor.peekChar();
         }
 
         public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
             skipSpaces();
-            if (!(atEndOfLine() || atCommentChar())) {
+            if (!(hor.atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");
             }
         }
