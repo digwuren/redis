@@ -307,29 +307,6 @@ public final class ParseUtil {
             dent++;
         }
 
-        public final char getChar() {
-            assert dent == 0 && !eof;
-            return hor.readChar();
-        }
-        
-        public final void skipChar() {
-            assert dent == 0 && !eof;
-            hor.skipChar();
-        }
-
-        public final boolean atUnsignedInteger() {
-            return dent == 0 && !eof && hor.atDigit();
-        }
-
-        /**
-         * Parse the unsigned integer starting from the cursor. Programming
-         * error if the cursor is not at an unsigned integer.
-         */
-        public final int parseThisUnsignedInteger() {
-            assert dent == 0 && !eof;
-            return hor.parseThisUnsignedInteger();
-        }
-        
         /**
          * Skip horizontal whitespace. If there's any unprocessing indent or
          * dedent, it will be cleared.
@@ -381,13 +358,13 @@ public final class ParseUtil {
             if (!hor.at(c)) {
                 complain("expected '" + c + "'");
             }
-            skipChar();
+            hor.skipChar();
         }
 
         public final boolean passOpt(char c) {
             boolean result = hor.at(c);
             if (result) {
-                skipChar();
+                hor.skipChar();
             }
             return result;
         }
@@ -400,10 +377,10 @@ public final class ParseUtil {
          * @throws LineParseError
          */
         public final int parseUnsignedInteger(String significance) throws ControlData.LineParseError {
-            if (!atUnsignedInteger()) {
+            if (!hor.atDigit()) {
                 complain("expected " + significance + ", an unsigned integer");
             }
-            return parseThisUnsignedInteger();
+            return hor.parseThisUnsignedInteger();
         }
 
         public final String parseString(String significance) throws ControlData.LineParseError {

@@ -74,7 +74,7 @@ abstract class StructureDescriptionParser {
         int rightShift = lexer.parseUnsignedInteger("right shift");
         lexer.skipSpaces();
         BinaryElementType.SlicedInteger.Slice slice;
-        if (lexer.atUnsignedInteger()) {
+        if (lexer.hor.atDigit()) {
             // it's a basic slice; the field width (in bits) comes next
             int sliceWidth = lexer.parseUnsignedInteger("slice width");
             if (sliceWidth == 0) {
@@ -100,7 +100,7 @@ abstract class StructureDescriptionParser {
             lexer.skipSpaces();
             String clearFlagName;
             if (lexer.hor.at('/')) {
-                lexer.skipChar();
+                lexer.hor.skipChar();
                 lexer.skipSpaces();
                 clearFlagName = lexer.parseString("cleared flag meaning");
             } else {
@@ -149,13 +149,13 @@ abstract class StructureDescriptionParser {
 
     public static final Step parseThisSeek(IndentationSensitiveLexer lexer) throws LineParseError {
         assert lexer.hor.at('@');
-        lexer.skipChar();
+        lexer.hor.skipChar();
         int sign;
         if (lexer.hor.at('+')) {
-            lexer.skipChar();
+            lexer.hor.skipChar();
             sign = +1;
         } else if (lexer.hor.at('-')) {
-            lexer.skipChar();
+            lexer.hor.skipChar();
             sign = -1;
         } else {
             sign = 0;
@@ -213,7 +213,7 @@ abstract class StructureDescriptionParser {
                             if (!lexer.hor.at(',')) {
                                 break;
                             }
-                            lexer.skipChar();
+                            lexer.hor.skipChar();
                             lexer.skipSpaces();
                             if (lexer.hor.at('@')) {
                                 Step seek = parseThisSeek(lexer);

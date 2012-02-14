@@ -36,15 +36,15 @@ public final class ControlData {
                     if (lexer.atDedent()) {
                         lexer.complain("unexpected dedentation");
                     }
-                    if (!lexer.atUnsignedInteger()) {
+                    if (!lexer.hor.atDigit()) {
                         lexer.complain("key expected");
                     }
-                    int key = lexer.parseThisUnsignedInteger();
+                    int key = lexer.hor.parseThisUnsignedInteger();
                     lexer.skipSpaces();
                     if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
                     }
-                    lexer.skipChar();
+                    lexer.hor.skipChar();
                     lexer.skipSpaces();
                     if (!lexer.hor.at('"')) {
                         lexer.complain("wrong value type");
@@ -92,7 +92,7 @@ public final class ControlData {
                     if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
                     }
-                    lexer.skipChar();
+                    lexer.hor.skipChar();
                     lexer.skipSpaces();
                     if (!lexer.hor.at('"')) {
                         lexer.complain("missing value");

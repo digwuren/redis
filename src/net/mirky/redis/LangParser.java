@@ -171,7 +171,7 @@ final class LangParser {
             }
             int size = 0;
             while (!lexer.hor.atEndOfLine()) {
-                char c = lexer.getChar();
+                char c = lexer.hor.readChar();
                 if (c != '<') {
                     if (c < 0x20 || c > 0x7E) {
                         throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));

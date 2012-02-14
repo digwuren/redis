@@ -17,20 +17,20 @@ abstract class CodeSet {
         int base;
         String digits;
         if (lexer.hor.at("0x")) {
-            lexer.skipChar();
-            lexer.skipChar();
+            lexer.hor.skipChar();
+            lexer.hor.skipChar();
             digitWidth = 4;
             base = 16;
             digits = "0123456789abcdefABCDEF";
         } else if (lexer.hor.at("0o")) {
-            lexer.skipChar();
-            lexer.skipChar();
+            lexer.hor.skipChar();
+            lexer.hor.skipChar();
             digitWidth = 3;
             base = 8;
             digits = "01234567";
         } else if (lexer.hor.at("0b")) {
-            lexer.skipChar();
-            lexer.skipChar();
+            lexer.hor.skipChar();
+            lexer.hor.skipChar();
             digitWidth = 1;
             base = 2;
             digits = "01";
@@ -41,11 +41,11 @@ abstract class CodeSet {
             if (lexer.hor.at('?')) {
                 bits <<= digitWidth;
                 mask <<= digitWidth;
-                lexer.skipChar();
+                lexer.hor.skipChar();
                 continue;
             } else if (lexer.hor.at('_')) {
                 // ignore
-                lexer.skipChar();
+                lexer.hor.skipChar();
                 continue;
             } else if (lexer.hor.atAnyOf(digits)) {
                 try {
@@ -56,7 +56,7 @@ abstract class CodeSet {
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("bug detected");
                 }
-                lexer.skipChar();
+                lexer.hor.skipChar();
                 continue;
             } else {
                 break;
@@ -73,7 +73,7 @@ abstract class CodeSet {
         CodeSet soFar = parseMasked(lexer);
         lexer.skipSpaces();
         while (lexer.hor.at('-')) {
-            lexer.skipChar();
+            lexer.hor.skipChar();
             lexer.skipSpaces();
             soFar = new Difference(soFar, parseMasked(lexer));
             lexer.skipSpaces();
