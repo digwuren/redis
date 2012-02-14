@@ -292,14 +292,6 @@ public final class ParseUtil {
             return dent < 0;
         }
 
-        public final boolean at(String s) {
-            return dent == 0 && !eof && hor.at(s);
-        }
-
-        public final boolean atAnyOf(String charset) {
-            return dent == 0 && !eof && hor.atAnyOf(charset);
-        }
-        
         // If any of the delimiters in {@code charset} is not found, pass until end of line.
         public final String passUntilDelimiter(String charset) {
             return hor.readUntilDelimiter(charset);
@@ -347,11 +339,6 @@ public final class ParseUtil {
             if (!eof) {
                 hor.skipSpaces();
             }
-        }
-
-        public final String parseThisString() {
-            assert dent == 0 && !eof;
-            return hor.parseThisString();
         }
 
         public final String parseDashedWord(String significance) throws ControlData.LineParseError {
@@ -423,7 +410,7 @@ public final class ParseUtil {
             if (!hor.at('"')) {
                 complain("expected " + significance + ", a string");
             }
-            return parseThisString();
+            return hor.parseThisString();
         }
 
         public final void passNewline() throws ControlData.LineParseError, IOException {

@@ -49,7 +49,7 @@ public final class ControlData {
                     if (!lexer.hor.at('"')) {
                         lexer.complain("wrong value type");
                     }
-                    String value = lexer.parseThisString();
+                    String value = lexer.hor.parseThisString();
                     lexer.expectLogicalEndOfLine();
                     if (key < 0 || key >= arraySize) {
                         throw new RuntimeException("key " + key + " out of bounds in " + filename);
@@ -87,7 +87,7 @@ public final class ControlData {
                     if (!lexer.hor.at('"')) {
                         lexer.complain("key expected");
                     }
-                    String key = lexer.parseThisString();
+                    String key = lexer.hor.parseThisString();
                     lexer.skipSpaces();
                     if (!lexer.hor.at(':')) {
                         lexer.complain("missing colon after key");
@@ -97,7 +97,7 @@ public final class ControlData {
                     if (!lexer.hor.at('"')) {
                         lexer.complain("missing value");
                     }
-                    String value = lexer.parseThisString();
+                    String value = lexer.hor.parseThisString();
                     lexer.expectLogicalEndOfLine();
                     ArrayList<String> list = map.get(key);
                     if (list == null) {

@@ -16,19 +16,19 @@ abstract class CodeSet {
         int digitWidth;
         int base;
         String digits;
-        if (lexer.at("0x")) {
+        if (lexer.hor.at("0x")) {
             lexer.skipChar();
             lexer.skipChar();
             digitWidth = 4;
             base = 16;
             digits = "0123456789abcdefABCDEF";
-        } else if (lexer.at("0o")) {
+        } else if (lexer.hor.at("0o")) {
             lexer.skipChar();
             lexer.skipChar();
             digitWidth = 3;
             base = 8;
             digits = "01234567";
-        } else if (lexer.at("0b")) {
+        } else if (lexer.hor.at("0b")) {
             lexer.skipChar();
             lexer.skipChar();
             digitWidth = 1;
@@ -47,7 +47,7 @@ abstract class CodeSet {
                 // ignore
                 lexer.skipChar();
                 continue;
-            } else if (lexer.atAnyOf(digits)) {
+            } else if (lexer.hor.atAnyOf(digits)) {
                 try {
                     bits <<= digitWidth;
                     mask <<= digitWidth;

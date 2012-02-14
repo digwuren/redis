@@ -86,14 +86,14 @@ abstract class StructureDescriptionParser {
                 if (!lexer.hor.at('"')) {
                     break;
                 }
-                meanings.add(lexer.parseThisString());
+                meanings.add(lexer.hor.parseThisString());
             }
             slice = new BinaryElementType.SlicedInteger.Slice.Basic(rightShift, sliceWidth, meanings.toArray(new String[0]));
         } else {
             // it's a flag slice; the field width is implicitly one
             String setFlagName;
             if (lexer.hor.at('"')) {
-                setFlagName = lexer.parseThisString();
+                setFlagName = lexer.hor.parseThisString();
             } else {
                 setFlagName = null;
             }
