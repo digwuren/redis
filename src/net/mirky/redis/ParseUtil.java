@@ -226,21 +226,23 @@ public final class ParseUtil {
         }
     }
 
-    public static abstract class IndentationSensitiveLexer {
+    public static final class IndentationSensitiveLexer {
+        private final LineSource lineSource;
+        private final char commentChar;
         private LineLexer lineLexer = null;
         private boolean eof = false;
         private final Vector<Integer> indentationStack = new Vector<Integer>();
-        private final char commentChar;
         private int dent; // +1 for indent, negative for dedent, the absolute
                           // value indicates the count of remaining dedents
 
-        public IndentationSensitiveLexer(char commentChar) {
+        public IndentationSensitiveLexer(LineSource lineSource, char commentChar) {
+            this.lineSource = lineSource;
             this.commentChar = commentChar;
         }
 
         public final void advanceVertically() throws ControlData.LineParseError, IOException {
             do {
-                String line = getNextLine();
+                String line = lineSource.getNextLine();
                 if (line == null) {
                     lineLexer = null;
                     eof = true;
@@ -379,11 +381,6 @@ public final class ParseUtil {
             }
         }
 
-        public final boolean atString() throws ControlData.LineParseError, IOException {
-            ensureCurrentLine();
-            return dent == 0 && !eof && lineLexer.at('"');
-        }
-
         public final String parseThisString() throws ControlData.LineParseError, IOException {
             ensureCurrentLine();
             assert dent == 0 && !eof;
@@ -425,25 +422,11 @@ public final class ParseUtil {
             }
         }
 
-        /**
-         * Fetch the next line and return it as a {@link String} instance or
-         * return {@code null} if the line source has ended.
-         * 
-         * @throws IOException
-         */
-        protected abstract String getNextLine() throws IOException;
-
-        /**
-         * Return the location marker for the currently loaded line, preferably
-         * in the standard filename:lineno form. Used for error reporting.
-         */
-        protected abstract String getLineLoc();
-
         public final void complain(String message) throws ControlData.LineParseError {
             if (!eof) {
-                throw new ControlData.LineParseError(getLineLoc() + ':' + (lineLexer.getPos() + 1) + ": " + message, lineLexer.line);
+                throw new ControlData.LineParseError(lineSource.getLineLoc() + ':' + (lineLexer.getPos() + 1) + ": " + message, lineLexer.line);
             } else {
-                throw new ControlData.LineParseError(getLineLoc() + ": " + message, "");
+                throw new ControlData.LineParseError(lineSource.getLineLoc() + ": " + message, "");
             }
         }
 
@@ -486,7 +469,7 @@ public final class ParseUtil {
 
         public final String parseString(String significance) throws ControlData.LineParseError,
                 IOException {
-            if (!atString()) {
+            if (!at('"')) {
                 complain("expected " + significance + ", a string");
             }
             return parseThisString();
@@ -541,52 +524,36 @@ public final class ParseUtil {
         }
     }
 
-    public static final class IndentationSensitiveFileLexer extends IndentationSensitiveLexer {
+    public static abstract class LineSource {
+        public abstract String getNextLine() throws IOException;
+
+        /**
+         * Return a string identifying the line-precision location of the line
+         * last read. As per GNUCS, lines are numbered from 1.
+         */
+        public abstract String getLineLoc();
+    }
+
+    public static final class FileLineSource extends LineSource {
         private final BufferedReader reader;
         private final String filename;
-        private int lineno = 0;
+        private int lineno;
 
-        public IndentationSensitiveFileLexer(BufferedReader reader, String filename, char commentChar) {
-            super(commentChar);
+        public FileLineSource(BufferedReader reader, String filename) {
             this.reader = reader;
             this.filename = filename;
+            lineno = 0;
         }
 
         @Override
-        protected final String getNextLine() throws IOException {
+        public final String getNextLine() throws IOException {
             lineno++;
             return reader.readLine();
         }
 
         @Override
-        protected final String getLineLoc() {
+        public final String getLineLoc() {
             return filename + ':' + lineno;
-        }
-    }
-    
-    public static final class SingleLineLexer extends IndentationSensitiveLexer {
-        private final String line;
-        private boolean lineGotten;
-        
-        public SingleLineLexer(String line, char commentChar) {
-            super(commentChar);
-            this.line = line;
-            lineGotten = false;
-        }
-        
-        @Override
-        protected final String getNextLine() {
-            if (!lineGotten) {
-                lineGotten = true;
-                return line;
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        protected final String getLineLoc() {
-            return "<string>:" + (lineGotten ? 2 : 1);
         }
     }
 }

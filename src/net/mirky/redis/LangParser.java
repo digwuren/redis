@@ -51,7 +51,7 @@ final class LangParser {
         knownHeaderItems.add("trivial");
         Set<String> seenHeaderLines = new TreeSet<String>();
         
-        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, name, '#');
+        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader, name), '#');
         String itemName = null;
         try {
             try {

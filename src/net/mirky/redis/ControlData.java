@@ -28,7 +28,7 @@ public final class ControlData {
         final BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, filename, '#');
+                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader, filename), '#');
                 while (!lexer.atEndOfFile()) {
                     if (lexer.atIndent()) {
                         lexer.complain("unexpected indentation");
@@ -46,7 +46,7 @@ public final class ControlData {
                     }
                     lexer.skipChar();
                     lexer.skipSpaces();
-                    if (!lexer.atString()) {
+                    if (!lexer.at('"')) {
                         lexer.complain("wrong value type");
                     }
                     String value = lexer.parseThisString();
@@ -76,7 +76,7 @@ public final class ControlData {
         BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveFileLexer(reader, filename, '#');
+                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader, filename), '#');
                 while (!lexer.atEndOfFile()) {
                     if (lexer.atIndent()) {
                         lexer.complain("unexpected indentation");
@@ -84,7 +84,7 @@ public final class ControlData {
                     if (lexer.atDedent()) {
                         lexer.complain("unexpected dedentation");
                     }
-                    if (!lexer.atString()) {
+                    if (!lexer.at('"')) {
                         lexer.complain("key expected");
                     }
                     String key = lexer.parseThisString();
@@ -94,7 +94,7 @@ public final class ControlData {
                     }
                     lexer.skipChar();
                     lexer.skipSpaces();
-                    if (!lexer.atString()) {
+                    if (!lexer.at('"')) {
                         lexer.complain("missing value");
                     }
                     String value = lexer.parseThisString();
