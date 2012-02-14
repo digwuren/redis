@@ -200,7 +200,7 @@ final class LangParser {
             coll.add(Disassembler.Bytecode.COMPLETE);
             lexer.passNewline();
         }
-        lexer.skipThisDedent();
+        lexer.discardDedent();
     }
 
     /**

@@ -61,7 +61,7 @@ abstract class StructureDescriptionParser {
                 lexer.noIndent();
                 slices.add(StructureDescriptionParser.parseIntegerSlice(lexer));
             }
-            lexer.skipThisDedent();
+            lexer.discardDedent();
             return new BinaryElementType.SlicedInteger(integerType, slices.toArray(new BinaryElementType.SlicedInteger.Slice[0]));
         }
     }
@@ -232,7 +232,7 @@ abstract class StructureDescriptionParser {
                         lexer.passNewline();
                     }
                 }
-                lexer.skipThisDedent();
+                lexer.discardDedent();
                 if (!lexer.atEndOfFile()) {
                     lexer.complain("garbage follows structure description");
                 }

@@ -321,19 +321,23 @@ public final class ParseUtil {
          * Discard one indentation level. Error if there is no non-discarded
          * indentation on this line.
          */
-        public final void skipThisIndent() {
+        public final void discardIndent() {
             assert atIndent();
             dent--;
         }
 
-        public final void skipThisDedent() {
+        /**
+         * Discard one dedentation level. Error if there is no non-discarded
+         * dedentation on this line.
+         */
+        public final void discardDedent() {
             assert atDedent();
             dent++;
         }
 
         public final String parseDashedWord(String significance) throws ControlData.LineParseError {
             if (!hor.atAlphanumeric()) {
-                complain("expected " + significance + ", a word (dashes permitted)");
+                error("expected " + significance + ", a word (dashes permitted)");
             }
             return hor.parseThisDashedWord();
         }
@@ -383,14 +387,14 @@ public final class ParseUtil {
          */
         public final int parseUnsignedInteger(String significance) throws ControlData.LineParseError {
             if (!hor.atDigit()) {
-                complain("expected " + significance + ", an unsigned integer");
+                error("expected " + significance + ", an unsigned integer");
             }
             return hor.parseThisUnsignedInteger();
         }
 
         public final String parseString(String significance) throws ControlData.LineParseError {
             if (!hor.at('"')) {
-                complain("expected " + significance + ", a string");
+                error("expected " + significance + ", a string");
             }
             return hor.parseThisString();
         }
@@ -402,11 +406,18 @@ public final class ParseUtil {
             advanceVertically();
         }
 
+        public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
+            hor.skipSpaces();
+            if (!(hor.atEndOfLine() || atCommentChar())) {
+                complain("expected end of line");
+            }
+        }
+
         public final void passIndent() throws ControlData.LineParseError {
             if (!atIndent()) {
                 complain("expected indent");
             }
-            skipThisIndent();
+            discardIndent();
         }
 
         public final String parseRestOfLine() {
@@ -432,13 +443,6 @@ public final class ParseUtil {
         public final char peekChar() {
             assert !hor.atEndOfLine();
             return hor.peekChar();
-        }
-
-        public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
-            hor.skipSpaces();
-            if (!(hor.atEndOfLine() || atCommentChar())) {
-                complain("expected end of line");
-            }
         }
     }
 
