@@ -250,6 +250,17 @@ public final class ParseUtil {
             advanceVertically();
         }
 
+        /**
+         * Discard the current line and move to the next line that is not all
+         * space and whose first non-space character is not {@code commentChar}.
+         * Update {@link #indentationStack} and set {@link #dent}. Leave the
+         * cursor at the new line's first non-space character.
+         * 
+         * @throws ControlData.LineParseError
+         *             if the line contains an insufficient dedent
+         * @throws IOException
+         *             if line acquisition fails due to an I/O error
+         */
         public final void advanceVertically() throws ControlData.LineParseError, IOException {
             do {
                 String line = lineSource.getNextLine();
@@ -292,10 +303,16 @@ public final class ParseUtil {
             return dent == 0 && eof;
         }
 
+        /**
+         * Check whether the current line contains a non-discarded indentation.
+         */
         public final boolean atIndent() {
             return dent > 0;
         }
 
+        /**
+         * Check whether the current line contains a non-discarded dedentation.
+         */
         public final boolean atDedent() {
             return dent < 0;
         }
@@ -305,6 +322,10 @@ public final class ParseUtil {
             return hor.readUntilDelimiter(charset);
         }
 
+        /**
+         * Discard one indentation level. Error if there is no non-discarded
+         * indentation on this line.
+         */
         public final void skipThisIndent() {
             assert atIndent();
             dent--;
