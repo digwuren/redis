@@ -51,7 +51,7 @@ abstract class CodeSet {
                 try {
                     bits <<= digitWidth;
                     mask <<= digitWidth;
-                    bits |= Integer.parseInt(Character.toString(lexer.peekChar()), base);
+                    bits |= Integer.parseInt(Character.toString(lexer.hor.peekChar()), base);
                     mask |= (1 << digitWidth) - 1;
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("bug detected");

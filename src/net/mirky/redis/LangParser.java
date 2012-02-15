@@ -65,7 +65,7 @@ final class LangParser {
                     lexer.pass(':');
                     // Note that comments are not ignored after header items.
                     lexer.hor.skipSpaces();
-                    processHeader(itemName, lexer.parseRestOfLine());
+                    processHeader(itemName, lexer.hor.readRestOfLine());
                     lexer.passNewline();
                 }
             } catch (NumberFormatException e) {

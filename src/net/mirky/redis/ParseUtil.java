@@ -174,6 +174,16 @@ public final class ParseUtil {
             return result;
         }
 
+        /**
+         * Read and return the rest of the line. Leave cursor at the end of the
+         * line.
+         */
+        public final String readRestOfLine() {
+            String result = line.substring(pos);
+            pos = line.length();
+            return result;
+        }
+
         public final String parseThisWord() {
             assert atAlphanumeric();
             int begin = pos;
@@ -209,12 +219,6 @@ public final class ParseUtil {
         public final int parseThisUnsignedInteger() throws NumberFormatException {
             assert atDigit();
             return ParseUtil.parseUnsignedInteger(parseThisWord());
-        }
-
-        public final String parseRestOfLine() {
-            String result = line.substring(pos);
-            pos = line.length();
-            return result;
         }
 
         public final int getPos() {
@@ -420,10 +424,6 @@ public final class ParseUtil {
             discardIndent();
         }
 
-        public final String parseRestOfLine() {
-            return hor.parseRestOfLine();
-        }
-
         public final void passDashedWord(String etalon) throws ControlData.LineParseError {
             if (!hor.atAlphanumeric() || !hor.peekThisDashedWord().equals(etalon)) {
                 complain("expected '" + etalon + "'");
@@ -438,11 +438,6 @@ public final class ParseUtil {
             } else {
                 return false;
             }
-        }
-
-        public final char peekChar() {
-            assert !hor.atEndOfLine();
-            return hor.peekChar();
         }
     }
 
