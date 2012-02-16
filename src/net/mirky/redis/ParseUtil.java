@@ -208,6 +208,12 @@ public final class ParseUtil {
             return readDashedWord(null);
         }
 
+        public final void passDashedWord(String etalon) {
+            if (!passOptDashedWord(etalon)) {
+                error("expected '" + etalon + "'");
+            }
+        }
+
         public final boolean passOptDashedWord(String etalon) {
             if (!atAlphanumeric()) {
                 return false;
@@ -275,13 +281,6 @@ public final class ParseUtil {
 
         /* * * * */
         
-        public final void passDashedWord(String etalon) {
-            int before = pos;
-            if (!atAlphanumeric() || !parseThisDashedWord().equals(etalon)) {
-                errorAtPos(before, "expected '" + etalon + "'");
-            }
-        }
-
         public final String peekDashedWord(String significance) {
             int begin = pos;
             String word = readDashedWord(significance);
