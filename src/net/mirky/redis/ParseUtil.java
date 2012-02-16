@@ -33,8 +33,10 @@ public final class ParseUtil {
     public static final class LineLexer {
         private String line;
         private int pos;
+        private final ErrorLocator errorLocator;
 
-        public LineLexer(String line) {
+        public LineLexer(String line, ErrorLocator errorLocator) {
+            this.errorLocator = errorLocator;
             reset(line);
         }
 
@@ -226,6 +228,14 @@ public final class ParseUtil {
             throw new RuntimeException("string not terminated");
         }
 
+        public final void error(String message) {
+            errorAtCol(pos + 1, message);
+        }
+
+        public final void errorAtCol(int colno, String message) {
+            errorLocator.error(colno, message);
+        }
+
         public final int getPos() {
             return pos;
         }
@@ -245,7 +255,6 @@ public final class ParseUtil {
 
     public static final class IndentationSensitiveLexer {
         private final LineSource lineSource;
-        private final ErrorLocator errorLocator;
         private final char commentChar;
         public final LineLexer hor;
         private boolean eof = false;
@@ -255,9 +264,8 @@ public final class ParseUtil {
 
         public IndentationSensitiveLexer(LineSource lineSource, ErrorLocator errorLocator, char commentChar) throws LineParseError, IOException {
             this.lineSource = lineSource;
-            this.errorLocator = errorLocator;
             this.commentChar = commentChar;
-            hor = new LineLexer(null);
+            hor = new LineLexer(null, errorLocator);
             advanceVertically();
         }
 
@@ -282,7 +290,7 @@ public final class ParseUtil {
                     indentationStack.clear();
                     return;
                 }
-                errorLocator.nextLine();
+                hor.errorLocator.nextLine();
                 hor.reset(line);
                 hor.skipSpaces();
             } while (hor.atEndOfLine() || hor.at(commentChar));
@@ -347,7 +355,7 @@ public final class ParseUtil {
             dent++;
         }
 
-        public final String parseDashedWord(String significance) throws ControlData.LineParseError {
+        public final String parseDashedWord(String significance) {
             if (!hor.atAlphanumeric()) {
                 error("expected " + significance + ", a word (dashes permitted)");
             }
@@ -359,23 +367,23 @@ public final class ParseUtil {
         }
         
         @Deprecated // in favour of {@link #error(String)}
-        public final void complain(String message) throws ControlData.LineParseError {
+        public final void complain(String message) {
             error(message);
         }
         
-        public final void error(String message) throws ControlData.LineParseError {
-            errorLocator.error(!eof ? hor.getPos() + 1 : 0, message);
+        public final void error(String message) {
+            hor.errorAtCol(!eof ? hor.getPos() + 1 : 0, message);
         }
 
-        public final void noIndent() throws ControlData.LineParseError {
+        public final void noIndent() {
             if (atIndent()) {
                 complain("unexpected indent");
             }
         }
 
-        public final void pass(char c) throws ControlData.LineParseError {
+        public final void pass(char c) {
             if (!hor.at(c)) {
-                complain("expected '" + c + "'");
+                error("expected '" + c + "'");
             }
             hor.skipChar();
         }
@@ -472,6 +480,11 @@ public final class ParseUtil {
             lineno++;
         }
 
+        /**
+         * Report an error according to the tracked line and, if {@code colno}
+         * is non-zero, the given column. Note that columns are numbered from 1
+         * unlike positions.
+         */
         public final void error(int colno, String message) {
             StringBuilder sb = new StringBuilder();
             sb.append(filename);
