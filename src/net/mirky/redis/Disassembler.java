@@ -862,7 +862,7 @@ public final class Disassembler {
                     }
                     port.print("0x" + Hex.b(i) + ' ');
                     if (dispatchTable[i] != -1) {
-                        port.print("(@" + dispatchTable[i] + ") ");
+                        port.print("(@0x" + Hex.w(dispatchTable[i]) + ") ");
                         dumpDecipherer(i, dispatchTable[i], port);
                         port.println();
                     } else {
