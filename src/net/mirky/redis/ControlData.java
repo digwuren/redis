@@ -11,12 +11,6 @@ public final class ControlData {
         // not a real constructor
     }
 
-    public static final class LineParseError extends Exception {
-        public LineParseError(String msg) {
-            super(msg);
-        }
-    }
-
     public static final String[] loadStringArray(final String filename, int arraySize) throws NumberFormatException {
         String[] keywords = new String[arraySize];
         for (int i = 0; i < keywords.length; i++) {
@@ -62,8 +56,6 @@ public final class ControlData {
             }
         } catch (IOException e) {
             throw new RuntimeException("I/O error reading resource " + filename, e);
-        } catch (LineParseError e) {
-            throw new RuntimeException("invalid " + filename + " line", e);
         }
         return keywords;
     }
@@ -109,8 +101,6 @@ public final class ControlData {
             }
         } catch (IOException e) {
             throw new RuntimeException("I/O error reading resource " + filename, e);
-        } catch (ControlData.LineParseError e) {
-            throw new RuntimeException("parse error reading resource " + filename, e);
         }
         return map;
     }

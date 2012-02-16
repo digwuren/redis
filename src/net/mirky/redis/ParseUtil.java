@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Vector;
 
-import net.mirky.redis.ControlData.LineParseError;
-
 public final class ParseUtil {
     private ParseUtil() {
         // not a real constructor
@@ -126,6 +124,13 @@ public final class ParseUtil {
          */
         public final boolean atEndOfLine() {
             return pos >= line.length();
+        }
+
+        public final void pass(char c) {
+            if (!at(c)) {
+                error("expected '" + c + "'");
+            }
+            skipChar();
         }
 
         /**
@@ -262,7 +267,7 @@ public final class ParseUtil {
         private int dent; // +1 for indent, negative for dedent, the absolute
                           // value indicates the count of remaining dedents
 
-        public IndentationSensitiveLexer(LineSource lineSource, ErrorLocator errorLocator, char commentChar) throws LineParseError, IOException {
+        public IndentationSensitiveLexer(LineSource lineSource, ErrorLocator errorLocator, char commentChar) throws IOException {
             this.lineSource = lineSource;
             this.commentChar = commentChar;
             hor = new LineLexer(null, errorLocator);
@@ -275,12 +280,10 @@ public final class ParseUtil {
          * Update {@link #indentationStack} and set {@link #dent}. Leave the
          * cursor at the new line's first non-space character.
          * 
-         * @throws ControlData.LineParseError
-         *             if the line contains an insufficient dedent
          * @throws IOException
          *             if line acquisition fails due to an I/O error
          */
-        public final void advanceVertically() throws ControlData.LineParseError, IOException {
+        public final void advanceVertically() throws IOException {
             do {
                 String line = lineSource.getNextLine();
                 if (line == null) {
@@ -381,56 +384,47 @@ public final class ParseUtil {
             }
         }
 
-        public final void pass(char c) {
-            if (!hor.at(c)) {
-                error("expected '" + c + "'");
-            }
-            hor.skipChar();
-        }
-
         /**
          * Parse an unsigned integer from the cursor onwards. If there isn't one
          * at the cursor, report an error and state the significance of the
          * missing unsined integer.
-         * 
-         * @throws LineParseError
          */
-        public final int parseUnsignedInteger(String significance) throws ControlData.LineParseError {
+        public final int parseUnsignedInteger(String significance) {
             if (!hor.atDigit()) {
                 error("expected " + significance + ", an unsigned integer");
             }
             return hor.parseThisUnsignedInteger();
         }
 
-        public final String parseString(String significance) throws ControlData.LineParseError {
+        public final String parseString(String significance) {
             if (!hor.at('"')) {
                 error("expected " + significance + ", a string");
             }
             return hor.parseThisString();
         }
 
-        public final void passNewline() throws ControlData.LineParseError, IOException {
+        public final void passNewline() throws IOException {
             if (!(hor.atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");
             }
             advanceVertically();
         }
 
-        public final void expectLogicalEndOfLine() throws ControlData.LineParseError {
+        public final void expectLogicalEndOfLine() {
             hor.skipSpaces();
             if (!(hor.atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");
             }
         }
 
-        public final void passIndent() throws ControlData.LineParseError {
+        public final void passIndent() {
             if (!atIndent()) {
                 complain("expected indent");
             }
             discardIndent();
         }
 
-        public final void passDashedWord(String etalon) throws ControlData.LineParseError {
+        public final void passDashedWord(String etalon) {
             if (!hor.atAlphanumeric() || !hor.peekThisDashedWord().equals(etalon)) {
                 complain("expected '" + etalon + "'");
             }

@@ -305,11 +305,7 @@ public abstract class BinaryElementType {
         @Override
         public final BinaryElementType load(String name, BufferedReader reader) {
             try {
-                try {
-                    return StructureDescriptionParser.parseStructureDescription(name, reader);
-                } catch (ControlData.LineParseError e) {
-                    throw new RuntimeException("parse error reading resource " + name, e);
-                }
+                return StructureDescriptionParser.parseStructureDescription(name, reader);
             } catch (IOException e) {
                 throw new RuntimeException("I/O error reading resource " + name, e);
             }

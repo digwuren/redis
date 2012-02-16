@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
 
 final class LangParser {
@@ -43,7 +42,7 @@ final class LangParser {
         minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
     }
 
-    final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError, LineParseError {
+    final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError {
         Set<String> knownHeaderItems = new TreeSet<String>();
         // note that the membership is checked with a downcased specimen
         knownHeaderItems.add("dispatch-suboffset");
@@ -62,7 +61,7 @@ final class LangParser {
                     seenHeaderLines.add(itemName);
                     lexer.hor.parseThisDashedWord();
                     lexer.hor.skipSpaces();
-                    lexer.pass(':');
+                    lexer.hor.pass(':');
                     // Note that comments are not ignored after header items.
                     lexer.hor.skipSpaces();
                     processHeader(itemName, lexer.hor.readRestOfLine());
@@ -70,22 +69,16 @@ final class LangParser {
                 }
             } catch (NumberFormatException e) {
                 throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
-            } catch (ControlData.LineParseError e) {
-                throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
             }
-            try {
-                lexer.passDashedWord("dispatch");
-                parseDispatchTable(lexer);
-                while (!lexer.atEndOfFile()) {
-                    lexer.noIndent();
-                    if (lexer.passOptDashedWord("minitable")) {
-                        parseMinitableDeclaration(lexer);
-                    } else {
-                        lexer.complain("expected end of file");
-                    }
+            lexer.passDashedWord("dispatch");
+            parseDispatchTable(lexer);
+            while (!lexer.atEndOfFile()) {
+                lexer.noIndent();
+                if (lexer.passOptDashedWord("minitable")) {
+                    parseMinitableDeclaration(lexer);
+                } else {
+                    lexer.complain("expected end of file");
                 }
-            } catch (ControlData.LineParseError e) {
-                throw new DisassemblyTableParseError("error parsing lang description " + name, e);
             }
         } finally {
             reader.close();
@@ -121,15 +114,14 @@ final class LangParser {
         throw new DisassemblyTableParseError("not a Boolean value: " + value);
     }
 
-    private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError,
-            IOException, DisassemblyTableParseError {
+    private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws IOException, DisassemblyTableParseError {
         lexer.hor.skipSpaces();
         String tableName = lexer.parseDashedWord("minitable name");
         if (minitablesByName.containsKey(tableName)) {
             lexer.complain("duplicate minitable name");
         }
         lexer.hor.skipSpaces();
-        lexer.pass(':');
+        lexer.hor.pass(':');
         lexer.hor.skipSpaces();
         List<String> minitable = new ArrayList<String>();
         while (lexer.hor.atAlphanumeric()) {
@@ -149,17 +141,17 @@ final class LangParser {
         lexer.passNewline();
     }
 
-    private final void parseDispatchTable(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError, IOException,
+    private final void parseDispatchTable(ParseUtil.IndentationSensitiveLexer lexer) throws IOException,
             RuntimeException, DisassemblyTableParseError {
         lexer.passNewline();
         lexer.passIndent();
         while (!lexer.atDedent()) {
             lexer.noIndent();
-            lexer.pass('[');
+            lexer.hor.pass('[');
             lexer.hor.skipSpaces();
             CodeSet set = CodeSet.parse(lexer);
             lexer.hor.skipSpaces();
-            lexer.pass(']');
+            lexer.hor.pass(']');
             lexer.hor.skipSpaces();
             for (int i = 0; i < 256; i++) {
                 if (set.matches(i)) {
@@ -188,7 +180,7 @@ final class LangParser {
                             String step = lexer.hor.readUntilDelimiter(">,").trim();
                             size = parseProcessingStep(step, size);
                         } while (lexer.hor.passOpt(','));
-                        lexer.pass('>');
+                        lexer.hor.pass('>');
                         if (size != 0) {
                             throw new DisassemblyTableParseError("final step missing");
                         }

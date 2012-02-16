@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.mirky.redis.BinaryElementType.Struct.Step;
-import net.mirky.redis.ControlData.LineParseError;
 import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
 
 abstract class StructureDescriptionParser {
@@ -26,7 +25,7 @@ abstract class StructureDescriptionParser {
          * @throws ControlData.LineParseError
          * @throws IOException
          */
-        abstract BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException;
+        abstract BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException;
     }
 
     // for field types without parameters
@@ -38,7 +37,7 @@ abstract class StructureDescriptionParser {
         }
     
         @Override
-        final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
             lexer.passNewline();
             return fieldType;
         }
@@ -52,7 +51,7 @@ abstract class StructureDescriptionParser {
         }
     
         @Override
-        final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+        final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
             lexer.hor.skipSpaces();
             lexer.passNewline();
             lexer.passIndent();
@@ -68,9 +67,9 @@ abstract class StructureDescriptionParser {
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.
     // Basic slices hold an integer, flag slices hold a single bit.
-    static final BinaryElementType.SlicedInteger.Slice parseIntegerSlice(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
-        lexer.pass('@');
-        lexer.pass('.');
+    static final BinaryElementType.SlicedInteger.Slice parseIntegerSlice(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
+        lexer.hor.pass('@');
+        lexer.hor.pass('.');
         int rightShift = lexer.parseUnsignedInteger("right shift");
         lexer.hor.skipSpaces();
         BinaryElementType.SlicedInteger.Slice slice;
@@ -115,8 +114,7 @@ abstract class StructureDescriptionParser {
         return slice;
     }
 
-    public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws LineParseError, IOException,
-            RuntimeException {
+    public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws IOException {
         ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
             return parseType(lexer);
@@ -125,8 +123,7 @@ abstract class StructureDescriptionParser {
         }
     }
 
-    public static final BinaryElementType parseType(ParseUtil.IndentationSensitiveLexer lexer) throws LineParseError,
-            IOException, RuntimeException {
+    public static final BinaryElementType parseType(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
         String keyword = lexer.parseDashedWord("type");
         StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(keyword);
         BinaryElementType type;
@@ -147,7 +144,7 @@ abstract class StructureDescriptionParser {
         return type;
     }
 
-    public static final Step parseThisSeek(IndentationSensitiveLexer lexer) throws LineParseError {
+    public static final Step parseThisSeek(IndentationSensitiveLexer lexer) {
         assert lexer.hor.at('@');
         lexer.hor.skipChar();
         int sign;
@@ -177,7 +174,7 @@ abstract class StructureDescriptionParser {
 
         KNOWN_FIELD_TYPES.put("padded-string", new ParameterParser() {
             @Override
-            final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws ControlData.LineParseError, IOException {
+            final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
                 lexer.hor.skipSpaces();
                 int size = lexer.parseUnsignedInteger("string length");
                 lexer.hor.skipSpaces();
@@ -192,7 +189,7 @@ abstract class StructureDescriptionParser {
         
         KNOWN_FIELD_TYPES.put("struct", new ParameterParser() {
             @Override
-            final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws LineParseError, IOException {
+            final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws IOException {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
                 lexer.passNewline();
                 lexer.passIndent();
@@ -221,7 +218,7 @@ abstract class StructureDescriptionParser {
                                 lexer.hor.skipSpaces();
                             }
                         }
-                        lexer.pass(':');
+                        lexer.hor.pass(':');
                         lexer.hor.skipSpaces();
                         BinaryElementType fieldType = parseType(lexer);
                         for (Step step : lineSteps) {
