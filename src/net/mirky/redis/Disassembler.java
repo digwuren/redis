@@ -81,6 +81,7 @@ public final class Disassembler {
         static final byte COMPLETE = 0x00;
 
         // Output the current integer value as a decimal number.
+        @DeciphererStep(name = "decimal", sizeRequirement = -1, sizeAfter = 0)
         static final byte DECIMAL = 0x01;
 
         // Add the current instruction's address and one to the current integer
@@ -218,15 +219,15 @@ public final class Disassembler {
         // Reserved placeholder code
         static final byte INVALID = (byte) 0xFF;
         
-        private static final Map<String, StepDeclaration> initialSteps = new HashMap<String, StepDeclaration>();
+        private static final Map<String, StepDeclaration> simpleSteps = new HashMap<String, StepDeclaration>();
 
         static {
             try {
                 for (Field field : Bytecode.class.getDeclaredFields()) {
                     DeciphererStep ann = field.getAnnotation(DeciphererStep.class);
                     if (ann != null) {
-                        assert !initialSteps.containsKey(ann.name());
-                        initialSteps.put(ann.name(), new StepDeclaration(field.getByte(null), ann.sizeRequirement(),
+                        assert !simpleSteps.containsKey(ann.name());
+                        simpleSteps.put(ann.name(), new StepDeclaration(field.getByte(null), ann.sizeRequirement(),
                                 ann.sizeAfter()));
                     }
                 }
@@ -237,8 +238,8 @@ public final class Disassembler {
             }
         }
 
-        static final StepDeclaration resolveInitialStep(String step) {
-            return initialSteps.get(step);
+        static final StepDeclaration resolveSimpleStep(String step) {
+            return simpleSteps.get(step);
         }
 
         static class StepDeclaration {

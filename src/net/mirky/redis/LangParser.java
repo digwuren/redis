@@ -224,8 +224,9 @@ final class LangParser {
         }
     }
 
-    final int parseProcessingStep(String step, int size) throws DisassemblyTableParseError, RuntimeException {
-        Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveInitialStep(step);
+    final int parseProcessingStep(String step, int initialSize) throws DisassemblyTableParseError, RuntimeException {
+        int size = initialSize;
+        Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveSimpleStep(step);
         if (resolvedStep != null) {
             if (!resolvedStep.typeMatches(size)) {
                 throw new DisassemblyTableParseError("type mismatch for step " + step);
@@ -273,9 +274,6 @@ final class LangParser {
                     coll.add(Disassembler.Bytecode.AND_3);
                 } else if (step.equals("and 7")) {
                     coll.add(Disassembler.Bytecode.AND_7);
-                } else if (step.equals("decimal")) {
-                    coll.add(Disassembler.Bytecode.DECIMAL);
-                    size = 0;
                 } else if (step.startsWith("dispatch ")) {
                     String newLangName = step.substring(9).trim();
                     coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
