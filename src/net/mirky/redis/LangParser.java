@@ -51,15 +51,21 @@ final class LangParser {
         Set<String> seenHeaderLines = new TreeSet<String>();
         
         ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
-        String itemName = null;
         try {
             try {
-                while (lexer.hor.atAlphanumeric() && knownHeaderItems.contains((itemName = lexer.hor.peekDashedWord(null)).toLowerCase())) {
-                    if (seenHeaderLines.contains(itemName)) {
+                while (true) {
+                    if (!lexer.hor.atAlphanumeric()) {
+                        break;
+                    }
+                    String itemName = lexer.hor.peekDashedWord(null);
+                    if (!knownHeaderItems.contains(itemName.toLowerCase())) {
+                        break;
+                    }
+                    if (seenHeaderLines.contains(itemName.toLowerCase())) {
                         throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
                     }
-                    seenHeaderLines.add(itemName);
-                    lexer.hor.parseThisDashedWord();
+                    seenHeaderLines.add(itemName.toLowerCase());
+                    lexer.hor.readDashedWord(null);
                     lexer.hor.skipSpaces();
                     lexer.hor.pass(':');
                     // Note that comments are not ignored after header items.
@@ -68,7 +74,7 @@ final class LangParser {
                     lexer.passNewline();
                 }
             } catch (NumberFormatException e) {
-                throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
+                throw new DisassemblyTableParseError("error parsing lang header", e);
             }
             lexer.hor.passDashedWord("dispatch");
             parseDispatchTable(lexer);

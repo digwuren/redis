@@ -203,11 +203,6 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
-        @Deprecated // in favour of readDashedWord(...)
-        public final String parseThisDashedWord() {
-            return readDashedWord(null);
-        }
-
         public final void passDashedWord(String etalon) {
             if (!passOptDashedWord(etalon)) {
                 error("expected '" + etalon + "'");
