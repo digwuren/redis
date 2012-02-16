@@ -268,17 +268,12 @@ final class LangParser {
                             throw new RuntimeException("bug detected");
                     }
                     size = 0;
-                } else if (step.equals("and 0x38")) {
-                    coll.add(Disassembler.Bytecode.AND_0x38);
-                } else if (step.equals("and 3")) {
-                    coll.add(Disassembler.Bytecode.AND_3);
-                } else if (step.equals("and 7")) {
-                    coll.add(Disassembler.Bytecode.AND_7);
                 } else if (step.startsWith("dispatch ")) {
                     String newLangName = step.substring(9).trim();
                     coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
                     size = 0;
                 } else {
+                    // unknown -- assume it's a minitable reference
                     int position = coll.currentPosition();
                     coll.add((Disassembler.Bytecode.INVALID));
                     size = 0;

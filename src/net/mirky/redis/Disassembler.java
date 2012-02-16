@@ -131,12 +131,15 @@ public final class Disassembler {
         static final byte SIGNED_WYDE = 0x0B;
 
         // AND the current integer value with 0x38.
+        @DeciphererStep(name = "and 0x38", sizeRequirement = -1)
         static final byte AND_0x38 = 0x0C;
 
         // AND the current integer value with 3.
+        @DeciphererStep(name = "and 3", sizeRequirement = -1)
         static final byte AND_3 = 0x0D;
 
         // AND the current integer value with 7.
+        @DeciphererStep(name = "and 7", sizeRequirement = -1)
         static final byte AND_7 = 0x0E;
 
         // Unsigned-shift the current integer value right by 3 bits.
