@@ -70,7 +70,7 @@ final class LangParser {
             } catch (NumberFormatException e) {
                 throw new DisassemblyTableParseError("error parsing lang header item " + itemName, e);
             }
-            lexer.passDashedWord("dispatch");
+            lexer.hor.passDashedWord("dispatch");
             parseDispatchTable(lexer);
             while (!lexer.atEndOfFile()) {
                 lexer.noIndent();

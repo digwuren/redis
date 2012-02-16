@@ -211,6 +211,13 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
+        public final void passDashedWord(String etalon) {
+            int before = pos;
+            if (!atAlphanumeric() || !parseThisDashedWord().equals(etalon)) {
+                errorAtPos(before, "expected '" + etalon + "'");
+            }
+        }
+
         public final String peekThisDashedWord() {
             int begin = pos;
             String word = parseThisDashedWord();
@@ -416,13 +423,6 @@ public final class ParseUtil {
                 complain("expected indent");
             }
             discardIndent();
-        }
-
-        public final void passDashedWord(String etalon) {
-            if (!hor.atAlphanumeric() || !hor.peekThisDashedWord().equals(etalon)) {
-                complain("expected '" + etalon + "'");
-            }
-            hor.parseThisDashedWord();
         }
 
         public final boolean passOptDashedWord(String etalon) {
