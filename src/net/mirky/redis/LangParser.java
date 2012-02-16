@@ -183,11 +183,19 @@ final class LangParser {
                         size = 0;
                         do {
                             lexer.skipSpaces();
-                            if (lexer.atEndOfLine()) {
-                                lexer.error("missing '>'");
+                            StringBuilder sb = new StringBuilder();
+                            do {
+                                String word = lexer.readDashedWord("processing step");
+                                if (sb.length() != 0) {
+                                    sb.append(' ');
+                                }
+                                sb.append(word);
+                                lexer.skipSpaces();
+                            } while (lexer.atAlphanumeric());
+                            String step = sb.toString();
+                            {
+                                size = parseProcessingStep(step, size);
                             }
-                            String step = lexer.readUntilDelimiter(">,").trim();
-                            size = parseProcessingStep(step, size);
                         } while (lexer.passOpt(','));
                         lexer.pass('>');
                         if (size != 0) {
