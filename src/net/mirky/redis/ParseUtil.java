@@ -203,8 +203,22 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
+        @Deprecated // in favour of readDashedWord(...)
         public final String parseThisDashedWord() {
             return readDashedWord(null);
+        }
+
+        public final boolean passOptDashedWord(String etalon) {
+            if (!atAlphanumeric()) {
+                return false;
+            }
+            int begin = pos;
+            String word = readDashedWord(null);
+            if (!word.equals(etalon)) {
+                pos = begin;
+                return false;
+            }
+            return true;
         }
 
         /**
@@ -268,9 +282,9 @@ public final class ParseUtil {
             }
         }
 
-        public final String peekThisDashedWord() {
+        public final String peekDashedWord(String significance) {
             int begin = pos;
-            String word = parseThisDashedWord();
+            String word = readDashedWord(significance);
             pos = begin;
             return word;
         }
@@ -445,15 +459,6 @@ public final class ParseUtil {
                 complain("expected indent");
             }
             discardIndent();
-        }
-
-        public final boolean passOptDashedWord(String etalon) {
-            if (hor.atAlphanumeric() && hor.peekThisDashedWord().equals(etalon)) {
-                hor.parseThisDashedWord();
-                return true;
-            } else {
-                return false;
-            }
         }
     }
 

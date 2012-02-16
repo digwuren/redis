@@ -54,7 +54,7 @@ final class LangParser {
         String itemName = null;
         try {
             try {
-                while (lexer.hor.atAlphanumeric() && knownHeaderItems.contains((itemName = lexer.hor.peekThisDashedWord()).toLowerCase())) {
+                while (lexer.hor.atAlphanumeric() && knownHeaderItems.contains((itemName = lexer.hor.peekDashedWord(null)).toLowerCase())) {
                     if (seenHeaderLines.contains(itemName)) {
                         throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
                     }
@@ -74,7 +74,7 @@ final class LangParser {
             parseDispatchTable(lexer);
             while (!lexer.atEndOfFile()) {
                 lexer.noIndent();
-                if (lexer.passOptDashedWord("minitable")) {
+                if (lexer.hor.passOptDashedWord("minitable")) {
                     parseMinitableDeclaration(lexer);
                 } else {
                     lexer.complain("expected end of file");
