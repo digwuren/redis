@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.mirky.redis.BinaryElementType.Struct.Step;
-import net.mirky.redis.ParseUtil.IndentationSensitiveLexer;
+import net.mirky.redis.ParseUtil.IndentableLexer;
 
 abstract class StructureDescriptionParser {
     private StructureDescriptionParser() {
@@ -25,7 +25,7 @@ abstract class StructureDescriptionParser {
          * @throws ControlData.LineParseError
          * @throws IOException
          */
-        abstract BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException;
+        abstract BinaryElementType parseParameters(ParseUtil.IndentableLexer lexer) throws IOException;
     }
 
     // for field types without parameters
@@ -37,7 +37,7 @@ abstract class StructureDescriptionParser {
         }
     
         @Override
-        final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
+        final BinaryElementType parseParameters(ParseUtil.IndentableLexer lexer) throws IOException {
             lexer.passLogicalNewline();
             return fieldType;
         }
@@ -51,7 +51,7 @@ abstract class StructureDescriptionParser {
         }
     
         @Override
-        final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
+        final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentableLexer lexer) throws IOException {
             lexer.passLogicalNewline();
             lexer.passIndent();
             ArrayList<BinaryElementType.SlicedInteger.Slice> slices = new ArrayList<BinaryElementType.SlicedInteger.Slice>();
@@ -66,37 +66,37 @@ abstract class StructureDescriptionParser {
 
     // Note that there are two forms of integer slices: 'basic' and 'flags'.
     // Basic slices hold an integer, flag slices hold a single bit.
-    static final BinaryElementType.SlicedInteger.Slice parseIntegerSlice(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
-        lexer.hor.pass('@');
-        lexer.hor.pass('.');
-        int rightShift = lexer.hor.readUnsignedInteger("right shift");
-        lexer.hor.skipSpaces();
+    static final BinaryElementType.SlicedInteger.Slice parseIntegerSlice(ParseUtil.IndentableLexer lexer) throws IOException {
+        lexer.pass('@');
+        lexer.pass('.');
+        int rightShift = lexer.readUnsignedInteger("right shift");
+        lexer.skipSpaces();
         BinaryElementType.SlicedInteger.Slice slice;
-        if (lexer.hor.atDigit()) {
+        if (lexer.atDigit()) {
             // it's a basic slice; the field width (in bits) comes next
-            int posBeforeSliceWidth = lexer.hor.getPos();
-            int sliceWidth = lexer.hor.readUnsignedInteger("slice width");
+            int posBeforeSliceWidth = lexer.getPos();
+            int sliceWidth = lexer.readUnsignedInteger("slice width");
             if (sliceWidth == 0) {
-                lexer.hor.errorAtPos(posBeforeSliceWidth, "zero-bit slice?");
+                lexer.errorAtPos(posBeforeSliceWidth, "zero-bit slice?");
             }
             List<String> meanings = new ArrayList<String>();
             while (true) {
-                lexer.hor.skipSpaces();
-                if (!lexer.hor.at('"')) {
+                lexer.skipSpaces();
+                if (!lexer.at('"')) {
                     break;
                 }
-                meanings.add(lexer.hor.readStringLiteral(null));
+                meanings.add(lexer.readStringLiteral(null));
             }
             slice = new BinaryElementType.SlicedInteger.Slice.Basic(rightShift, sliceWidth, meanings.toArray(new String[0]));
         } else {
             // it's a flag slice; the field width is implicitly one
-            String setFlagName = lexer.hor.readOptStringLiteral(null);
-            lexer.hor.skipSpaces();
+            String setFlagName = lexer.readOptStringLiteral(null);
+            lexer.skipSpaces();
             String clearFlagName;
-            if (lexer.hor.at('/')) {
-                lexer.hor.skipChar();
-                lexer.hor.skipSpaces();
-                clearFlagName = lexer.hor.readStringLiteral("cleared flag meaning");
+            if (lexer.at('/')) {
+                lexer.skipChar();
+                lexer.skipSpaces();
+                clearFlagName = lexer.readStringLiteral("cleared flag meaning");
             } else {
                 clearFlagName = null;
             }
@@ -110,7 +110,7 @@ abstract class StructureDescriptionParser {
     }
 
     public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws IOException {
-        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
+        ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
             BinaryElementType type = parseType(lexer);
             lexer.requireEndOfFile();
@@ -120,16 +120,16 @@ abstract class StructureDescriptionParser {
         }
     }
 
-    public static final BinaryElementType parseType(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
-        int posBefore = lexer.hor.getPos();
-        String keyword = lexer.hor.readDashedWord("type");
+    public static final BinaryElementType parseType(ParseUtil.IndentableLexer lexer) throws IOException {
+        int posBefore = lexer.getPos();
+        String keyword = lexer.readDashedWord("type");
         StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(keyword);
         BinaryElementType type;
         if (parameterParser == null) {
             try {
                 type = BinaryElementType.MANAGER.get(keyword);
             } catch (ResourceManager.ResolutionError e) {
-                lexer.hor.errorAtPos(posBefore, "unknown type");
+                lexer.errorAtPos(posBefore, "unknown type");
                 throw new RuntimeException("bug detected");
             }
             lexer.passLogicalNewline();
@@ -139,20 +139,20 @@ abstract class StructureDescriptionParser {
         return type;
     }
 
-    public static final Step parseThisSeek(IndentationSensitiveLexer lexer) {
-        assert lexer.hor.at('@');
-        lexer.hor.skipChar();
+    public static final Step parseThisSeek(IndentableLexer lexer) {
+        assert lexer.at('@');
+        lexer.skipChar();
         int sign;
-        if (lexer.hor.at('+')) {
-            lexer.hor.skipChar();
+        if (lexer.at('+')) {
+            lexer.skipChar();
             sign = +1;
-        } else if (lexer.hor.at('-')) {
-            lexer.hor.skipChar();
+        } else if (lexer.at('-')) {
+            lexer.skipChar();
             sign = -1;
         } else {
             sign = 0;
         }
-        int offset = lexer.hor.readUnsignedInteger("offset");
+        int offset = lexer.readUnsignedInteger("offset");
         return sign == 0 ? new Step.LocalSeek(offset) : new Step.RelSeek(sign * offset);
     }
 
@@ -169,14 +169,14 @@ abstract class StructureDescriptionParser {
 
         KNOWN_FIELD_TYPES.put("padded-string", new ParameterParser() {
             @Override
-            final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
-                lexer.hor.skipSpaces();
-                int size = lexer.hor.readUnsignedInteger("string length");
-                lexer.hor.skipSpaces();
-                int beforePadding = lexer.hor.getPos();
-                int padding = lexer.hor.readUnsignedInteger("char code");
+            final BinaryElementType parseParameters(ParseUtil.IndentableLexer lexer) throws IOException {
+                lexer.skipSpaces();
+                int size = lexer.readUnsignedInteger("string length");
+                lexer.skipSpaces();
+                int beforePadding = lexer.getPos();
+                int padding = lexer.readUnsignedInteger("char code");
                 if (padding >= 0x100) {
-                    lexer.hor.errorAtPos(beforePadding, "value too high to be a char code");
+                    lexer.errorAtPos(beforePadding, "value too high to be a char code");
                 }
                 lexer.passLogicalNewline();
                 return new BinaryElementType.PaddedString(size, (byte) padding);
@@ -185,37 +185,37 @@ abstract class StructureDescriptionParser {
         
         KNOWN_FIELD_TYPES.put("struct", new ParameterParser() {
             @Override
-            final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws IOException {
+            final BinaryElementType parseParameters(IndentableLexer lexer) throws IOException {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
                 lexer.passLogicalNewline();
                 lexer.passIndent();
                 
                 while (!lexer.atDedent()) {
                     lexer.noIndent();
-                    if (lexer.hor.at('@')) {
+                    if (lexer.at('@')) {
                         Step seek = parseThisSeek(lexer);
                         steps.add(seek);
-                        lexer.hor.skipSpaces();
+                        lexer.skipSpaces();
                     }
-                    if (!(lexer.hor.atEndOfLine() || lexer.atCommentChar())) {
+                    if (!(lexer.atEndOfLine() || lexer.atCommentChar())) {
                         ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
                         while (true) {
-                            String fieldName = lexer.hor.readDashedWord("field name");
+                            String fieldName = lexer.readDashedWord("field name");
                             lineSteps.add(new Step.Pass(fieldName, null));
-                            lexer.hor.skipSpaces();
-                            if (!lexer.hor.at(',')) {
+                            lexer.skipSpaces();
+                            if (!lexer.at(',')) {
                                 break;
                             }
-                            lexer.hor.skipChar();
-                            lexer.hor.skipSpaces();
-                            if (lexer.hor.at('@')) {
+                            lexer.skipChar();
+                            lexer.skipSpaces();
+                            if (lexer.at('@')) {
                                 Step seek = parseThisSeek(lexer);
                                 lineSteps.add(seek);
-                                lexer.hor.skipSpaces();
+                                lexer.skipSpaces();
                             }
                         }
-                        lexer.hor.pass(':');
-                        lexer.hor.skipSpaces();
+                        lexer.pass(':');
+                        lexer.skipSpaces();
                         BinaryElementType fieldType = parseType(lexer);
                         for (Step step : lineSteps) {
                             step.setType(fieldType);

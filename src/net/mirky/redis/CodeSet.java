@@ -10,27 +10,27 @@ package net.mirky.redis;
 abstract class CodeSet {
     abstract boolean matches(int candidate);
 
-    public static final CodeSet.Masked parseMasked(ParseUtil.IndentationSensitiveLexer lexer) {
+    public static final CodeSet.Masked parseMasked(ParseUtil.IndentableLexer lexer) {
         int bits = 0;
         int mask = ~0;
         int digitWidth;
         int base;
         String digits;
-        if (lexer.hor.at("0x")) {
-            lexer.hor.skipChar();
-            lexer.hor.skipChar();
+        if (lexer.at("0x")) {
+            lexer.skipChar();
+            lexer.skipChar();
             digitWidth = 4;
             base = 16;
             digits = "0123456789abcdefABCDEF";
-        } else if (lexer.hor.at("0o")) {
-            lexer.hor.skipChar();
-            lexer.hor.skipChar();
+        } else if (lexer.at("0o")) {
+            lexer.skipChar();
+            lexer.skipChar();
             digitWidth = 3;
             base = 8;
             digits = "01234567";
-        } else if (lexer.hor.at("0b")) {
-            lexer.hor.skipChar();
-            lexer.hor.skipChar();
+        } else if (lexer.at("0b")) {
+            lexer.skipChar();
+            lexer.skipChar();
             digitWidth = 1;
             base = 2;
             digits = "01";
@@ -38,45 +38,45 @@ abstract class CodeSet {
             throw new RuntimeException("invalid masked value");
         }
         while (true) {
-            if (lexer.hor.at('?')) {
+            if (lexer.at('?')) {
                 bits <<= digitWidth;
                 mask <<= digitWidth;
-                lexer.hor.skipChar();
+                lexer.skipChar();
                 continue;
-            } else if (lexer.hor.at('_')) {
+            } else if (lexer.at('_')) {
                 // ignore
-                lexer.hor.skipChar();
+                lexer.skipChar();
                 continue;
-            } else if (lexer.hor.atAnyOf(digits)) {
+            } else if (lexer.atAnyOf(digits)) {
                 try {
                     bits <<= digitWidth;
                     mask <<= digitWidth;
-                    bits |= Integer.parseInt(Character.toString(lexer.hor.peekChar()), base);
+                    bits |= Integer.parseInt(Character.toString(lexer.peekChar()), base);
                     mask |= (1 << digitWidth) - 1;
                 } catch (NumberFormatException e) {
                     throw new RuntimeException("bug detected");
                 }
-                lexer.hor.skipChar();
+                lexer.skipChar();
                 continue;
             } else {
                 break;
             }
         }
-        if (lexer.hor.atAlphanumeric()) {
+        if (lexer.atAlphanumeric()) {
             throw new RuntimeException("not a base " + base + " digit");
         }
         return new Masked(bits, mask);
     }
 
     // Also eats up the whitespace immediately following the set.
-    static final CodeSet parse(ParseUtil.IndentationSensitiveLexer lexer) {
+    static final CodeSet parse(ParseUtil.IndentableLexer lexer) {
         CodeSet soFar = parseMasked(lexer);
-        lexer.hor.skipSpaces();
-        while (lexer.hor.at('-')) {
-            lexer.hor.skipChar();
-            lexer.hor.skipSpaces();
+        lexer.skipSpaces();
+        while (lexer.at('-')) {
+            lexer.skipChar();
+            lexer.skipSpaces();
             soFar = new Difference(soFar, parseMasked(lexer));
-            lexer.hor.skipSpaces();
+            lexer.skipSpaces();
         }
         return soFar;
     }

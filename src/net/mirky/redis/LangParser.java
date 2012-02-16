@@ -50,14 +50,14 @@ final class LangParser {
         knownHeaderItems.add("trivial");
         Set<String> seenHeaderLines = new TreeSet<String>();
         
-        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
+        ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
             try {
                 while (true) {
-                    if (!lexer.hor.atAlphanumeric()) {
+                    if (!lexer.atAlphanumeric()) {
                         break;
                     }
-                    String itemName = lexer.hor.peekDashedWord(null);
+                    String itemName = lexer.peekDashedWord(null);
                     if (!knownHeaderItems.contains(itemName.toLowerCase())) {
                         break;
                     }
@@ -65,22 +65,22 @@ final class LangParser {
                         throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
                     }
                     seenHeaderLines.add(itemName.toLowerCase());
-                    lexer.hor.readDashedWord(null);
-                    lexer.hor.skipSpaces();
-                    lexer.hor.pass(':');
+                    lexer.readDashedWord(null);
+                    lexer.skipSpaces();
+                    lexer.pass(':');
                     // Note that comments are not ignored after header items.
-                    lexer.hor.skipSpaces();
-                    processHeader(itemName, lexer.hor.readRestOfLine());
+                    lexer.skipSpaces();
+                    processHeader(itemName, lexer.readRestOfLine());
                     lexer.passLogicalNewline();
                 }
             } catch (NumberFormatException e) {
                 throw new DisassemblyTableParseError("error parsing lang header", e);
             }
-            lexer.hor.passDashedWord("dispatch");
+            lexer.passDashedWord("dispatch");
             parseDispatchTable(lexer);
             while (!lexer.atEndOfFile()) {
                 lexer.noIndent();
-                if (lexer.hor.passOptDashedWord("minitable")) {
+                if (lexer.passOptDashedWord("minitable")) {
                     parseMinitableDeclaration(lexer);
                 } else {
                     break;
@@ -121,20 +121,20 @@ final class LangParser {
         throw new DisassemblyTableParseError("not a Boolean value: " + value);
     }
 
-    private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws IOException, DisassemblyTableParseError {
-        lexer.hor.skipSpaces();
-        int before = lexer.hor.getPos();
-        String tableName = lexer.hor.readDashedWord("minitable name");
+    private final void parseMinitableDeclaration(ParseUtil.IndentableLexer lexer) throws IOException, DisassemblyTableParseError {
+        lexer.skipSpaces();
+        int before = lexer.getPos();
+        String tableName = lexer.readDashedWord("minitable name");
         if (minitablesByName.containsKey(tableName)) {
-            lexer.hor.errorAtPos(before, "duplicate minitable name");
+            lexer.errorAtPos(before, "duplicate minitable name");
         }
-        lexer.hor.skipSpaces();
-        lexer.hor.pass(':');
-        lexer.hor.skipSpaces();
+        lexer.skipSpaces();
+        lexer.pass(':');
+        lexer.skipSpaces();
         List<String> minitable = new ArrayList<String>();
-        while (lexer.hor.atAlphanumeric()) {
-            minitable.add(lexer.hor.readDashedWord("item"));
-            lexer.hor.skipSpaces();
+        while (lexer.atAlphanumeric()) {
+            minitable.add(lexer.readDashedWord("item"));
+            lexer.skipSpaces();
         }
         // minitable size must be a power of two
         // (so that we can mask off excess high bits meaningfully)
@@ -149,18 +149,18 @@ final class LangParser {
         lexer.passLogicalNewline();
     }
 
-    private final void parseDispatchTable(ParseUtil.IndentationSensitiveLexer lexer) throws IOException,
+    private final void parseDispatchTable(ParseUtil.IndentableLexer lexer) throws IOException,
             RuntimeException, DisassemblyTableParseError {
         lexer.passLogicalNewline();
         lexer.passIndent();
         while (!lexer.atDedent()) {
             lexer.noIndent();
-            lexer.hor.pass('[');
-            lexer.hor.skipSpaces();
+            lexer.pass('[');
+            lexer.skipSpaces();
             CodeSet set = CodeSet.parse(lexer);
-            lexer.hor.skipSpaces();
-            lexer.hor.pass(']');
-            lexer.hor.skipSpaces();
+            lexer.skipSpaces();
+            lexer.pass(']');
+            lexer.skipSpaces();
             for (int i = 0; i < 256; i++) {
                 if (set.matches(i)) {
                     if (dispatchTable[i] != -1) {
@@ -170,8 +170,8 @@ final class LangParser {
                 }
             }
             int size = 0;
-            while (!lexer.hor.atEndOfLine()) {
-                char c = lexer.hor.readChar();
+            while (!lexer.atEndOfLine()) {
+                char c = lexer.readChar();
                 if (c != '<') {
                     if (c < 0x20 || c > 0x7E) {
                         throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
@@ -181,14 +181,14 @@ final class LangParser {
                     try {
                         size = 0;
                         do {
-                            lexer.hor.skipSpaces();
-                            if (lexer.hor.atEndOfLine()) {
+                            lexer.skipSpaces();
+                            if (lexer.atEndOfLine()) {
                                 lexer.error("missing '>'");
                             }
-                            String step = lexer.hor.readUntilDelimiter(">,").trim();
+                            String step = lexer.readUntilDelimiter(">,").trim();
                             size = parseProcessingStep(step, size);
-                        } while (lexer.hor.passOpt(','));
-                        lexer.hor.pass('>');
+                        } while (lexer.passOpt(','));
+                        lexer.pass('>');
                         if (size != 0) {
                             throw new DisassemblyTableParseError("final step missing");
                         }

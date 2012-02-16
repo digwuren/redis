@@ -19,21 +19,21 @@ public final class ControlData {
         final BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
+                ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
-                    int keyPos = lexer.hor.getPos();
-                    int key = lexer.hor.readUnsignedInteger("key");
+                    int keyPos = lexer.getPos();
+                    int key = lexer.readUnsignedInteger("key");
                     if (key < 0 || key >= arraySize) {
-                        lexer.hor.errorAtPos(keyPos, "key out of bounds");
+                        lexer.errorAtPos(keyPos, "key out of bounds");
                     }
                     if (keywords[key] != null) {
-                        lexer.hor.errorAtPos(keyPos, "duplicate key");
+                        lexer.errorAtPos(keyPos, "duplicate key");
                     }
-                    lexer.hor.skipSpaces();
-                    lexer.hor.pass(':');
-                    lexer.hor.skipSpaces();
-                    String value = lexer.hor.readStringLiteral("value");
+                    lexer.skipSpaces();
+                    lexer.pass(':');
+                    lexer.skipSpaces();
+                    String value = lexer.readStringLiteral("value");
                     keywords[key] = value;
                     lexer.passLogicalNewline();
                 }
@@ -51,14 +51,14 @@ public final class ControlData {
         BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
+                ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
-                    String key = lexer.hor.readStringLiteral("key");
-                    lexer.hor.skipSpaces();
-                    lexer.hor.pass(':');
-                    lexer.hor.skipSpaces();
-                    String value = lexer.hor.readStringLiteral("value");
+                    String key = lexer.readStringLiteral("key");
+                    lexer.skipSpaces();
+                    lexer.pass(':');
+                    lexer.skipSpaces();
+                    String value = lexer.readStringLiteral("value");
                     ArrayList<String> list = map.get(key);
                     if (list == null) {
                         list = new ArrayList<String>();

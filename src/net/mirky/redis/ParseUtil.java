@@ -28,12 +28,12 @@ public final class ParseUtil {
         }
     }
 
-    public static final class LineLexer {
+    public static class HorizontalLexer {
         private String line;
         private int pos;
-        private final ErrorLocator errorLocator;
+        protected final ErrorLocator errorLocator;
 
-        public LineLexer(String line, ErrorLocator errorLocator) {
+        public HorizontalLexer(String line, ErrorLocator errorLocator) {
             this.errorLocator = errorLocator;
             reset(line);
         }
@@ -315,7 +315,7 @@ public final class ParseUtil {
             return pos;
         }
 
-        public final void error(String message) {
+        public void error(String message) {
             errorAtPos(pos, message);
         }
 
@@ -352,19 +352,18 @@ public final class ParseUtil {
         }
     }
 
-    public static final class IndentationSensitiveLexer {
+    public static final class IndentableLexer extends HorizontalLexer {
         private final LineSource lineSource;
         private final char commentChar;
-        public final LineLexer hor;
         private boolean eof = false;
         private final Vector<Integer> indentationStack = new Vector<Integer>();
         private int dent; // +1 for indent, negative for dedent, the absolute
                           // value indicates the count of remaining dedents
 
-        public IndentationSensitiveLexer(LineSource lineSource, ErrorLocator errorLocator, char commentChar) throws IOException {
+        public IndentableLexer(LineSource lineSource, ErrorLocator errorLocator, char commentChar) throws IOException {
+            super(null, errorLocator);
             this.lineSource = lineSource;
             this.commentChar = commentChar;
-            hor = new LineLexer(null, errorLocator);
             advanceVertically();
         }
 
@@ -381,43 +380,43 @@ public final class ParseUtil {
             do {
                 String line = lineSource.getNextLine();
                 if (line == null) {
-                    hor.reset(null);
+                    reset(null);
                     eof = true;
                     dent = -indentationStack.size();
                     indentationStack.clear();
                     return;
                 }
-                hor.errorLocator.nextLine();
-                hor.reset(line);
-                hor.skipSpaces();
-            } while (hor.atEndOfLine() || hor.at(commentChar));
+                errorLocator.nextLine();
+                reset(line);
+                skipSpaces();
+            } while (atEndOfLine() || at(commentChar));
             int threshold = indentationStack.isEmpty() ? 0 : indentationStack.get(indentationStack.size() - 1)
                     .intValue();
-            if (hor.getPos() > threshold) {
+            if (getPos() > threshold) {
                 dent = 1;
-                indentationStack.add(new Integer(hor.getPos()));
+                indentationStack.add(new Integer(getPos()));
             } else {
                 dent = 0;
-                while (hor.getPos() < threshold) {
+                while (getPos() < threshold) {
                     dent--;
                     indentationStack.remove(indentationStack.size() - 1);
                     threshold = indentationStack.isEmpty() ? 0 : indentationStack.get(indentationStack.size() - 1)
                             .intValue();
                 }
-                if (hor.getPos() != threshold) {
+                if (getPos() != threshold) {
                     error("invalid dedent");
                 }
             }
         }
 
         public final boolean atCommentChar() {
-            return hor.at(commentChar);
+            return at(commentChar);
         }
 
         public final void passLogicalNewline() throws IOException {
-            hor.skipSpaces();
-            if (!(hor.atEndOfLine() || atCommentChar())) {
-                hor.error("expected end of line");
+            skipSpaces();
+            if (!(atEndOfLine() || atCommentChar())) {
+                error("expected end of line");
             }
             advanceVertically();
         }
@@ -438,13 +437,13 @@ public final class ParseUtil {
 
         public final void noIndent() {
             if (atIndent()) {
-                hor.errorAtCol(0, "unexpected indent");
+                errorAtCol(0, "unexpected indent");
             }
         }
 
         public final void passIndent() {
             if (!atIndent()) {
-                hor.errorAtCol(0, "expected indent");
+                errorAtCol(0, "expected indent");
             }
             discardIndent();
         }
@@ -481,8 +480,9 @@ public final class ParseUtil {
             }
         }
 
+        @Override
         public final void error(String message) {
-            hor.errorAtCol(!eof ? hor.getPos() + 1 : 0, message);
+            errorAtCol(!eof ? getPos() + 1 : 0, message);
         }
     }
 
