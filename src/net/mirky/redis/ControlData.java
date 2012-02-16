@@ -33,7 +33,7 @@ public final class ControlData {
                     lexer.hor.skipSpaces();
                     lexer.hor.pass(':');
                     lexer.hor.skipSpaces();
-                    String value = lexer.parseString("value");
+                    String value = lexer.hor.readStringLiteral("value");
                     lexer.expectLogicalEndOfLine();
                     keywords[key] = value;
                     lexer.advanceVertically();
@@ -55,11 +55,11 @@ public final class ControlData {
                 ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
-                    String key = lexer.parseString("key");
+                    String key = lexer.hor.readStringLiteral("key");
                     lexer.hor.skipSpaces();
                     lexer.hor.pass(':');
                     lexer.hor.skipSpaces();
-                    String value = lexer.parseString("value");
+                    String value = lexer.hor.readStringLiteral("value");
                     lexer.expectLogicalEndOfLine();
                     ArrayList<String> list = map.get(key);
                     if (list == null) {

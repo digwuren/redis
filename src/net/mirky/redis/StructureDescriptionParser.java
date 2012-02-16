@@ -85,23 +85,18 @@ abstract class StructureDescriptionParser {
                 if (!lexer.hor.at('"')) {
                     break;
                 }
-                meanings.add(lexer.hor.parseThisString());
+                meanings.add(lexer.hor.readStringLiteral(null));
             }
             slice = new BinaryElementType.SlicedInteger.Slice.Basic(rightShift, sliceWidth, meanings.toArray(new String[0]));
         } else {
             // it's a flag slice; the field width is implicitly one
-            String setFlagName;
-            if (lexer.hor.at('"')) {
-                setFlagName = lexer.hor.parseThisString();
-            } else {
-                setFlagName = null;
-            }
+            String setFlagName = lexer.hor.readOptStringLiteral(null);
             lexer.hor.skipSpaces();
             String clearFlagName;
             if (lexer.hor.at('/')) {
                 lexer.hor.skipChar();
                 lexer.hor.skipSpaces();
-                clearFlagName = lexer.parseString("cleared flag meaning");
+                clearFlagName = lexer.hor.readStringLiteral("cleared flag meaning");
             } else {
                 clearFlagName = null;
             }

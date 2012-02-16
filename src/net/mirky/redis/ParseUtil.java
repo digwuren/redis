@@ -203,6 +203,13 @@ public final class ParseUtil {
             return line.substring(begin, pos);
         }
 
+        public final String peekDashedWord(String significance) {
+            int begin = pos;
+            String word = readDashedWord(significance);
+            pos = begin;
+            return word;
+        }
+
         public final void passDashedWord(String etalon) {
             if (!passOptDashedWord(etalon)) {
                 error("expected '" + etalon + "'");
@@ -234,6 +241,80 @@ public final class ParseUtil {
             return ParseUtil.parseUnsignedInteger(readWord(significance));
         }
 
+        /**
+         * Read a string literal wrapped in double quotes and using the
+         * backslash as the quote character.
+         * 
+         * @param significance
+         *            significance of the string literal, for error reporting.
+         *            May be {@code null}.
+         * 
+         * @return the string literal's content, with the backslash constructs
+         *         having been properly evaluated
+         * 
+         * @throws ControlDataError
+         *             if the cursor is not standing at a double quote or there
+         *             is no matching terminal double quote. The cursor is left
+         *             at its original position.
+         */
+        public final String readStringLiteral(String significance) {
+            int before = pos;
+            if (!at('"')) {
+                expectationError(significance, "a string literal");
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int cur = pos + 1; cur < line.length(); cur++) {
+                if (line.charAt(cur) == '"') {
+                    pos = cur + 1;
+                    return sb.toString();
+                }
+                if (line.charAt(cur) == '\\') {
+                    cur++;
+                    if (cur >= line.length()) {
+                        break; // and complain about termination
+                    }
+                    char c = line.charAt(cur);
+                    // XXX: currently, \ is a pure escape character; there are
+                    // no specials
+                    sb.append(c);
+                } else {
+                    sb.append(line.charAt(cur));
+                }
+            }
+            pos = before;
+            error("incomplete string literal");
+            throw new RuntimeException("bug detected");
+        }
+
+        /**
+         * If the cursor is standing at a double quote, read and return a string
+         * literal as in {@link #readStringLiteral(String)}; otherwise return
+         * {@code null}.
+         * 
+         * @param significance
+         *            significance of the string literal, for error reporting.
+         *            May be {@code null}.
+         * 
+         * @return the string literal's content, with the backslash constructs
+         *         having been properly evaluated
+         * 
+         * @throws ControlDataError
+         *             if the cursor is standing at a double quote but there is
+         *             no matching terminal double quote. The cursor is left at
+         *             its original position.
+         */
+        public final String readOptStringLiteral(String significance) {
+            if (at('"')) {
+                return readStringLiteral(significance);
+            } else {
+                return null;
+            }
+        }
+
+        public final int getPos() {
+            return pos;
+        }
+
         public final void error(String message) {
             errorAtPos(pos, message);
         }
@@ -258,10 +339,6 @@ public final class ParseUtil {
             error(message);
         }
 
-        public final int getPos() {
-            return pos;
-        }
-
         public static final boolean isDigit(char c) {
             return c >= '0' && c <= '9';
         }
@@ -272,39 +349,6 @@ public final class ParseUtil {
 
         public static final boolean isAlphanumeric(char c) {
             return isLetter(c) || isDigit(c);
-        }
-
-        /* * * * */
-        
-        public final String peekDashedWord(String significance) {
-            int begin = pos;
-            String word = readDashedWord(significance);
-            pos = begin;
-            return word;
-        }
-
-        public final String parseThisString() {
-            assert at('"');
-            StringBuilder sb = new StringBuilder();
-            for (int cur = pos + 1; cur < line.length(); cur++) {
-                if (line.charAt(cur) == '"') {
-                    pos = cur + 1;
-                    return sb.toString();
-                }
-                if (line.charAt(cur) == '\\') {
-                    cur++;
-                    if (cur >= line.length()) {
-                        break; // and complain about termination
-                    }
-                    char c = line.charAt(cur);
-                    // XXX: currently, \ is a pure escape character; there are
-                    // no specials
-                    sb.append(c);
-                } else {
-                    sb.append(line.charAt(cur));
-                }
-            }
-            throw new RuntimeException("string not terminated");
         }
     }
 
@@ -425,13 +469,6 @@ public final class ParseUtil {
             if (atIndent()) {
                 complain("unexpected indent");
             }
-        }
-
-        public final String parseString(String significance) {
-            if (!hor.at('"')) {
-                error("expected " + significance + ", a string");
-            }
-            return hor.parseThisString();
         }
 
         public final void passNewline() throws IOException {
