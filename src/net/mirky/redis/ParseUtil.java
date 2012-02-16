@@ -488,24 +488,24 @@ public final class ParseUtil {
 
     public static abstract class LineSource {
         public abstract String getNextLine() throws IOException;
+
+        public static final class File extends LineSource {
+            private final BufferedReader reader;
+            private int lineno;
+        
+            public File(BufferedReader reader) {
+                this.reader = reader;
+                lineno = 0;
+            }
+        
+            @Override
+            public final String getNextLine() throws IOException {
+                lineno++;
+                return reader.readLine();
+            }
+        }
     }
 
-    public static final class FileLineSource extends LineSource {
-        private final BufferedReader reader;
-        private int lineno;
-
-        public FileLineSource(BufferedReader reader) {
-            this.reader = reader;
-            lineno = 0;
-        }
-
-        @Override
-        public final String getNextLine() throws IOException {
-            lineno++;
-            return reader.readLine();
-        }
-    }
-    
     public static final class ErrorLocator {
         public final String filename;
         public int lineno;

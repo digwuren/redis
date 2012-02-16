@@ -19,7 +19,7 @@ public final class ControlData {
         final BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
+                ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.LineSource.File(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     int keyPos = lexer.getPos();
@@ -51,7 +51,7 @@ public final class ControlData {
         BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
+                ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.LineSource.File(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     String key = lexer.readStringLiteral("key");

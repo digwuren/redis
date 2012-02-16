@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.mirky.redis.BinaryElementType.Struct.Step;
-import net.mirky.redis.ParseUtil.IndentableLexer;
 
 abstract class StructureDescriptionParser {
     private StructureDescriptionParser() {
@@ -110,7 +109,7 @@ abstract class StructureDescriptionParser {
     }
 
     public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws IOException {
-        ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
+        ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.LineSource.File(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
             BinaryElementType type = parseType(lexer);
             lexer.requireEndOfFile();
@@ -139,7 +138,7 @@ abstract class StructureDescriptionParser {
         return type;
     }
 
-    public static final Step parseThisSeek(IndentableLexer lexer) {
+    public static final Step parseThisSeek(ParseUtil.IndentableLexer lexer) {
         assert lexer.at('@');
         lexer.skipChar();
         int sign;
@@ -185,7 +184,7 @@ abstract class StructureDescriptionParser {
         
         KNOWN_FIELD_TYPES.put("struct", new ParameterParser() {
             @Override
-            final BinaryElementType parseParameters(IndentableLexer lexer) throws IOException {
+            final BinaryElementType parseParameters(ParseUtil.IndentableLexer lexer) throws IOException {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
                 lexer.passLogicalNewline();
                 lexer.passIndent();

@@ -50,31 +50,32 @@ final class LangParser {
         knownHeaderItems.add("trivial");
         Set<String> seenHeaderLines = new TreeSet<String>();
         
-        ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
+        ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.LineSource.File(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
-            try {
-                while (true) {
-                    if (!lexer.atAlphanumeric()) {
-                        break;
-                    }
-                    String itemName = lexer.peekDashedWord(null);
-                    if (!knownHeaderItems.contains(itemName.toLowerCase())) {
-                        break;
-                    }
-                    if (seenHeaderLines.contains(itemName.toLowerCase())) {
-                        throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
-                    }
-                    seenHeaderLines.add(itemName.toLowerCase());
-                    lexer.readDashedWord(null);
-                    lexer.skipSpaces();
-                    lexer.pass(':');
-                    // Note that comments are not ignored after header items.
-                    lexer.skipSpaces();
-                    processHeader(itemName, lexer.readRestOfLine());
-                    lexer.passLogicalNewline();
+            while (true) {
+                if (!lexer.atAlphanumeric()) {
+                    break;
                 }
-            } catch (NumberFormatException e) {
-                throw new DisassemblyTableParseError("error parsing lang header", e);
+                String itemName = lexer.peekDashedWord(null);
+                if (!knownHeaderItems.contains(itemName.toLowerCase())) {
+                    break;
+                }
+                if (seenHeaderLines.contains(itemName.toLowerCase())) {
+                    throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
+                }
+                seenHeaderLines.add(itemName.toLowerCase());
+                lexer.readDashedWord(null);
+                lexer.skipSpaces();
+                lexer.pass(':');
+                // Note that comments are not ignored after header items.
+                lexer.skipSpaces();
+                int posBeforeContent = lexer.getPos();
+                try {
+                    processHeader(itemName, lexer.readRestOfLine());
+                } catch (NumberFormatException e) {
+                    lexer.errorAtPos(posBeforeContent, "not a proper numeric value");
+                }
+                lexer.passLogicalNewline();
             }
             lexer.passDashedWord("dispatch");
             parseDispatchTable(lexer);
