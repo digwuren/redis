@@ -12,11 +12,8 @@ public final class ControlData {
     }
 
     public static final class LineParseError extends Exception {
-        public final String line;
-
-        public LineParseError(String msg, String line) {
+        public LineParseError(String msg) {
             super(msg);
-            this.line = line;
         }
     }
 
@@ -28,7 +25,7 @@ public final class ControlData {
         final BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader, filename), '#');
+                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     if (lexer.atIndent()) {
                         lexer.complain("unexpected indentation");
@@ -66,7 +63,7 @@ public final class ControlData {
         } catch (IOException e) {
             throw new RuntimeException("I/O error reading resource " + filename, e);
         } catch (LineParseError e) {
-            throw new RuntimeException("invalid " + filename + " line: " + e.line, e);
+            throw new RuntimeException("invalid " + filename + " line", e);
         }
         return keywords;
     }
@@ -76,7 +73,7 @@ public final class ControlData {
         BufferedReader reader = TextResource.getBufferedReader(filename);
         try {
             try {
-                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader, filename), '#');
+                ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
                     if (lexer.atIndent()) {
                         lexer.complain("unexpected indentation");

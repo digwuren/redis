@@ -117,7 +117,7 @@ abstract class StructureDescriptionParser {
 
     public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws LineParseError, IOException,
             RuntimeException {
-        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader, name), '#');
+        ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
             return parseType(lexer);
         } finally {

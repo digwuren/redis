@@ -245,6 +245,7 @@ public final class ParseUtil {
 
     public static final class IndentationSensitiveLexer {
         private final LineSource lineSource;
+        private final ErrorLocator errorLocator;
         private final char commentChar;
         public final LineLexer hor;
         private boolean eof = false;
@@ -252,8 +253,9 @@ public final class ParseUtil {
         private int dent; // +1 for indent, negative for dedent, the absolute
                           // value indicates the count of remaining dedents
 
-        public IndentationSensitiveLexer(LineSource lineSource, char commentChar) throws LineParseError, IOException {
+        public IndentationSensitiveLexer(LineSource lineSource, ErrorLocator errorLocator, char commentChar) throws LineParseError, IOException {
             this.lineSource = lineSource;
+            this.errorLocator = errorLocator;
             this.commentChar = commentChar;
             hor = new LineLexer(null);
             advanceVertically();
@@ -280,6 +282,7 @@ public final class ParseUtil {
                     indentationStack.clear();
                     return;
                 }
+                errorLocator.nextLine();
                 hor.reset(line);
                 hor.skipSpaces();
             } while (hor.atEndOfLine() || hor.at(commentChar));
@@ -357,21 +360,11 @@ public final class ParseUtil {
         
         @Deprecated // in favour of {@link #error(String)}
         public final void complain(String message) throws ControlData.LineParseError {
-            if (!eof) {
-                throw new ControlData.LineParseError(lineSource.getLineLoc() + ':' + (hor.getPos() + 1) + ": " + message, hor.line);
-            } else {
-                throw new ControlData.LineParseError(lineSource.getLineLoc() + ": " + message, "");
-            }
+            error(message);
         }
         
         public final void error(String message) throws ControlData.LineParseError {
-            String loc;
-            if (!eof) {
-                loc = lineSource.getLineLoc() + '.' + (hor.getPos() + 1);
-            } else {
-                loc = lineSource.getLineLoc();
-            }
-            throw new ControlData.LineParseError(loc + ": " + message, hor.line);
+            errorLocator.error(!eof ? hor.getPos() + 1 : 0, message);
         }
 
         public final void noIndent() throws ControlData.LineParseError {
@@ -448,22 +441,14 @@ public final class ParseUtil {
 
     public static abstract class LineSource {
         public abstract String getNextLine() throws IOException;
-
-        /**
-         * Return a string identifying the line-precision location of the line
-         * last read. As per GNUCS, lines are numbered from 1.
-         */
-        public abstract String getLineLoc();
     }
 
     public static final class FileLineSource extends LineSource {
         private final BufferedReader reader;
-        private final String filename;
         private int lineno;
 
-        public FileLineSource(BufferedReader reader, String filename) {
+        public FileLineSource(BufferedReader reader) {
             this.reader = reader;
-            this.filename = filename;
             lineno = 0;
         }
 
@@ -472,10 +457,39 @@ public final class ParseUtil {
             lineno++;
             return reader.readLine();
         }
+    }
+    
+    public static final class ErrorLocator {
+        public final String filename;
+        public int lineno;
+        
+        public ErrorLocator(String filename, int lineno) {
+            this.filename = filename;
+            this.lineno = lineno;
+        }
 
-        @Override
-        public final String getLineLoc() {
-            return filename + ':' + lineno;
+        public final void nextLine() {
+            lineno++;
+        }
+
+        public final void error(int colno, String message) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(filename);
+            sb.append(':');
+            sb.append(lineno);
+            if (colno != 0) {
+                sb.append('.');
+                sb.append(colno);
+            }
+            sb.append(": ");
+            sb.append(message);
+            throw new ControlDataError(sb.toString());
+        }
+    }
+    
+    public static final class ControlDataError extends RuntimeException {
+        public ControlDataError(String message) {
+            super(message);
         }
     }
 }
