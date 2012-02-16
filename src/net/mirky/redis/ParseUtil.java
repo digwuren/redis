@@ -234,7 +234,11 @@ public final class ParseUtil {
         }
 
         public final void error(String message) {
-            errorAtCol(pos + 1, message);
+            errorAtPos(pos, message);
+        }
+
+        public final void errorAtPos(int newPos, String message) {
+            errorAtCol(newPos, message);
         }
 
         public final void errorAtCol(int colno, String message) {

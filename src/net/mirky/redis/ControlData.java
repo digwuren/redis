@@ -21,33 +21,20 @@ public final class ControlData {
             try {
                 ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
-                    if (lexer.atIndent()) {
-                        lexer.complain("unexpected indentation");
-                    }
-                    if (lexer.atDedent()) {
-                        lexer.complain("unexpected dedentation");
-                    }
-                    if (!lexer.hor.atDigit()) {
-                        lexer.complain("key expected");
-                    }
-                    int key = lexer.hor.parseThisUnsignedInteger();
-                    lexer.hor.skipSpaces();
-                    if (!lexer.hor.at(':')) {
-                        lexer.complain("missing colon after key");
-                    }
-                    lexer.hor.skipChar();
-                    lexer.hor.skipSpaces();
-                    if (!lexer.hor.at('"')) {
-                        lexer.complain("wrong value type");
-                    }
-                    String value = lexer.hor.parseThisString();
-                    lexer.expectLogicalEndOfLine();
+                    lexer.noIndent();
+                    int keyPos = lexer.hor.getPos();
+                    int key = lexer.parseUnsignedInteger("key");
                     if (key < 0 || key >= arraySize) {
-                        throw new RuntimeException("key " + key + " out of bounds in " + filename);
+                        lexer.hor.errorAtPos(keyPos, "key out of bounds");
                     }
                     if (keywords[key] != null) {
-                        throw new RuntimeException("duplicate " + filename + " entry for " + key);
+                        lexer.hor.errorAtPos(keyPos, "duplicate key");
                     }
+                    lexer.hor.skipSpaces();
+                    lexer.hor.pass(':');
+                    lexer.hor.skipSpaces();
+                    String value = lexer.parseString("value");
+                    lexer.expectLogicalEndOfLine();
                     keywords[key] = value;
                     lexer.advanceVertically();
                 }
@@ -67,26 +54,12 @@ public final class ControlData {
             try {
                 ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(filename, 0), '#');
                 while (!lexer.atEndOfFile()) {
-                    if (lexer.atIndent()) {
-                        lexer.complain("unexpected indentation");
-                    }
-                    if (lexer.atDedent()) {
-                        lexer.complain("unexpected dedentation");
-                    }
-                    if (!lexer.hor.at('"')) {
-                        lexer.complain("key expected");
-                    }
-                    String key = lexer.hor.parseThisString();
+                    lexer.noIndent();
+                    String key = lexer.parseString("key");
                     lexer.hor.skipSpaces();
-                    if (!lexer.hor.at(':')) {
-                        lexer.complain("missing colon after key");
-                    }
-                    lexer.hor.skipChar();
+                    lexer.hor.pass(':');
                     lexer.hor.skipSpaces();
-                    if (!lexer.hor.at('"')) {
-                        lexer.complain("missing value");
-                    }
-                    String value = lexer.hor.parseThisString();
+                    String value = lexer.parseString("value");
                     lexer.expectLogicalEndOfLine();
                     ArrayList<String> list = map.get(key);
                     if (list == null) {
