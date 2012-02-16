@@ -174,7 +174,7 @@ public final class ParseUtil {
 
         public final String readDashedWord(String significance) {
             if (!atAlphanumeric()) {
-                error("expected " + significance + ", a word (dashes permitted)");
+                expectationError(significance, "a word (dashes permitted)");
             }
             return parseThisDashedWord();
         }
@@ -186,9 +186,49 @@ public final class ParseUtil {
          */
         public final int readUnsignedInteger(String significance) {
             if (!atDigit()) {
-                error("expected " + significance + ", an unsigned integer");
+                expectationError(significance, "an unsigned integer");
             }
             return ParseUtil.parseUnsignedInteger(parseThisWord());
+        }
+
+        public final void error(String message) {
+            errorAtPos(pos, message);
+        }
+
+        public final void errorAtPos(int newPos, String message) {
+            errorAtCol(newPos, message);
+        }
+
+        public final void errorAtCol(int colno, String message) {
+            errorLocator.error(colno, message);
+        }
+
+        // {@code significance} may be {@code null}, in which case the message
+        // only states the type
+        public final void expectationError(String significance, String type) {
+            String message;
+            if (significance != null) {
+                message = "expected " + significance + ", " + type;
+            } else {
+                message = "expected " + type;
+            }
+            error(message);
+        }
+
+        public final int getPos() {
+            return pos;
+        }
+
+        public static final boolean isDigit(char c) {
+            return c >= '0' && c <= '9';
+        }
+
+        public static final boolean isLetter(char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+        }
+
+        public static final boolean isAlphanumeric(char c) {
+            return isLetter(c) || isDigit(c);
         }
 
         /* * * * */
@@ -247,34 +287,6 @@ public final class ParseUtil {
                 }
             }
             throw new RuntimeException("string not terminated");
-        }
-
-        public final void error(String message) {
-            errorAtPos(pos, message);
-        }
-
-        public final void errorAtPos(int newPos, String message) {
-            errorAtCol(newPos, message);
-        }
-
-        public final void errorAtCol(int colno, String message) {
-            errorLocator.error(colno, message);
-        }
-
-        public final int getPos() {
-            return pos;
-        }
-
-        public static final boolean isDigit(char c) {
-            return c >= '0' && c <= '9';
-        }
-
-        public static final boolean isLetter(char c) {
-            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-        }
-
-        public static final boolean isAlphanumeric(char c) {
-            return isLetter(c) || isDigit(c);
         }
     }
 
