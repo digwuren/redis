@@ -34,9 +34,8 @@ public final class ControlData {
                     lexer.hor.pass(':');
                     lexer.hor.skipSpaces();
                     String value = lexer.hor.readStringLiteral("value");
-                    lexer.expectLogicalEndOfLine();
                     keywords[key] = value;
-                    lexer.advanceVertically();
+                    lexer.passLogicalNewline();
                 }
             } finally {
                 reader.close();
@@ -60,14 +59,13 @@ public final class ControlData {
                     lexer.hor.pass(':');
                     lexer.hor.skipSpaces();
                     String value = lexer.hor.readStringLiteral("value");
-                    lexer.expectLogicalEndOfLine();
                     ArrayList<String> list = map.get(key);
                     if (list == null) {
                         list = new ArrayList<String>();
                         map.put(key, list);
                     }
                     list.add(value);
-                    lexer.advanceVertically();
+                    lexer.passLogicalNewline();
                 }
             } finally {
                 reader.close();

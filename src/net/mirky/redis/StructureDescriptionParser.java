@@ -38,7 +38,7 @@ abstract class StructureDescriptionParser {
     
         @Override
         final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
-            lexer.passNewline();
+            lexer.passLogicalNewline();
             return fieldType;
         }
     }
@@ -53,7 +53,7 @@ abstract class StructureDescriptionParser {
         @Override
         final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
             lexer.hor.skipSpaces();
-            lexer.passNewline();
+            lexer.passLogicalNewline();
             lexer.passIndent();
             ArrayList<BinaryElementType.SlicedInteger.Slice> slices = new ArrayList<BinaryElementType.SlicedInteger.Slice>();
             while (!lexer.atDedent()) {
@@ -105,7 +105,7 @@ abstract class StructureDescriptionParser {
             }
             slice = new BinaryElementType.SlicedInteger.Slice.Flag(rightShift, setFlagName, clearFlagName);
         }
-        lexer.passNewline();
+        lexer.passLogicalNewline();
         return slice;
     }
 
@@ -132,7 +132,7 @@ abstract class StructureDescriptionParser {
                 // returned?
                 throw new RuntimeException("bug detected");
             }
-            lexer.passNewline();
+            lexer.passLogicalNewline();
         } else {
             type = parameterParser.parseParameters(lexer);
         }
@@ -177,7 +177,7 @@ abstract class StructureDescriptionParser {
                 if (padding >= 0x100) {
                     lexer.complain("value too high to be a char code");
                 }
-                lexer.passNewline();
+                lexer.passLogicalNewline();
                 return new BinaryElementType.PaddedString(size, (byte) padding);
             }
         });
@@ -186,7 +186,7 @@ abstract class StructureDescriptionParser {
             @Override
             final BinaryElementType parseParameters(IndentationSensitiveLexer lexer) throws IOException {
                 ArrayList<BinaryElementType.Struct.Step> steps = new ArrayList<BinaryElementType.Struct.Step>();
-                lexer.passNewline();
+                lexer.passLogicalNewline();
                 lexer.passIndent();
                 
                 while (!lexer.atDedent()) {
@@ -221,7 +221,7 @@ abstract class StructureDescriptionParser {
                         }
                         steps.addAll(lineSteps);
                     } else {
-                        lexer.passNewline();
+                        lexer.passLogicalNewline();
                     }
                 }
                 lexer.discardDedent();

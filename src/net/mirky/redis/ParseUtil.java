@@ -471,18 +471,11 @@ public final class ParseUtil {
             hor.errorAtCol(!eof ? hor.getPos() + 1 : 0, message);
         }
 
-        public final void passNewline() throws IOException {
+        public final void passLogicalNewline() throws IOException {
             if (!(hor.atEndOfLine() || atCommentChar())) {
                 complain("expected end of line");
             }
             advanceVertically();
-        }
-
-        public final void expectLogicalEndOfLine() {
-            hor.skipSpaces();
-            if (!(hor.atEndOfLine() || atCommentChar())) {
-                complain("expected end of line");
-            }
         }
 
         public final void passIndent() {

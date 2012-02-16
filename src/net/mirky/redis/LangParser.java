@@ -71,7 +71,7 @@ final class LangParser {
                     // Note that comments are not ignored after header items.
                     lexer.hor.skipSpaces();
                     processHeader(itemName, lexer.hor.readRestOfLine());
-                    lexer.passNewline();
+                    lexer.passLogicalNewline();
                 }
             } catch (NumberFormatException e) {
                 throw new DisassemblyTableParseError("error parsing lang header", e);
@@ -144,12 +144,12 @@ final class LangParser {
         }
         minitablesByName.put(tableName, new Integer(minitableCounter));
         linkage.minitables[minitableCounter++] = minitable.toArray(new String[0]);
-        lexer.passNewline();
+        lexer.passLogicalNewline();
     }
 
     private final void parseDispatchTable(ParseUtil.IndentationSensitiveLexer lexer) throws IOException,
             RuntimeException, DisassemblyTableParseError {
-        lexer.passNewline();
+        lexer.passLogicalNewline();
         lexer.passIndent();
         while (!lexer.atDedent()) {
             lexer.noIndent();
@@ -196,7 +196,7 @@ final class LangParser {
                 }
             }
             coll.add(Disassembler.Bytecode.COMPLETE);
-            lexer.passNewline();
+            lexer.passLogicalNewline();
         }
         lexer.discardDedent();
     }
