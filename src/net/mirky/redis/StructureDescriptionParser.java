@@ -112,7 +112,9 @@ abstract class StructureDescriptionParser {
     public static final BinaryElementType parseStructureDescription(String name, BufferedReader reader) throws IOException {
         ParseUtil.IndentationSensitiveLexer lexer = new ParseUtil.IndentationSensitiveLexer(new ParseUtil.FileLineSource(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
-            return parseType(lexer);
+            BinaryElementType type = parseType(lexer);
+            lexer.requireEndOfFile();
+            return type;
         } finally {
             reader.close();
         }
@@ -225,9 +227,6 @@ abstract class StructureDescriptionParser {
                     }
                 }
                 lexer.discardDedent();
-                if (!lexer.atEndOfFile()) {
-                    lexer.complain("garbage follows structure description");
-                }
                 return new BinaryElementType.Struct(steps.toArray(new BinaryElementType.Struct.Step[0]));
             }
         });

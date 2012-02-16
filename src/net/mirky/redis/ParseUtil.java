@@ -410,14 +410,15 @@ public final class ParseUtil {
             }
         }
 
-        /**
-         * Check whether we're at the end of file. Note that this means having
-         * actually advanced vertically past the final interesting line in this
-         * file *and* having zero dent. Standing at the end of the last line
-         * does not count as standing at the end of the file.
-         */
-        public final boolean atEndOfFile() {
-            return dent == 0 && eof;
+        public final boolean atCommentChar() {
+            return hor.at(commentChar);
+        }
+
+        public final void passLogicalNewline() throws IOException {
+            if (!(hor.atEndOfLine() || atCommentChar())) {
+                complain("expected end of line");
+            }
+            advanceVertically();
         }
 
         /**
@@ -440,6 +441,13 @@ public final class ParseUtil {
             }
         }
 
+        public final void passIndent() {
+            if (!atIndent()) {
+                complain("expected indent");
+            }
+            discardIndent();
+        }
+
         /**
          * Discard one indentation level. Error if there is no non-discarded
          * indentation on this line.
@@ -458,10 +466,20 @@ public final class ParseUtil {
             dent++;
         }
 
-        public final boolean atCommentChar() {
-            return hor.at(commentChar);
+        /**
+         * Check whether the cursor has passed the last non-empty non-comment
+         * line of the file.
+         */
+        public final boolean atEndOfFile() {
+            return dent == 0 && eof;
         }
-        
+
+        public final void requireEndOfFile() {
+            if (!eof) {
+                error("garbage follows structure description");
+            }
+        }
+
         @Deprecated // in favour of {@link #error(String)}
         public final void complain(String message) {
             error(message);
@@ -469,20 +487,6 @@ public final class ParseUtil {
         
         public final void error(String message) {
             hor.errorAtCol(!eof ? hor.getPos() + 1 : 0, message);
-        }
-
-        public final void passLogicalNewline() throws IOException {
-            if (!(hor.atEndOfLine() || atCommentChar())) {
-                complain("expected end of line");
-            }
-            advanceVertically();
-        }
-
-        public final void passIndent() {
-            if (!atIndent()) {
-                complain("expected indent");
-            }
-            discardIndent();
         }
     }
 
