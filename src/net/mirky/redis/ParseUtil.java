@@ -172,12 +172,18 @@ public final class ParseUtil {
             return result;
         }
 
+        public final String readDashedWord(String significance) {
+            if (!atAlphanumeric()) {
+                error("expected " + significance + ", a word (dashes permitted)");
+            }
+            return parseThisDashedWord();
+        }
+
+        /* * * * */
+        
         /**
          * Parse the unsigned integer starting from the cursor. Programming
          * error if the cursor is not at an unsigned integer.
-         * 
-         * @throws LineParseError
-         * @throws IOException
          */
         public final int parseThisUnsignedInteger() throws NumberFormatException {
             assert atDigit();
@@ -360,13 +366,6 @@ public final class ParseUtil {
         public final void discardDedent() {
             assert atDedent();
             dent++;
-        }
-
-        public final String parseDashedWord(String significance) {
-            if (!hor.atAlphanumeric()) {
-                error("expected " + significance + ", a word (dashes permitted)");
-            }
-            return hor.parseThisDashedWord();
         }
 
         public final boolean atCommentChar() {

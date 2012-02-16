@@ -124,7 +124,7 @@ abstract class StructureDescriptionParser {
     }
 
     public static final BinaryElementType parseType(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
-        String keyword = lexer.parseDashedWord("type");
+        String keyword = lexer.hor.readDashedWord("type");
         StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(keyword);
         BinaryElementType type;
         if (parameterParser == null) {
@@ -204,7 +204,7 @@ abstract class StructureDescriptionParser {
                     if (!(lexer.hor.atEndOfLine() || lexer.atCommentChar())) {
                         ArrayList<BinaryElementType.Struct.Step> lineSteps = new ArrayList<BinaryElementType.Struct.Step>();
                         while (true) {
-                            String fieldName = lexer.parseDashedWord("field name");
+                            String fieldName = lexer.hor.readDashedWord("field name");
                             lineSteps.add(new Step.Pass(fieldName, null));
                             lexer.hor.skipSpaces();
                             if (!lexer.hor.at(',')) {

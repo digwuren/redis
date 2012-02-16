@@ -116,7 +116,7 @@ final class LangParser {
 
     private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws IOException, DisassemblyTableParseError {
         lexer.hor.skipSpaces();
-        String tableName = lexer.parseDashedWord("minitable name");
+        String tableName = lexer.hor.readDashedWord("minitable name");
         if (minitablesByName.containsKey(tableName)) {
             lexer.complain("duplicate minitable name");
         }
