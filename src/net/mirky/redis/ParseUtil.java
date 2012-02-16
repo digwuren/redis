@@ -126,6 +126,11 @@ public final class ParseUtil {
             return pos >= line.length();
         }
 
+        /**
+         * If the cursor is at a character matching the given etalon, pass it
+         * and return {@code true}; otherwise retain the cursor's position and
+         * return {@code false}.
+         */
         public final boolean passOpt(char c) {
             boolean result = at(c);
             if (result) {
@@ -134,28 +139,14 @@ public final class ParseUtil {
             return result;
         }
 
-        public final String parseThisString() {
-            assert at('"');
-            StringBuilder sb = new StringBuilder();
-            for (int cur = pos + 1; cur < line.length(); cur++) {
-                if (line.charAt(cur) == '"') {
-                    pos = cur + 1;
-                    return sb.toString();
-                }
-                if (line.charAt(cur) == '\\') {
-                    cur++;
-                    if (cur >= line.length()) {
-                        break; // and complain about termination
-                    }
-                    char c = line.charAt(cur);
-                    // XXX: currently, \ is a pure escape character; there are
-                    // no specials
-                    sb.append(c);
-                } else {
-                    sb.append(line.charAt(cur));
-                }
-            }
-            throw new RuntimeException("string not terminated");
+        /**
+         * Read and return the rest of the line. Leave cursor at the end of the
+         * line.
+         */
+        public final String readRestOfLine() {
+            String result = line.substring(pos);
+            pos = line.length();
+            return result;
         }
 
         /**
@@ -175,13 +166,15 @@ public final class ParseUtil {
         }
 
         /**
-         * Read and return the rest of the line. Leave cursor at the end of the
-         * line.
+         * Parse the unsigned integer starting from the cursor. Programming
+         * error if the cursor is not at an unsigned integer.
+         * 
+         * @throws LineParseError
+         * @throws IOException
          */
-        public final String readRestOfLine() {
-            String result = line.substring(pos);
-            pos = line.length();
-            return result;
+        public final int parseThisUnsignedInteger() throws NumberFormatException {
+            assert atDigit();
+            return ParseUtil.parseUnsignedInteger(parseThisWord());
         }
 
         public final String parseThisWord() {
@@ -209,16 +202,28 @@ public final class ParseUtil {
             return word;
         }
 
-        /**
-         * Parse the unsigned integer starting from the cursor. Programming
-         * error if the cursor is not at an unsigned integer.
-         * 
-         * @throws LineParseError
-         * @throws IOException
-         */
-        public final int parseThisUnsignedInteger() throws NumberFormatException {
-            assert atDigit();
-            return ParseUtil.parseUnsignedInteger(parseThisWord());
+        public final String parseThisString() {
+            assert at('"');
+            StringBuilder sb = new StringBuilder();
+            for (int cur = pos + 1; cur < line.length(); cur++) {
+                if (line.charAt(cur) == '"') {
+                    pos = cur + 1;
+                    return sb.toString();
+                }
+                if (line.charAt(cur) == '\\') {
+                    cur++;
+                    if (cur >= line.length()) {
+                        break; // and complain about termination
+                    }
+                    char c = line.charAt(cur);
+                    // XXX: currently, \ is a pure escape character; there are
+                    // no specials
+                    sb.append(c);
+                } else {
+                    sb.append(line.charAt(cur));
+                }
+            }
+            throw new RuntimeException("string not terminated");
         }
 
         public final int getPos() {
