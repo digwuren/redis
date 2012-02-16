@@ -157,6 +157,26 @@ public final class ParseUtil {
         }
 
         /**
+         * Read and return a non-empty sequence of alphanumeric characters.
+         * Leave cursor at the end of the sequence. If the cursor is not
+         * standing at such a sequence, raise a run-time error.
+         * 
+         * @param significance
+         *            significance of the sequence, for error reporting. May be
+         *            {@code null}.
+         */
+        public final String readWord(String significance) {
+            if (!atAlphanumeric()) {
+                expectationError(significance, "a word");
+            }
+            int begin = pos;
+            while (atAlphanumeric()) {
+                pos++;
+            }
+            return line.substring(begin, pos);
+        }
+
+        /**
          * Read characters until a delimiter listed in {@code charset} is seen,
          * or the line ends, and return them as a {@link String}. Leave the
          * cursor at the delimiter or at the end of line. May return an empty
@@ -188,7 +208,7 @@ public final class ParseUtil {
             if (!atDigit()) {
                 expectationError(significance, "an unsigned integer");
             }
-            return ParseUtil.parseUnsignedInteger(parseThisWord());
+            return ParseUtil.parseUnsignedInteger(readWord(significance));
         }
 
         public final void error(String message) {
@@ -233,15 +253,6 @@ public final class ParseUtil {
 
         /* * * * */
         
-        public final String parseThisWord() {
-            assert atAlphanumeric();
-            int begin = pos;
-            while (atAlphanumeric()) {
-                pos++;
-            }
-            return line.substring(begin, pos);
-        }
-
         public final String parseThisDashedWord() {
             assert atAlphanumeric();
             int begin = pos;
