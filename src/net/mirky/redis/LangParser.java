@@ -83,9 +83,10 @@ final class LangParser {
                 if (lexer.hor.passOptDashedWord("minitable")) {
                     parseMinitableDeclaration(lexer);
                 } else {
-                    lexer.complain("expected end of file");
+                    break;
                 }
             }
+            lexer.requireEndOfFile();
         } finally {
             reader.close();
         }
@@ -122,9 +123,10 @@ final class LangParser {
 
     private final void parseMinitableDeclaration(ParseUtil.IndentationSensitiveLexer lexer) throws IOException, DisassemblyTableParseError {
         lexer.hor.skipSpaces();
+        int before = lexer.hor.getPos();
         String tableName = lexer.hor.readDashedWord("minitable name");
         if (minitablesByName.containsKey(tableName)) {
-            lexer.complain("duplicate minitable name");
+            lexer.hor.errorAtPos(before, "duplicate minitable name");
         }
         lexer.hor.skipSpaces();
         lexer.hor.pass(':');
@@ -181,7 +183,7 @@ final class LangParser {
                         do {
                             lexer.hor.skipSpaces();
                             if (lexer.hor.atEndOfLine()) {
-                                lexer.complain("missing '>'");
+                                lexer.error("missing '>'");
                             }
                             String step = lexer.hor.readUntilDelimiter(">,").trim();
                             size = parseProcessingStep(step, size);

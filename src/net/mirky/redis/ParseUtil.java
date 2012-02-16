@@ -415,8 +415,9 @@ public final class ParseUtil {
         }
 
         public final void passLogicalNewline() throws IOException {
+            hor.skipSpaces();
             if (!(hor.atEndOfLine() || atCommentChar())) {
-                complain("expected end of line");
+                hor.error("expected end of line");
             }
             advanceVertically();
         }
@@ -443,7 +444,7 @@ public final class ParseUtil {
 
         public final void passIndent() {
             if (!atIndent()) {
-                complain("expected indent");
+                hor.errorAtCol(0, "expected indent");
             }
             discardIndent();
         }
@@ -480,11 +481,6 @@ public final class ParseUtil {
             }
         }
 
-        @Deprecated // in favour of {@link #error(String)}
-        public final void complain(String message) {
-            error(message);
-        }
-        
         public final void error(String message) {
             hor.errorAtCol(!eof ? hor.getPos() + 1 : 0, message);
         }

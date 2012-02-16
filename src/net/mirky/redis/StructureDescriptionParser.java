@@ -52,7 +52,6 @@ abstract class StructureDescriptionParser {
     
         @Override
         final BinaryElementType.SlicedInteger parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
-            lexer.hor.skipSpaces();
             lexer.passLogicalNewline();
             lexer.passIndent();
             ArrayList<BinaryElementType.SlicedInteger.Slice> slices = new ArrayList<BinaryElementType.SlicedInteger.Slice>();
@@ -75,9 +74,10 @@ abstract class StructureDescriptionParser {
         BinaryElementType.SlicedInteger.Slice slice;
         if (lexer.hor.atDigit()) {
             // it's a basic slice; the field width (in bits) comes next
+            int posBeforeSliceWidth = lexer.hor.getPos();
             int sliceWidth = lexer.hor.readUnsignedInteger("slice width");
             if (sliceWidth == 0) {
-                lexer.complain("zero-bit slice?");
+                lexer.hor.errorAtPos(posBeforeSliceWidth, "zero-bit slice?");
             }
             List<String> meanings = new ArrayList<String>();
             while (true) {
@@ -101,7 +101,7 @@ abstract class StructureDescriptionParser {
                 clearFlagName = null;
             }
             if (setFlagName == null && clearFlagName == null) {
-                lexer.complain("expected bit meaning");
+                lexer.error("expected bit meaning");
             }
             slice = new BinaryElementType.SlicedInteger.Slice.Flag(rightShift, setFlagName, clearFlagName);
         }
@@ -121,6 +121,7 @@ abstract class StructureDescriptionParser {
     }
 
     public static final BinaryElementType parseType(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
+        int posBefore = lexer.hor.getPos();
         String keyword = lexer.hor.readDashedWord("type");
         StructureDescriptionParser.ParameterParser parameterParser = getFieldTypeParameterParser(keyword);
         BinaryElementType type;
@@ -128,10 +129,7 @@ abstract class StructureDescriptionParser {
             try {
                 type = BinaryElementType.MANAGER.get(keyword);
             } catch (ResourceManager.ResolutionError e) {
-                lexer.complain("unknown type");
-                // {@link
-                // ParseUtil.IndentationSensitiveFileLexer#complain(String)}
-                // returned?
+                lexer.hor.errorAtPos(posBefore, "unknown type");
                 throw new RuntimeException("bug detected");
             }
             lexer.passLogicalNewline();
@@ -175,9 +173,10 @@ abstract class StructureDescriptionParser {
                 lexer.hor.skipSpaces();
                 int size = lexer.hor.readUnsignedInteger("string length");
                 lexer.hor.skipSpaces();
+                int beforePadding = lexer.hor.getPos();
                 int padding = lexer.hor.readUnsignedInteger("char code");
                 if (padding >= 0x100) {
-                    lexer.complain("value too high to be a char code");
+                    lexer.hor.errorAtPos(beforePadding, "value too high to be a char code");
                 }
                 lexer.passLogicalNewline();
                 return new BinaryElementType.PaddedString(size, (byte) padding);
