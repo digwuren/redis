@@ -170,46 +170,98 @@ final class LangParser {
                     dispatchTable[i] = coll.currentPosition();
                 }
             }
-            int size = 0;
             while (!lexer.atEndOfLine()) {
                 char c = lexer.readChar();
-                if (c != '<') {
+                if (c == '<') {
+                    parseBroketed(lexer);
+                } else {
                     if (c < 0x20 || c > 0x7E) {
                         throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
                     }
                     coll.add((byte) c);
-                } else {
-                    try {
-                        size = 0;
-                        do {
-                            lexer.skipSpaces();
-                            StringBuilder sb = new StringBuilder();
-                            do {
-                                String word = lexer.readDashedWord("processing step");
-                                if (sb.length() != 0) {
-                                    sb.append(' ');
-                                }
-                                sb.append(word);
-                                lexer.skipSpaces();
-                            } while (lexer.atAlphanumeric());
-                            String step = sb.toString();
-                            {
-                                size = parseProcessingStep(step, size);
-                            }
-                        } while (lexer.passOpt(','));
-                        lexer.pass('>');
-                        if (size != 0) {
-                            throw new DisassemblyTableParseError("final step missing");
-                        }
-                    } catch (DisassemblyTableParseError e) {
-                        throw new RuntimeException("error parsing opcode decipherer", e);
-                    }
                 }
             }
             coll.add(Disassembler.Bytecode.COMPLETE);
             lexer.passLogicalNewline();
         }
         lexer.discardDedent();
+    }
+
+    // called with lexer's cursor immediately after the opening broket; returns
+    // with the cursor immediately after the closing broket
+    private final void parseBroketed(ParseUtil.IndentableLexer lexer) {
+        int size = 0;
+        do {
+            lexer.skipSpaces();
+            size = parseBroketedStep(lexer, size);
+        } while (lexer.passOpt(','));
+        if (size != 0) {
+            lexer.error("final step missing");
+        }
+        lexer.pass('>');
+    }
+
+    // also eats up the whitespace following the step
+    private final int parseBroketedStep(ParseUtil.IndentableLexer lexer, int size) {
+        int posBeforeStep = lexer.getPos();
+        String verb = lexer.readDashedWord("processing step");
+        lexer.skipSpaces();
+        int posBeforeArg = lexer.getPos();
+        String arg;
+        if (lexer.atAlphanumeric()) {
+            arg = lexer.readDashedWord("processing step argument");
+            lexer.skipSpaces();
+        } else {
+            arg = null;
+        }
+        if (verb.equals("tempswitch")) {
+            if (size != 0) {
+                lexer.errorAtPos(posBeforeStep, "misplaced tempswitch");
+            }
+            if (arg == null) {
+                lexer.errorAtPos(posBeforeArg, "expected lang reference");
+            }
+            coll.add((byte) (Disassembler.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(arg)));
+            return 0;
+        } else if (verb.equals("dispatch")) {
+            if (size != 1) {
+                lexer.errorAtPos(posBeforeStep, "misplaced dispatch");
+            }
+            if (arg == null) {
+                lexer.errorAtPos(posBeforeArg, "expected lang reference");
+            }
+            coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(arg)));
+            return 0;
+        } else {
+            String step = arg == null ? verb : verb + ' ' + arg;
+            Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveSimpleStep(step);
+            if (resolvedStep == null) {
+                switch (size) {
+                    case 1:
+                        resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<byte> " + step);
+                        break;
+                    case 2:
+                        resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<wyde> " + step);
+                        break;
+                }
+            }
+            if (resolvedStep != null) {
+                if (!resolvedStep.typeMatches(size)) {
+                    lexer.errorAtPos(posBeforeStep, "type mismatch");
+                }
+                coll.add(resolvedStep.code);
+                return resolvedStep.sizeAfter != -1 ? resolvedStep.sizeAfter : size;
+            } else {
+                // unknown -- assume it's a minitable reference
+                if (size == 0) {
+                    lexer.errorAtPos(posBeforeStep, "attempt to look up void value");
+                }
+                int position = coll.currentPosition();
+                coll.add((Disassembler.Bytecode.INVALID));
+                minitableReferencePatches.add(new MinitableReferencePatch(position, step));
+                return 0;
+            }
+        }
     }
 
     /**
@@ -222,6 +274,7 @@ final class LangParser {
         Integer index = referredLanguagesByName.get(newLangName);
         if (index == null) {
             if (referredLanguageCounter >= Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                // FIXME: this ought to be properly pinpointed
                 throw new RuntimeException("too many referred languages");
             }
             linkage.referredLanguages[referredLanguageCounter] = newLangName;
@@ -230,54 +283,6 @@ final class LangParser {
         } else {
             return index.intValue();
         }
-    }
-
-    final int parseProcessingStep(String step, int initialSize) throws DisassemblyTableParseError, RuntimeException {
-        int size = initialSize;
-        Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveSimpleStep(step);
-        if (resolvedStep == null) {
-            switch (size) {
-                case 1:
-                    resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<byte> " + step);
-                    break;
-                case 2:
-                    resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<wyde> " + step);
-                    break;
-            }
-        }
-        if (resolvedStep != null) {
-            if (!resolvedStep.typeMatches(size)) {
-                throw new DisassemblyTableParseError("type mismatch for step " + step);
-            }
-            coll.add(resolvedStep.code);
-            if (resolvedStep.sizeAfter != -1) {
-                size = resolvedStep.sizeAfter;
-            }
-        } else {
-            if (step.startsWith("tempswitch ")) {
-                String newLangName = step.substring(11).trim();
-                coll.add((byte) (Disassembler.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(newLangName)));
-                size = 0;
-            } else {
-                if (size == 0) {
-                    throw new DisassemblyTableParseError("attempt to process void value");
-                }
-                if (step.startsWith("dispatch ")) {
-                    String newLangName = step.substring(9).trim();
-                    coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
-                    size = 0;
-                } else {
-                    // unknown -- assume it's a minitable reference
-                    int position = coll.currentPosition();
-                    coll.add((Disassembler.Bytecode.INVALID));
-                    size = 0;
-                    
-                    MinitableReferencePatch patch = new MinitableReferencePatch(position, step);
-                    minitableReferencePatches.add(patch);
-                }
-            }
-        }
-        return size;
     }
 
     class MinitableReferencePatch {
