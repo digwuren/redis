@@ -381,7 +381,7 @@ public final class ParseUtil {
             do {
                 String line = lineSource.getNextLine();
                 if (line == null) {
-                    hor.reset("");
+                    hor.reset(null);
                     eof = true;
                     dent = -indentationStack.size();
                     indentationStack.clear();
@@ -434,6 +434,12 @@ public final class ParseUtil {
             return dent < 0;
         }
 
+        public final void noIndent() {
+            if (atIndent()) {
+                hor.errorAtCol(0, "unexpected indent");
+            }
+        }
+
         /**
          * Discard one indentation level. Error if there is no non-discarded
          * indentation on this line.
@@ -463,12 +469,6 @@ public final class ParseUtil {
         
         public final void error(String message) {
             hor.errorAtCol(!eof ? hor.getPos() + 1 : 0, message);
-        }
-
-        public final void noIndent() {
-            if (atIndent()) {
-                complain("unexpected indent");
-            }
         }
 
         public final void passNewline() throws IOException {
