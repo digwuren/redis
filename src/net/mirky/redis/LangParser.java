@@ -125,7 +125,7 @@ final class LangParser {
         lexer.hor.skipSpaces();
         List<String> minitable = new ArrayList<String>();
         while (lexer.hor.atAlphanumeric()) {
-            minitable.add(lexer.hor.parseThisDashedWord());
+            minitable.add(lexer.hor.readDashedWord("item"));
             lexer.hor.skipSpaces();
         }
         // minitable size must be a power of two

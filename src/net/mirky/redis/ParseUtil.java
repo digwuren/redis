@@ -196,7 +196,15 @@ public final class ParseUtil {
             if (!atAlphanumeric()) {
                 expectationError(significance, "a word (dashes permitted)");
             }
-            return parseThisDashedWord();
+            int begin = pos;
+            while (atAlphanumeric() || (pos != begin && at('-') && pos + 1 < line.length() && isAlphanumeric(line.charAt(pos + 1)))) {
+                pos++;
+            }
+            return line.substring(begin, pos);
+        }
+
+        public final String parseThisDashedWord() {
+            return readDashedWord(null);
         }
 
         /**
@@ -253,15 +261,6 @@ public final class ParseUtil {
 
         /* * * * */
         
-        public final String parseThisDashedWord() {
-            assert atAlphanumeric();
-            int begin = pos;
-            while (atAlphanumeric() || (pos != begin && at('-') && pos + 1 < line.length() && isAlphanumeric(line.charAt(pos + 1)))) {
-                pos++;
-            }
-            return line.substring(begin, pos);
-        }
-
         public final void passDashedWord(String etalon) {
             int before = pos;
             if (!atAlphanumeric() || !parseThisDashedWord().equals(etalon)) {
