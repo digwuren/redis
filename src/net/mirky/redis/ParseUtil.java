@@ -179,17 +179,20 @@ public final class ParseUtil {
             return parseThisDashedWord();
         }
 
-        /* * * * */
-        
         /**
-         * Parse the unsigned integer starting from the cursor. Programming
-         * error if the cursor is not at an unsigned integer.
+         * Read an unsigned integer from the cursor onwards. If there isn't one
+         * at the cursor, report an error and state the significance of the
+         * missing unsigned integer.  The "0x" prefix is recognised as in C.
          */
-        public final int parseThisUnsignedInteger() throws NumberFormatException {
-            assert atDigit();
+        public final int readUnsignedInteger(String significance) {
+            if (!atDigit()) {
+                error("expected " + significance + ", an unsigned integer");
+            }
             return ParseUtil.parseUnsignedInteger(parseThisWord());
         }
 
+        /* * * * */
+        
         public final String parseThisWord() {
             assert atAlphanumeric();
             int begin = pos;
@@ -385,18 +388,6 @@ public final class ParseUtil {
             if (atIndent()) {
                 complain("unexpected indent");
             }
-        }
-
-        /**
-         * Parse an unsigned integer from the cursor onwards. If there isn't one
-         * at the cursor, report an error and state the significance of the
-         * missing unsined integer.
-         */
-        public final int parseUnsignedInteger(String significance) {
-            if (!hor.atDigit()) {
-                error("expected " + significance + ", an unsigned integer");
-            }
-            return hor.parseThisUnsignedInteger();
         }
 
         public final String parseString(String significance) {

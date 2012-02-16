@@ -70,12 +70,12 @@ abstract class StructureDescriptionParser {
     static final BinaryElementType.SlicedInteger.Slice parseIntegerSlice(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
         lexer.hor.pass('@');
         lexer.hor.pass('.');
-        int rightShift = lexer.parseUnsignedInteger("right shift");
+        int rightShift = lexer.hor.readUnsignedInteger("right shift");
         lexer.hor.skipSpaces();
         BinaryElementType.SlicedInteger.Slice slice;
         if (lexer.hor.atDigit()) {
             // it's a basic slice; the field width (in bits) comes next
-            int sliceWidth = lexer.parseUnsignedInteger("slice width");
+            int sliceWidth = lexer.hor.readUnsignedInteger("slice width");
             if (sliceWidth == 0) {
                 lexer.complain("zero-bit slice?");
             }
@@ -157,7 +157,7 @@ abstract class StructureDescriptionParser {
         } else {
             sign = 0;
         }
-        int offset = lexer.parseUnsignedInteger("offset");
+        int offset = lexer.hor.readUnsignedInteger("offset");
         return sign == 0 ? new Step.LocalSeek(offset) : new Step.RelSeek(sign * offset);
     }
 
@@ -176,9 +176,9 @@ abstract class StructureDescriptionParser {
             @Override
             final BinaryElementType parseParameters(ParseUtil.IndentationSensitiveLexer lexer) throws IOException {
                 lexer.hor.skipSpaces();
-                int size = lexer.parseUnsignedInteger("string length");
+                int size = lexer.hor.readUnsignedInteger("string length");
                 lexer.hor.skipSpaces();
-                int padding = lexer.parseUnsignedInteger("char code");
+                int padding = lexer.hor.readUnsignedInteger("char code");
                 if (padding >= 0x100) {
                     lexer.complain("value too high to be a char code");
                 }

@@ -23,7 +23,7 @@ public final class ControlData {
                 while (!lexer.atEndOfFile()) {
                     lexer.noIndent();
                     int keyPos = lexer.hor.getPos();
-                    int key = lexer.parseUnsignedInteger("key");
+                    int key = lexer.hor.readUnsignedInteger("key");
                     if (key < 0 || key >= arraySize) {
                         lexer.hor.errorAtPos(keyPos, "key out of bounds");
                     }
