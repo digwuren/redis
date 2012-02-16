@@ -119,15 +119,19 @@ public final class Disassembler {
         static final byte LEWYDE_ENTRY_POINT_REFERENCE = 0x07;
 
         // Output the current integer value as an unsigned hex byte.
+        @DeciphererStep(name = "<byte> unsigned", sizeRequirement = 1, sizeAfter = 0)
         static final byte UNSIGNED_BYTE = 0x08;
 
         // Output the current integer value as an unsigned hex wyde.
+        @DeciphererStep(name = "<wyde> unsigned", sizeRequirement = 2, sizeAfter = 0)
         static final byte UNSIGNED_WYDE = 0x09;
 
         // Output the current integer value as a signed hex byte.
+        @DeciphererStep(name = "<byte> signed", sizeRequirement = 1, sizeAfter = 0)
         static final byte SIGNED_BYTE = 0x0A;
 
         // Output the current integer value as a signed hex wyde.
+        @DeciphererStep(name = "<wyde> signed", sizeRequirement = 2, sizeAfter = 0)
         static final byte SIGNED_WYDE = 0x0B;
 
         // AND the current integer value with 0x38.

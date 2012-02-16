@@ -227,6 +227,16 @@ final class LangParser {
     final int parseProcessingStep(String step, int initialSize) throws DisassemblyTableParseError, RuntimeException {
         int size = initialSize;
         Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveSimpleStep(step);
+        if (resolvedStep == null) {
+            switch (size) {
+                case 1:
+                    resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<byte> " + step);
+                    break;
+                case 2:
+                    resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<wyde> " + step);
+                    break;
+            }
+        }
         if (resolvedStep != null) {
             if (!resolvedStep.typeMatches(size)) {
                 throw new DisassemblyTableParseError("type mismatch for step " + step);
@@ -244,31 +254,7 @@ final class LangParser {
                 if (size == 0) {
                     throw new DisassemblyTableParseError("attempt to process void value");
                 }
-                if (step.equals("unsigned")) {
-                    switch (size) {
-                        case 1:
-                            coll.add(Disassembler.Bytecode.UNSIGNED_BYTE);
-                            break;
-                        case 2:
-                            coll.add(Disassembler.Bytecode.UNSIGNED_WYDE);
-                            break;
-                        default:
-                            throw new RuntimeException("bug detected");
-                    }
-                    size = 0;
-                } else if (step.equals("signed")) {
-                    switch (size) {
-                        case 1:
-                            coll.add(Disassembler.Bytecode.SIGNED_BYTE);
-                            break;
-                        case 2:
-                            coll.add(Disassembler.Bytecode.SIGNED_WYDE);
-                            break;
-                        default:
-                            throw new RuntimeException("bug detected");
-                    }
-                    size = 0;
-                } else if (step.startsWith("dispatch ")) {
+                if (step.startsWith("dispatch ")) {
                     String newLangName = step.substring(9).trim();
                     coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(newLangName)));
                     size = 0;
