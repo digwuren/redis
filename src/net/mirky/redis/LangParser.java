@@ -151,13 +151,14 @@ final class LangParser {
     }
 
     private final void parseDispatchTable(ParseUtil.IndentableLexer lexer) throws IOException,
-            RuntimeException, DisassemblyTableParseError {
+            RuntimeException {
         lexer.passLogicalNewline();
         lexer.passIndent();
         while (!lexer.atDedent()) {
             lexer.noIndent();
             lexer.pass('[');
             lexer.skipSpaces();
+            int posBeforeSet = lexer.getPos();
             CodeSet set = CodeSet.parse(lexer);
             lexer.skipSpaces();
             lexer.pass(']');
@@ -165,7 +166,7 @@ final class LangParser {
             for (int i = 0; i < 256; i++) {
                 if (set.matches(i)) {
                     if (dispatchTable[i] != -1) {
-                        throw new DisassemblyTableParseError("duplicate decipherer for 0x" + Hex.b(i));
+                        lexer.errorAtPos(posBeforeSet, "duplicate decipherer for 0x" + Hex.b(i));
                     }
                     dispatchTable[i] = coll.currentPosition();
                 }
