@@ -122,12 +122,12 @@ final class LangParser {
         throw new DisassemblyTableParseError("not a Boolean value: " + value);
     }
 
-    private final void parseMinitableDeclaration(ParseUtil.IndentableLexer lexer) throws IOException, DisassemblyTableParseError {
+    private final void parseMinitableDeclaration(ParseUtil.IndentableLexer lexer) throws IOException {
         lexer.skipSpaces();
-        int before = lexer.getPos();
+        int posBeforeName = lexer.getPos();
         String tableName = lexer.readDashedWord("minitable name");
         if (minitablesByName.containsKey(tableName)) {
-            lexer.errorAtPos(before, "duplicate minitable name");
+            lexer.errorAtPos(posBeforeName, "duplicate minitable name");
         }
         lexer.skipSpaces();
         lexer.pass(':');
@@ -140,10 +140,10 @@ final class LangParser {
         // minitable size must be a power of two
         // (so that we can mask off excess high bits meaningfully)
         if (minitable.size() == 0 || (minitable.size() & (minitable.size() - 1)) != 0) {
-            throw new DisassemblyTableParseError("invalid minitable size for " + tableName);
+            lexer.errorAtPos(posBeforeName, "invalid minitable size");
         }
         if (minitableCounter >= Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-            throw new RuntimeException("too many minitables");
+            lexer.errorAtPos(posBeforeName, "too many minitables");
         }
         minitablesByName.put(tableName, new Integer(minitableCounter));
         linkage.minitables[minitableCounter++] = minitable.toArray(new String[0]);
@@ -172,12 +172,13 @@ final class LangParser {
                 }
             }
             while (!lexer.atEndOfLine()) {
+                int posBeforeChar = lexer.getPos();
                 char c = lexer.readChar();
                 if (c == '<') {
                     parseBroketed(lexer);
                 } else {
                     if (c < 0x20 || c > 0x7E) {
-                        throw new RuntimeException("invalid literal character code 0x" + Hex.w(c));
+                        lexer.errorAtPos(posBeforeChar, "invalid literal character code 0x" + Hex.w(c));
                     }
                     coll.add((byte) c);
                 }
