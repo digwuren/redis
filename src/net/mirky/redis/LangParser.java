@@ -258,7 +258,7 @@ final class LangParser {
                 }
                 int position = coll.currentPosition();
                 coll.add((Disassembler.Bytecode.INVALID));
-                minitableReferencePatches.add(new MinitableReferencePatch(position, step));
+                minitableReferencePatches.add(new MinitableReferencePatch(position, step, lexer.locAtPos(posBeforeStep)));
                 return 0;
             }
         }
@@ -288,18 +288,20 @@ final class LangParser {
     class MinitableReferencePatch {
         public final int position;
         public final String minitableName;
+        private final String loc;
         
-        public MinitableReferencePatch(int position, String minitableName) {
+        public MinitableReferencePatch(int position, String minitableName, String loc) {
             this.position = position;
             this.minitableName = minitableName;
+            this.loc = loc;
         }
     
-        public final void apply() throws DisassemblyTableParseError {
+        public final void apply() {
             if (bytecode[position] != Disassembler.Bytecode.INVALID) {
                 throw new RuntimeException("bug detected");
             }
             if (!minitablesByName.containsKey(minitableName)) {
-                throw new DisassemblyTableParseError("unknown minitable: " + minitableName);
+                throw new ParseUtil.ControlDataError(loc + ": unknown minitable");
             }
             int minitableNumber = minitablesByName.get(minitableName).intValue();
             assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;

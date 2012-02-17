@@ -484,6 +484,10 @@ public final class ParseUtil {
         public final void error(String message) {
             errorAtCol(!eof ? getPos() + 1 : 0, message);
         }
+
+        public final String locAtPos(int posBeforeStep) {
+            return errorLocator.locAtCol(posBeforeStep + 1);
+        }
     }
 
     public static abstract class LineSource {
@@ -526,6 +530,19 @@ public final class ParseUtil {
          */
         public final void error(int colno, String message) {
             StringBuilder sb = new StringBuilder();
+            locAtCol(colno, sb);
+            sb.append(": ");
+            sb.append(message);
+            throw new ControlDataError(sb.toString());
+        }
+        
+        public final String locAtCol(int colno) {
+            StringBuilder sb = new StringBuilder();
+            locAtCol(colno, sb);
+            return sb.toString();
+        }
+        
+        public final void locAtCol(int colno, StringBuilder sb) {
             sb.append(filename);
             sb.append(':');
             sb.append(lineno);
@@ -533,9 +550,6 @@ public final class ParseUtil {
                 sb.append('.');
                 sb.append(colno);
             }
-            sb.append(": ");
-            sb.append(message);
-            throw new ControlDataError(sb.toString());
         }
     }
     
