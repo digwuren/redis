@@ -309,14 +309,7 @@ final class LangParser {
         }
     }
 
-    /*
-     * An instance of this with a brief message is thrown internally
-     * when lang file parsing fails. Considering that all our lang files
-     * are considered internal to the project, this is not supposed to
-     * happen, so we catch all our {@link DisassemblyTableParseError}:s
-     * and throw a RuntimeException to the caller instead (but we'll
-     * retain the {@link DisassemblyTableParseError} as a cause).
-     */
+    @Deprecated // in favour of ParseUtil.ControlDataError
     static final class DisassemblyTableParseError extends Exception {
         DisassemblyTableParseError(String msg) {
             super(msg);
