@@ -278,7 +278,7 @@ final class LangParser {
                 throw new RuntimeException("too many referred languages");
             }
             linkage.referredLanguages[referredLanguageCounter] = newLangName;
-            referredLanguagesByName.put(newLangName, index);
+            referredLanguagesByName.put(newLangName, new Integer(referredLanguageCounter));
             return referredLanguageCounter++;
         } else {
             return index.intValue();
