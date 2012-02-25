@@ -56,12 +56,13 @@ final class LangParser {
                 if (!lexer.atAlphanumeric()) {
                     break;
                 }
+                int posBeforeItemName = lexer.getPos();
                 String itemName = lexer.peekDashedWord(null);
                 if (!knownHeaderItems.contains(itemName.toLowerCase())) {
                     break;
                 }
                 if (seenHeaderLines.contains(itemName.toLowerCase())) {
-                    throw new DisassemblyTableParseError("duplicate lang header item " + itemName);
+                    lexer.errorAtPos(posBeforeItemName, "duplicate lang header");
                 }
                 seenHeaderLines.add(itemName.toLowerCase());
                 lexer.readDashedWord(null);
