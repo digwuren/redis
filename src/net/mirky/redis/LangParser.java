@@ -40,7 +40,7 @@ final class LangParser {
         minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
     }
 
-    final void parse(String name, BufferedReader reader) throws IOException, DisassemblyTableParseError {
+    final void parse(String name, BufferedReader reader) throws IOException {
         Set<String> knownHeaderItems = new TreeSet<String>();
         // note that the membership is checked with a downcased specimen
         knownHeaderItems.add("dispatch-suboffset");
@@ -63,6 +63,7 @@ final class LangParser {
                     lexer.errorAtPos(posBeforeItemName, "duplicate lang header");
                 }
                 seenHeaderLines.add(itemName.toLowerCase());
+                int posBeforeName = lexer.getPos();
                 lexer.readDashedWord(null);
                 lexer.skipSpaces();
                 lexer.pass(':');
@@ -80,7 +81,7 @@ final class LangParser {
                         lexer.error("expected 'true' or 'false'");
                     }
                 } else {
-                    throw new DisassemblyTableParseError("unknown lang file header item " + itemName);
+                    lexer.errorAtPos(posBeforeName, "unknown lang file header item");
                 }
                 lexer.passLogicalNewline();
             }
@@ -291,17 +292,6 @@ final class LangParser {
             int minitableNumber = minitablesByName.get(minitableName).intValue();
             assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
             bytecode[position] = (byte) (Disassembler.Bytecode.MINITABLE_LOOKUP_0 + minitableNumber);
-        }
-    }
-
-    @Deprecated // in favour of ParseUtil.ControlDataError
-    static final class DisassemblyTableParseError extends Exception {
-        DisassemblyTableParseError(String msg) {
-            super(msg);
-        }
-
-        public DisassemblyTableParseError(String msg, Exception cause) {
-            super(msg, cause);
         }
     }
 }

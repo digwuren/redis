@@ -816,7 +816,7 @@ public final class Disassembler {
                 this.dispatchTable = dispatchTable;
             }
 
-            static final Tabular loadTabular(String name, BufferedReader reader) throws IOException, LangParser.DisassemblyTableParseError {
+            static final Tabular loadTabular(String name, BufferedReader reader) throws IOException {
                 LangParser parser = new LangParser();
                 parser.parse(name, reader);
                 return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
@@ -975,11 +975,7 @@ public final class Disassembler {
         public static final ResourceManager<Lang> MANAGER = new ResourceManager<Lang>("lang") {
             @Override
             public final Lang load(String name, BufferedReader reader) throws IOException {
-                try {
-                    return Tabular.loadTabular(name, reader);
-                } catch (LangParser.DisassemblyTableParseError e) {
-                    throw new RuntimeException("parse error reading lang " + name, e);
-                }
+                return Tabular.loadTabular(name, reader);
             }
         };
         
