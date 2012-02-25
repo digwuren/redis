@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import net.mirky.redis.ResourceManager.ResolutionError;
 import net.mirky.redis.analysers.ZXSBasicProgramAnalyser;
@@ -792,8 +791,6 @@ public final class Disassembler {
         };
 
         static final class Tabular extends Lang {
-            static final Pattern SPACED_COMMA = Pattern.compile("\\s*,\\s*");
-
             private final boolean trivial;
             private final Tabular.Linkage linkage;
             private final byte[] bytecode;
