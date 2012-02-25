@@ -351,7 +351,7 @@ public final class Disassembler {
             entryPoints.add(new Integer(offset));
             if (!haveProcessed(offset, lang.name)) {
                 queue.add(new PendingEntryPoint(offset, new LangSequencer.Frame[]{new LangSequencer.Frame(
-                        lang.defaultCountdown, lang)}));
+                        lang.getDefaultCountdown(), lang)}));
             }
         } else {
             TreeSet<String> set = externalPointsOfInterest.get(new Integer(address));
@@ -699,7 +699,7 @@ public final class Disassembler {
      */
     public static abstract class Lang extends AbstractBinaryLanguage implements Comparable<Lang> {
         final String name;
-        final int defaultCountdown;
+        private final int defaultCountdown;
 
         private Lang(String name, int defaultCountdown) {
             this.name = name;
@@ -734,6 +734,10 @@ public final class Disassembler {
 
         void dumpLang(PrintStream port) {
             port.println(name + " is a builtin language");
+        }
+
+        public final int getDefaultCountdown() {
+            return defaultCountdown;
         }
 
         @SuppressWarnings("synthetic-access")
@@ -840,7 +844,7 @@ public final class Disassembler {
             final void dumpLang(PrintStream port) {
                 port.println("# " + name + " is a tabular language");
                 port.println("Dispatch-suboffset: " + dispatchSuboffset);
-                port.println("Default-countdown: " + defaultCountdown);
+                port.println("Default-countdown: " + getDefaultCountdown());
                 if (trivial) {
                     port.println("Trivial: true");
                 }
@@ -1164,8 +1168,8 @@ public final class Disassembler {
 
         final void switchTemporarily(Lang newLang) {
             assert newLang != null;
-            assert newLang.defaultCountdown >= 0;
-            stack.addLast(new Frame(newLang.defaultCountdown, newLang));
+            assert newLang.getDefaultCountdown() >= 0;
+            stack.addLast(new Frame(newLang.getDefaultCountdown(), newLang));
         }
 
         final void switchBack() {
