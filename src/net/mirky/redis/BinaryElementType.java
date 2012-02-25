@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintStream;
 
-public abstract class BinaryElementType {
+public abstract class BinaryElementType extends AbstractBinaryLanguage {
     /**
      * Show the content of an item of {@code this} structure, extracted from the
      * given {@code cursor}, as a sequence of full lines, output to the given

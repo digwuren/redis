@@ -697,7 +697,7 @@ public final class Disassembler {
      * hashed and tree:d sets. Note that {@link Lang} names are unique because
      * of the caching done by {@link Lang#get(String)}.
      */
-    public static abstract class Lang implements Comparable<Lang> {
+    public static abstract class Lang extends AbstractBinaryLanguage implements Comparable<Lang> {
         final String name;
         final int defaultCountdown;
 
