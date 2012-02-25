@@ -9,11 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import net.mirky.redis.Disassembler.Lang.Tabular.BytecodeCollector;
-
 final class LangParser {
     byte[] bytecode;
-    private final BytecodeCollector coll;
+    private final Disassembler.Lang.Tabular.BytecodeCollector coll;
     final int[] dispatchTable;
     final Disassembler.Lang.Tabular.Linkage linkage;
     final Map<String, Integer> minitablesByName;
@@ -30,7 +28,7 @@ final class LangParser {
         for (int i = 0; i < 256; i++) {
             dispatchTable[i] = -1;
         }
-        coll = new BytecodeCollector();
+        coll = new Disassembler.Lang.Tabular.BytecodeCollector();
         linkage = new Disassembler.Lang.Tabular.Linkage();
         minitablesByName = new HashMap<String, Integer>();
         minitableCounter = 0;
@@ -68,13 +66,21 @@ final class LangParser {
                 lexer.readDashedWord(null);
                 lexer.skipSpaces();
                 lexer.pass(':');
-                // Note that comments are not ignored after header items.
                 lexer.skipSpaces();
-                int posBeforeContent = lexer.getPos();
-                try {
-                    processHeader(itemName, lexer.readRestOfLine());
-                } catch (NumberFormatException e) {
-                    lexer.errorAtPos(posBeforeContent, "not a proper numeric value");
+                if (itemName.equalsIgnoreCase("Dispatch-suboffset")) {
+                    dispatchSuboffset = lexer.readUnsignedInteger("dispatch suboffset");
+                } else if (itemName.equalsIgnoreCase("Default-countdown")) {
+                    defaultCountdown = lexer.readUnsignedInteger("default countdown");
+                } else if (itemName.equalsIgnoreCase("Trivial")) {
+                    if (lexer.passOptDashedWord("true")) {
+                        trivial = true;
+                    } else if (lexer.passOptDashedWord("false")) {
+                        trivial = false;
+                    } else {
+                        lexer.error("expected 'true' or 'false'");
+                    }
+                } else {
+                    throw new DisassemblyTableParseError("unknown lang file header item " + itemName);
                 }
                 lexer.passLogicalNewline();
             }
@@ -97,30 +103,6 @@ final class LangParser {
         for (MinitableReferencePatch patch : minitableReferencePatches) {
             patch.apply();
         }
-    }
-
-    // Called by {@code parse(...)} for each header name-value pair. Guaranteed
-    // to be called at most once per name.
-    private final void processHeader(String name, String value) throws NumberFormatException, DisassemblyTableParseError {
-        if (name.equalsIgnoreCase("Dispatch-suboffset")) {
-            dispatchSuboffset = Integer.parseInt(value);
-        } else if (name.equalsIgnoreCase("Default-countdown")) {
-            defaultCountdown = Integer.parseInt(value);
-        } else if (name.equalsIgnoreCase("Trivial")) {
-            trivial = parseBoolean(value);
-        } else {
-            throw new DisassemblyTableParseError("unknown lang file header item " + name);
-        }
-    }
-
-    private static final boolean parseBoolean(String value) throws DisassemblyTableParseError {
-        if (value.equalsIgnoreCase("true")) {
-            return true;
-        }
-        if (value.equalsIgnoreCase("false")) {
-            return false;
-        }
-        throw new DisassemblyTableParseError("not a Boolean value: " + value);
     }
 
     private final void parseMinitableDeclaration(ParseUtil.IndentableLexer lexer) throws IOException {
