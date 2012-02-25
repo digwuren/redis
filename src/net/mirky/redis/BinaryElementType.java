@@ -25,6 +25,11 @@ public abstract class BinaryElementType extends AbstractBinaryLanguage {
     public abstract void pass(Cursor cursor, String indentation, String itemName, Decoding decoding, PrintStream port)
             throws ImageError;
 
+    @Override
+    public final int getDefaultCountdown() {
+        return 1;
+    }
+
     static final class PaddedString extends BinaryElementType {
         private final int size;
         private final byte padding;

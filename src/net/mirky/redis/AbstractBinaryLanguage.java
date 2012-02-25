@@ -5,4 +5,5 @@ package net.mirky.redis;
 // BinaryElementType}). Ideally, they should be interchangeable. This class, not
 // yet fully abstracted, is their common ancestor.
 abstract class AbstractBinaryLanguage {
+    public abstract int getDefaultCountdown();
 }
