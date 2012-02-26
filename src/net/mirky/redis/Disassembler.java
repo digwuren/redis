@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.mirky.redis.ClassicLang.UnknownOpcode;
-
 public final class Disassembler {
     private final byte[] data;
     private final Format format;
@@ -353,6 +351,7 @@ public final class Disassembler {
     }
 
     public final void run() throws RuntimeException {
+        DeciphererInput input = this.getDeciphererInput();
         WavingContext ctx = this.getWavingContext();
         while (!queue.isEmpty()) {
             PendingEntryPoint entryPoint = queue.removeFirst();
@@ -364,7 +363,7 @@ public final class Disassembler {
                 }
                 try {
                     try {
-                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), ctx);
+                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), input, ctx);
                         addInstructionEntry(currentOffset, sequencer.getCurrentLang());
                         for (int i = 0; i < currentInstructionSize; i++) {
                             undeciphered[currentOffset + i] = false;
@@ -407,7 +406,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -419,7 +418,7 @@ public final class Disassembler {
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
-                newLang.decipher(this, currentValue, ctx);
+                newLang.decipher(this, currentValue, input, ctx);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
@@ -429,9 +428,9 @@ public final class Disassembler {
                 ClassicLang lang = linkage.getReferredLanguage(step - Bytecode.ENTRY_POINT_0);
                 ctx.noteAbsoluteEntryPoint(currentValue, lang);
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
+                currentValue = input.getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
+                currentValue = input.getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
             } else {
                 switch (step) {
                     case Bytecode.SHR_3:
@@ -492,7 +491,7 @@ public final class Disassembler {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += format.getOrigin() + currentOffset + 1;
+                        currentValue += input.getCurrentInstructionAddress() + 1;
                         break;
 
                     case Bytecode.BYTE_SIGNEDREL_2:
@@ -501,7 +500,7 @@ public final class Disassembler {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += format.getOrigin() + currentOffset + 2;
+                        currentValue += input.getCurrentInstructionAddress() + 2;
                         break;
 
                     case Bytecode.AND_3:
@@ -536,6 +535,7 @@ public final class Disassembler {
      * the instruction's size, and mark referred entry points. This is the
      * output generation phase variant; it does not mark the entry points or
      * affect the sequencer.
+     * @param input TODO
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
@@ -545,7 +545,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -562,7 +562,7 @@ public final class Disassembler {
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
-                newLang.decipher(this, currentValue, sb);
+                newLang.decipher(this, currentValue, input, sb);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // ignore in output generation phase
@@ -570,9 +570,9 @@ public final class Disassembler {
                     && step < Bytecode.ENTRY_POINT_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // ignore in output generation phase
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
+                currentValue = input.getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
+                currentValue = input.getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
             } else {
                 switch (step) {
                     case Bytecode.SHR_3:
@@ -644,7 +644,7 @@ public final class Disassembler {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += format.getOrigin() + currentOffset + 1;
+                        currentValue += input.getCurrentInstructionAddress() + 1;
                         break;
     
                     case Bytecode.BYTE_SIGNEDREL_2:
@@ -653,7 +653,7 @@ public final class Disassembler {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += format.getOrigin() + currentOffset + 2;
+                        currentValue += input.getCurrentInstructionAddress() + 2;
                         break;
     
                     case Bytecode.AND_3:
@@ -688,6 +688,7 @@ public final class Disassembler {
      * @param port
      */
     public final void printResults(PrintStream port) {
+        DeciphererInput input = this.getDeciphererInput();
         TreeSet<Integer> decipheredKeys = new TreeSet<Integer>(deciphered.keySet());
         decipheredKeys.addAll(problems.keySet());
         int lastOffset = 0;
@@ -713,8 +714,8 @@ public final class Disassembler {
                     sequencer.setCountdown(1);
                     StringBuilder sb = new StringBuilder();
                     try {
-                        lang.decipher(this, getUnsignedByte(0), sb);
-                    } catch (UnknownOpcode e) {
+                        lang.decipher(this, getUnsignedByte(0), input, sb);
+                    } catch (ClassicLang.UnknownOpcode e) {
                         throw new RuntimeException("bug detected", e);
                     } catch (IncompleteInstruction e) {
                         throw new RuntimeException("bug detected", e);
@@ -758,6 +759,10 @@ public final class Disassembler {
         }
         port.println();
         Hex.dump(data, format.getOrigin(), format.getDecoding(), undeciphered, port);
+    }
+
+    public final DeciphererInput getDeciphererInput() {
+        return new DeciphererInput();
     }
 
     public final WavingContext getWavingContext() {
@@ -1022,6 +1027,21 @@ public final class Disassembler {
         }
     }
     
+    @SuppressWarnings("synthetic-access")
+    final class DeciphererInput {
+        public final int getUnsignedByte(int suboffset) throws IncompleteInstruction {
+            return Disassembler.this.getUnsignedByte(suboffset);
+        }
+
+        public final int getUnsignedLewyde(int suboffset) throws IncompleteInstruction {
+            return Disassembler.this.getUnsignedLewyde(suboffset);
+        }
+
+        public final int getCurrentInstructionAddress() {
+            return Disassembler.this.format.getOrigin() + Disassembler.this.currentOffset;
+        }
+    }
+
     @SuppressWarnings("synthetic-access")
     final class WavingContext {
         public final void switchTemporarily(ClassicLang newLang) {
