@@ -56,10 +56,10 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
      */
     abstract boolean isTrivial();
 
-    abstract int decipher(int opcode, DeciphererInput input, WavingContext ctx) throws UnknownOpcode,
+    abstract int decipher(int opcode, DeciphererInput in, WavingContext out) throws UnknownOpcode,
     IncompleteInstruction;
 
-    abstract int decipher(int opcode, DeciphererInput input, StringBuilder sb) throws UnknownOpcode,
+    abstract int decipher(int opcode, DeciphererInput in, StringBuilder out) throws UnknownOpcode,
             IncompleteInstruction;
 
     void dumpLang(String langName, PrintStream port) {
@@ -74,14 +74,14 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang NONE = new ClassicLang("none", 0) {
         @Override
-        final int decipher(int opcode, DeciphererInput input, WavingContext ctx) {
+        final int decipher(int opcode, DeciphererInput in, WavingContext out) {
             // should never be called -- the disassembler should check
             // against NONE
             throw new RuntimeException("bug detected");
         }
 
         @Override
-        final int decipher(int opcode, DeciphererInput input, StringBuilder sb) {
+        final int decipher(int opcode, DeciphererInput in, StringBuilder out) {
             // should never be called -- the disassembler should check
             // against NONE
             throw new RuntimeException("bug detected");
@@ -96,7 +96,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
         @Override
-        final int decipher(int firstCondensedByte, DeciphererInput input, WavingContext ctx) {
+        final int decipher(int firstCondensedByte, DeciphererInput in, WavingContext out) {
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
             int significandOffset = condensedExponent == 0 ? 2 : 1;
@@ -104,14 +104,14 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final int decipher(int firstCondensedByte, DeciphererInput input, StringBuilder sb)
+        final int decipher(int firstCondensedByte, DeciphererInput in, StringBuilder out)
                 throws IncompleteInstruction {
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
             byte[] bytes = new byte[]{0, 0, 0, 0, 0};
             int significandOffset;
             if (condensedExponent == 0) {
-                bytes[0] = (byte) input.getUnsignedByte(1);
+                bytes[0] = (byte) in.getUnsignedByte(1);
                 significandOffset = 2;
             } else {
                 bytes[0] = condensedExponent;
@@ -119,19 +119,19 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             }
             bytes[0] += 0x50;
             for (int i = 0; i < significandByteCount; i++) {
-                bytes[i + 1] = (byte) input.getUnsignedByte(significandOffset + i);
+                bytes[i + 1] = (byte) in.getUnsignedByte(significandOffset + i);
             }
-            sb.append("byte ");
+            out.append("byte ");
             for (int i = 0; i < significandOffset + significandByteCount; i++) {
                 if (i != 0) {
-                    sb.append(", ");
+                    out.append(", ");
                 }
-                sb.append("0x");
-                sb.append(Hex.b(input.getUnsignedByte(i)));
+                out.append("0x");
+                out.append(Hex.b(in.getUnsignedByte(i)));
             }
             ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(bytes);
-            sb.append(" // ");
-            number.prepareForDisassemblyDisplay(sb);
+            out.append(" // ");
+            number.prepareForDisassemblyDisplay(out);
             return significandOffset + significandByteCount;
         }
 
@@ -174,21 +174,21 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final int decipher(int opcode, DeciphererInput input, WavingContext ctx) throws UnknownOpcode,
+        final int decipher(int opcode, DeciphererInput in, WavingContext out) throws UnknownOpcode,
                 IncompleteInstruction {
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return WavingPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, input, ctx);
+            return WavingPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, in, out);
         }
 
         @Override
-        final int decipher(int opcode, DeciphererInput input, StringBuilder sb) throws UnknownOpcode,
+        final int decipher(int opcode, DeciphererInput in, StringBuilder out) throws UnknownOpcode,
                 IncompleteInstruction {
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, input, new DeciphererOutputStringBuilder(sb));
+            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, in, new DeciphererOutputStringBuilder(out));
         }
 
         @Override
