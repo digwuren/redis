@@ -90,6 +90,36 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     };
 
     @SuppressWarnings("synthetic-access")
+    static final ClassicLang BYTE = new ClassicLang("byte", 1) {
+        @Override
+        final boolean isTrivial() {
+            return true;
+        }
+        
+        @Override
+        final int decipher(DeciphererInput in, DeciphererOutput out) throws IncompleteInstruction {
+            int value = in.getUnsignedByte(0);
+            out.append("byte 0x" + Hex.b(value));
+            return 1;
+        }
+    };
+
+    @SuppressWarnings("synthetic-access")
+    static final ClassicLang LEWYDE = new ClassicLang("lewyde", 1) {
+        @Override
+        final boolean isTrivial() {
+            return true;
+        }
+        
+        @Override
+        final int decipher(DeciphererInput in, DeciphererOutput out) throws IncompleteInstruction {
+            int value = in.getUnsignedLewyde(0);
+            out.append("lewyde 0x" + Hex.w(value));
+            return 2;
+        }
+    };
+
+    @SuppressWarnings("synthetic-access")
     static final ClassicLang ZXSB_ERROR = new ClassicLang("zxsb-error", 1) {
         @Override
         final boolean isTrivial() {
@@ -789,6 +819,8 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
 
     static {
         MANAGER.registerSpecial("none", ClassicLang.NONE);
+        MANAGER.registerSpecial("byte", ClassicLang.BYTE);
+        MANAGER.registerSpecial("lewyde", ClassicLang.LEWYDE);
         MANAGER.registerSpecial("condensed-zxsnum", ClassicLang.CONDENSED_ZXSNUM);
         MANAGER.registerSpecial("zxsb-error", ClassicLang.ZXSB_ERROR);
     }
