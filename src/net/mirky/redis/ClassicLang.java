@@ -56,10 +56,10 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
      */
     abstract boolean isTrivial();
 
-    abstract void decipher(Disassembler disassembler, int opcode, DeciphererInput input, WavingContext ctx) throws UnknownOpcode,
+    abstract int decipher(Disassembler disassembler, int opcode, DeciphererInput input, WavingContext ctx) throws UnknownOpcode,
     IncompleteInstruction;
 
-    abstract void decipher(Disassembler disassembler, int opcode, DeciphererInput input, StringBuilder sb) throws UnknownOpcode,
+    abstract int decipher(Disassembler disassembler, int opcode, DeciphererInput input, StringBuilder sb) throws UnknownOpcode,
             IncompleteInstruction;
 
     void dumpLang(String langName, PrintStream port) {
@@ -74,14 +74,14 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang NONE = new ClassicLang("none", 0) {
         @Override
-        final void decipher(Disassembler disassembler, int opcode, DeciphererInput input, WavingContext ctx) {
+        final int decipher(Disassembler disassembler, int opcode, DeciphererInput input, WavingContext ctx) {
             // should never be called -- the disassembler should check
             // against NONE
             throw new RuntimeException("bug detected");
         }
 
         @Override
-        final void decipher(Disassembler disassembler, int opcode, DeciphererInput input, StringBuilder sb) {
+        final int decipher(Disassembler disassembler, int opcode, DeciphererInput input, StringBuilder sb) {
             // should never be called -- the disassembler should check
             // against NONE
             throw new RuntimeException("bug detected");
@@ -96,15 +96,15 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
         @Override
-        final void decipher(Disassembler disassembler, int firstCondensedByte, DeciphererInput input, WavingContext ctx) {
+        final int decipher(Disassembler disassembler, int firstCondensedByte, DeciphererInput input, WavingContext ctx) {
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
             int significandOffset = condensedExponent == 0 ? 2 : 1;
-            disassembler.updateInstructionSize(significandOffset + significandByteCount);
+            return significandOffset + significandByteCount;
         }
 
         @Override
-        final void decipher(Disassembler disassembler, int firstCondensedByte, DeciphererInput input, StringBuilder sb)
+        final int decipher(Disassembler disassembler, int firstCondensedByte, DeciphererInput input, StringBuilder sb)
                 throws IncompleteInstruction {
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
@@ -132,6 +132,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(bytes);
             sb.append(" // ");
             number.prepareForDisassemblyDisplay(sb);
+            return significandOffset + significandByteCount;
         }
 
         @Override
@@ -173,21 +174,21 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final void decipher(Disassembler disassembler, int opcode, DeciphererInput input, WavingContext ctx) throws UnknownOpcode,
+        final int decipher(Disassembler disassembler, int opcode, DeciphererInput input, WavingContext ctx) throws UnknownOpcode,
                 IncompleteInstruction {
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            disassembler.decipher(bytecode, dispatchTable[opcode], linkage, input, ctx);
+            return disassembler.decipher(bytecode, dispatchTable[opcode], linkage, input, ctx);
         }
 
         @Override
-        final void decipher(Disassembler disassembler, int opcode, DeciphererInput input, StringBuilder sb) throws UnknownOpcode,
+        final int decipher(Disassembler disassembler, int opcode, DeciphererInput input, StringBuilder sb) throws UnknownOpcode,
                 IncompleteInstruction {
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            disassembler.decipher(bytecode, dispatchTable[opcode], linkage, input, sb);
+            return disassembler.decipher(bytecode, dispatchTable[opcode], linkage, input, sb);
         }
 
         @Override

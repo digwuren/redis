@@ -406,7 +406,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -417,8 +417,10 @@ public final class Disassembler {
                 // ignore -- no output
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
-                newLang.decipher(this, currentValue, input, ctx);
+                int suboffset = step - Bytecode.DISPATCH_0;
+                ClassicLang newLang = linkage.getReferredLanguage(suboffset);
+                int subsize = newLang.decipher(this, currentValue, input, ctx);
+                updateInstructionSize(suboffset + subsize);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
@@ -428,9 +430,13 @@ public final class Disassembler {
                 ClassicLang lang = linkage.getReferredLanguage(step - Bytecode.ENTRY_POINT_0);
                 ctx.noteAbsoluteEntryPoint(currentValue, lang);
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = input.getUnsignedByte(step - Bytecode.GET_BYTE_0);
+                int suboffset = step - Bytecode.GET_BYTE_0;
+                currentValue = input.getUnsignedByte(suboffset);
+                updateInstructionSize(suboffset + 1);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = input.getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
+                int suboffset = step - Bytecode.GET_LEWYDE_0;
+                currentValue = input.getUnsignedLewyde(suboffset);
+                updateInstructionSize(suboffset + 2);
             } else {
                 switch (step) {
                     case Bytecode.SHR_3:
@@ -520,7 +526,7 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.COMPLETE:
-                        return;
+                        return currentInstructionSize;
 
                     default:
                         throw new RuntimeException("bug detected");
@@ -536,6 +542,7 @@ public final class Disassembler {
      * output generation phase variant; it does not mark the entry points or
      * affect the sequencer.
      * @param input TODO
+     * @return 
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
@@ -545,7 +552,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -561,8 +568,10 @@ public final class Disassembler {
                 sb.append(minitable[currentValue & (minitable.length - 1)]);
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
-                newLang.decipher(this, currentValue, input, sb);
+                int suboffset = step - Bytecode.DISPATCH_0;
+                ClassicLang newLang = linkage.getReferredLanguage(suboffset);
+                int subsize = newLang.decipher(this, currentValue, input, sb);
+                updateInstructionSize(suboffset + subsize);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // ignore in output generation phase
@@ -570,9 +579,13 @@ public final class Disassembler {
                     && step < Bytecode.ENTRY_POINT_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // ignore in output generation phase
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = input.getUnsignedByte(step - Bytecode.GET_BYTE_0);
+                int suboffset = step - Bytecode.GET_BYTE_0;
+                currentValue = input.getUnsignedByte(suboffset);
+                updateInstructionSize(suboffset + 1);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
-                currentValue = input.getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
+                int suboffset = step - Bytecode.GET_LEWYDE_0;
+                currentValue = input.getUnsignedLewyde(suboffset);
+                updateInstructionSize(suboffset + 2);
             } else {
                 switch (step) {
                     case Bytecode.SHR_3:
@@ -673,7 +686,7 @@ public final class Disassembler {
                         break;
     
                     case Bytecode.COMPLETE:
-                        return;
+                        return currentInstructionSize;
     
                     default:
                         throw new RuntimeException("bug detected");
