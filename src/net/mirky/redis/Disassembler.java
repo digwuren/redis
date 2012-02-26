@@ -315,7 +315,7 @@ public final class Disassembler {
         return (data[base] & 0xFF) + (data[base + 1] & 0xFF) * 256;
     }
 
-    private final void updateInstructionSize(int min) {
+    final void updateInstructionSize(int min) {
         if (min > currentInstructionSize) {
             currentInstructionSize = min;
         }
@@ -363,8 +363,7 @@ public final class Disassembler {
                 }
                 try {
                     try {
-                        StringBuilder sb = new StringBuilder();
-                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), sb);
+                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0));
                         addInstructionEntry(currentOffset, sequencer.getCurrentLang());
                         for (int i = 0; i < currentInstructionSize; i++) {
                             undeciphered[currentOffset + i] = false;
@@ -396,8 +395,8 @@ public final class Disassembler {
 
     /**
      * Run the given disassembler bytecode on this {@link Disassembler}
-     * instance, append the output to the given {@link StringBuilder}, determine
-     * the instruction's size, and mark referred entry points.
+     * instance, determine the instruction's size, and mark referred entry
+     * points.
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
@@ -407,24 +406,19 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
             if (step >= 0x20 && step <= 0x7E) {
-                sb.append((char) step);
+                // ignore -- no output
             } else if (step >= Bytecode.MINITABLE_LOOKUP_0
                     && step < Bytecode.MINITABLE_LOOKUP_0 + Bytecode.MAX_MINITABLE_COUNT) {
-                String[] minitable = linkage.minitables[step - Bytecode.MINITABLE_LOOKUP_0];
-                // note that we're checking this at the minitable construction
-                // time
-                assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
-                // mask off excess bits, then fetch a string from the minitable
-                sb.append(minitable[currentValue & (minitable.length - 1)]);
+                // ignore -- no output
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
-                newLang.decipher(this, currentValue, sb);
+                newLang.decipher(this, currentValue);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
@@ -475,37 +469,19 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.UNSIGNED_BYTE:
-                        sb.append("0x");
-                        sb.append(Hex.b(currentValue));
+                        // ignore -- no output
                         break;
 
                     case Bytecode.UNSIGNED_WYDE:
-                        sb.append("0x");
-                        sb.append(Hex.w(currentValue));
+                        // ignore -- no output
                         break;
 
                     case Bytecode.SIGNED_BYTE:
-                        if ((currentValue & 0x80) == 0) {
-                            currentValue &= 0x7F;
-                        } else {
-                            currentValue |= ~0x7F;
-                            currentValue = -currentValue;
-                            sb.append('-');
-                        }
-                        sb.append("0x");
-                        sb.append(Hex.b(currentValue));
+                        // ignore -- no output
                         break;
 
                     case Bytecode.SIGNED_WYDE:
-                        if ((currentValue & 0x8000) == 0) {
-                            currentValue &= 0x7FFF;
-                        } else {
-                            currentValue |= ~0x7FFF;
-                            currentValue = -currentValue;
-                            sb.append('-');
-                        }
-                        sb.append("0x");
-                        sb.append(Hex.w(currentValue));
+                        // ignore -- no output
                         break;
 
                     case Bytecode.TERMINATE:
@@ -559,12 +535,190 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.DECIMAL:
-                        sb.append(currentValue);
+                        // ignore -- no output
                         break;
 
                     case Bytecode.COMPLETE:
                         return;
 
+                    default:
+                        throw new RuntimeException("bug detected");
+                }
+            }
+        }
+    }
+
+    /**
+     * Run the given disassembler bytecode on this {@link Disassembler}
+     * instance, append the output to the given {@link StringBuilder}, determine
+     * the instruction's size, and mark referred entry points.
+     * 
+     * @throws IncompleteInstruction
+     *             if the end of the binary object in the {@link Disassembler}
+     *             is encountered before the instruction ends
+     * @throws ClassicLang.UnknownOpcode
+     *             if {@link Lang.Tabular} dispatch fails (which is not
+     *             necessarily dispatch by the first byte in this instruction;
+     *             some languages have instructions with multiple dispatches)
+     */
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+        int currentValue = 0;
+        for (int i = startPosition;; i++) {
+            byte step = code[i];
+            if (step >= 0x20 && step <= 0x7E) {
+                sb.append((char) step);
+            } else if (step >= Bytecode.MINITABLE_LOOKUP_0
+                    && step < Bytecode.MINITABLE_LOOKUP_0 + Bytecode.MAX_MINITABLE_COUNT) {
+                String[] minitable = linkage.minitables[step - Bytecode.MINITABLE_LOOKUP_0];
+                // note that we're checking this at the minitable construction
+                // time
+                assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
+                // mask off excess bits, then fetch a string from the minitable
+                sb.append(minitable[currentValue & (minitable.length - 1)]);
+            } else if (step >= Bytecode.DISPATCH_0
+                    && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
+                newLang.decipher(this, currentValue, sb);
+            } else if (step >= Bytecode.TEMPSWITCH_0
+                    && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
+                sequencer.switchTemporarily(newLang);
+            } else if (step >= Bytecode.ENTRY_POINT_0
+                    && step < Bytecode.ENTRY_POINT_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                ClassicLang lang = linkage.getReferredLanguage(step - Bytecode.ENTRY_POINT_0);
+                noteAbsoluteEntryPoint(currentValue, lang);
+            } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
+                currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
+            } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
+                currentValue = getUnsignedLewyde(step - Bytecode.GET_LEWYDE_0);
+            } else {
+                switch (step) {
+                    case Bytecode.SHR_3:
+                        currentValue >>>= 3;
+                        break;
+    
+                    case Bytecode.SHR_4:
+                        currentValue >>>= 4;
+                        break;
+    
+                    case Bytecode.SHR_5:
+                        currentValue >>>= 5;
+                        break;
+    
+                    case Bytecode.SHR_6:
+                        currentValue >>>= 6;
+                        break;
+    
+                    case Bytecode.ENTRY_POINT_REFERENCE:
+                        noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
+                        break;
+    
+                    case Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
+                        noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
+                        /*
+                         * XXX: Note that we don't care which language is used
+                         * to call the API entry point; all can cause the
+                         * switch. This can theoretically cause false positives.
+                         * In practice, they would be quite convoluted and
+                         * reasonably unlikely.
+                         */
+                        SequencerEffect effect = api.getSequencerEffect(currentValue);
+                        if (effect != null) {
+                            effect.affectSequencer(sequencer);
+                        }
+                        break;
+    
+                    case Bytecode.UNSIGNED_BYTE:
+                        sb.append("0x");
+                        sb.append(Hex.b(currentValue));
+                        break;
+    
+                    case Bytecode.UNSIGNED_WYDE:
+                        sb.append("0x");
+                        sb.append(Hex.w(currentValue));
+                        break;
+    
+                    case Bytecode.SIGNED_BYTE:
+                        if ((currentValue & 0x80) == 0) {
+                            currentValue &= 0x7F;
+                        } else {
+                            currentValue |= ~0x7F;
+                            currentValue = -currentValue;
+                            sb.append('-');
+                        }
+                        sb.append("0x");
+                        sb.append(Hex.b(currentValue));
+                        break;
+    
+                    case Bytecode.SIGNED_WYDE:
+                        if ((currentValue & 0x8000) == 0) {
+                            currentValue &= 0x7FFF;
+                        } else {
+                            currentValue |= ~0x7FFF;
+                            currentValue = -currentValue;
+                            sb.append('-');
+                        }
+                        sb.append("0x");
+                        sb.append(Hex.w(currentValue));
+                        break;
+    
+                    case Bytecode.TERMINATE:
+                        sequencer.switchPermanently(ClassicLang.NONE);
+                        break;
+    
+                    case Bytecode.SET_COUNTDOWN_6:
+                        sequencer.setCountdown(6);
+                        break;
+                        
+                    case Bytecode.SET_COUNTDOWN_8:
+                        sequencer.setCountdown(8);
+                        break;
+                        
+                    case Bytecode.SET_COUNTDOWN_12:
+                        sequencer.setCountdown(12);
+                        break;
+                        
+                    case Bytecode.SWITCH_BACK:
+                        sequencer.switchBack();
+                        break;
+    
+                    case Bytecode.BYTE_SIGNEDREL_1:
+                        if ((currentValue & 0x80) == 0) {
+                            currentValue &= 0x7F;
+                        } else {
+                            currentValue |= ~0x7F;
+                        }
+                        currentValue += format.getOrigin() + currentOffset + 1;
+                        break;
+    
+                    case Bytecode.BYTE_SIGNEDREL_2:
+                        if ((currentValue & 0x80) == 0) {
+                            currentValue &= 0x7F;
+                        } else {
+                            currentValue |= ~0x7F;
+                        }
+                        currentValue += format.getOrigin() + currentOffset + 2;
+                        break;
+    
+                    case Bytecode.AND_3:
+                        currentValue &= 3;
+                        break;
+    
+                    case Bytecode.AND_7:
+                        currentValue &= 7;
+                        break;
+    
+                    case Bytecode.AND_0x38:
+                        currentValue &= 0x38;
+                        break;
+    
+                    case Bytecode.DECIMAL:
+                        sb.append(currentValue);
+                        break;
+    
+                    case Bytecode.COMPLETE:
+                        return;
+    
                     default:
                         throw new RuntimeException("bug detected");
                 }

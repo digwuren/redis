@@ -54,6 +54,9 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
      */
     abstract boolean isTrivial();
 
+    abstract void decipher(Disassembler disassembler, int opcode) throws UnknownOpcode,
+    IncompleteInstruction;
+
     abstract void decipher(Disassembler disassembler, int opcode, StringBuilder sb) throws UnknownOpcode,
             IncompleteInstruction;
 
@@ -69,6 +72,13 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang NONE = new ClassicLang("none", 0) {
         @Override
+        final void decipher(Disassembler disassembler, int opcode) {
+            // should never be called -- the disassembler should check
+            // against NONE
+            throw new RuntimeException("bug detected");
+        }
+
+        @Override
         final void decipher(Disassembler disassembler, int opcode, StringBuilder sb) {
             // should never be called -- the disassembler should check
             // against NONE
@@ -83,6 +93,15 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
 
     @SuppressWarnings("synthetic-access")
     static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
+        @Override
+        final void decipher(Disassembler disassembler, int firstCondensedByte)
+                throws IncompleteInstruction {
+            int significandByteCount = (firstCondensedByte >> 6) + 1;
+            byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
+            int significandOffset = condensedExponent == 0 ? 2 : 1;
+            disassembler.updateInstructionSize(significandOffset + significandByteCount);
+        }
+
         @Override
         final void decipher(Disassembler disassembler, int firstCondensedByte, StringBuilder sb)
                 throws IncompleteInstruction {
@@ -150,6 +169,15 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             LangParser parser = new LangParser();
             parser.parse(name, reader);
             return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
+        }
+
+        @Override
+        final void decipher(Disassembler disassembler, int opcode) throws UnknownOpcode,
+                IncompleteInstruction {
+            if (dispatchTable[opcode] == -1) {
+                throw new ClassicLang.UnknownOpcode(this);
+            }
+            disassembler.decipher(bytecode, dispatchTable[opcode], linkage);
         }
 
         @Override
