@@ -542,7 +542,9 @@ public final class Disassembler {
     /**
      * Run the given disassembler bytecode on this {@link Disassembler}
      * instance, append the output to the given {@link StringBuilder}, determine
-     * the instruction's size, and mark referred entry points.
+     * the instruction's size, and mark referred entry points. This is the
+     * output generation phase variant; it does not mark the entry points or
+     * affect the sequencer.
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
@@ -572,12 +574,10 @@ public final class Disassembler {
                 newLang.decipher(this, currentValue, sb);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
-                sequencer.switchTemporarily(newLang);
+                // ignore in output generation phase
             } else if (step >= Bytecode.ENTRY_POINT_0
                     && step < Bytecode.ENTRY_POINT_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                ClassicLang lang = linkage.getReferredLanguage(step - Bytecode.ENTRY_POINT_0);
-                noteAbsoluteEntryPoint(currentValue, lang);
+                // ignore in output generation phase
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
@@ -601,22 +601,8 @@ public final class Disassembler {
                         break;
     
                     case Bytecode.ENTRY_POINT_REFERENCE:
-                        noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
-                        break;
-    
                     case Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
-                        noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
-                        /*
-                         * XXX: Note that we don't care which language is used
-                         * to call the API entry point; all can cause the
-                         * switch. This can theoretically cause false positives.
-                         * In practice, they would be quite convoluted and
-                         * reasonably unlikely.
-                         */
-                        SequencerEffect effect = api.getSequencerEffect(currentValue);
-                        if (effect != null) {
-                            effect.affectSequencer(sequencer);
-                        }
+                        // ignore in output generation phase
                         break;
     
                     case Bytecode.UNSIGNED_BYTE:
@@ -654,23 +640,11 @@ public final class Disassembler {
                         break;
     
                     case Bytecode.TERMINATE:
-                        sequencer.switchPermanently(ClassicLang.NONE);
-                        break;
-    
-                    case Bytecode.SET_COUNTDOWN_6:
-                        sequencer.setCountdown(6);
-                        break;
-                        
-                    case Bytecode.SET_COUNTDOWN_8:
-                        sequencer.setCountdown(8);
-                        break;
-                        
-                    case Bytecode.SET_COUNTDOWN_12:
-                        sequencer.setCountdown(12);
-                        break;
-                        
                     case Bytecode.SWITCH_BACK:
-                        sequencer.switchBack();
+                    case Bytecode.SET_COUNTDOWN_6:
+                    case Bytecode.SET_COUNTDOWN_8:
+                    case Bytecode.SET_COUNTDOWN_12:
+                        // ignore in output generation phase
                         break;
     
                     case Bytecode.BYTE_SIGNEDREL_1:
