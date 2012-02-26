@@ -81,10 +81,10 @@ dispatch(0)
 
     # Note that all Z180 extensions are in the ED-prefixed table.
 
-    [0xCB]        <byte 1, dispatch z80-cb>
-    [0xED]        <byte 1, dispatch z180-ed>
-    [0xDD]        <byte 1, dispatch z80-xd>
-    [0xFD]        <byte 1, dispatch z80-xd>
+    [0xCB]        <dispatch z80-cb>
+    [0xED]        <dispatch z180-ed>
+    [0xDD]        <dispatch z80-xd>
+    [0xFD]        <dispatch z80-xd>
 
     [0x08]        exaf
     [0xD9]        exx

@@ -2,4 +2,4 @@ Default-countdown: 1
 Trivial: true
 
 dispatch(0)
-    [0x??] byte <byte 0, unsigned> // <byte 0, dispatch zxsb-error-text>
+    [0x??] byte <byte 0, unsigned> // <dispatch zxsb-error-text>

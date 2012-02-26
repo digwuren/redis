@@ -1,5 +1,5 @@
 dispatch(1)
-    [0xCB]  <byte 3, dispatch z80-xd-cb>
+    [0xCB]  <dispatch z80-xd-cb>
 
     [0o1?6-0o166]  mov <byte 1, shr 3, reg>, <byte 2, signed>[i<byte 0, shr 5, indexreg>]
     [0o16?-0o166]  mov <byte 2, signed>[i<byte 0, shr 5, indexreg>], <byte 1, reg>

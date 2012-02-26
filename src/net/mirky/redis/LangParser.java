@@ -213,7 +213,7 @@ final class LangParser {
             coll.add((byte) (ClassicLang.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(arg)));
             return 0;
         } else if (verb.equals("dispatch")) {
-            if (size != 1) {
+            if (size != 0) {
                 lexer.errorAtPos(posBeforeStep, "misplaced dispatch");
             }
             if (arg == null) {

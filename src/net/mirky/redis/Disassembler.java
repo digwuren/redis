@@ -134,7 +134,7 @@ public final class Disassembler {
                 }
                 try {
                     try {
-                        int instructionSize = sequencer.getCurrentLang().decipher(getUnsignedByte(0), input, ctx);
+                        int instructionSize = sequencer.getCurrentLang().decipher(input, ctx);
                         if (instructionSize < 1) {
                             instructionSize = 1;
                         }
@@ -191,7 +191,7 @@ public final class Disassembler {
                     StringBuilder sb = new StringBuilder();
                     int size;
                     try {
-                        size = lang.decipher(getUnsignedByte(0), input, new DeciphererOutputStringBuilder(sb));
+                        size = lang.decipher(input, new DeciphererOutputStringBuilder(sb));
                         if (size < 1) {
                             size = 1;
                         }

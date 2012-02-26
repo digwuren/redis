@@ -62,7 +62,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
      */
     abstract boolean isTrivial();
 
-    abstract int decipher(int opcode, DeciphererInput in, DeciphererOutput out) throws UnknownOpcode,
+    abstract int decipher(DeciphererInput in, DeciphererOutput out) throws UnknownOpcode,
             IncompleteInstruction;
 
     void dumpLang(String langName, PrintStream port) {
@@ -77,7 +77,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang NONE = new ClassicLang("none", 0) {
         @Override
-        final int decipher(int opcode, DeciphererInput in, DeciphererOutput out) {
+        final int decipher(DeciphererInput in, DeciphererOutput out) {
             // should never be called -- the disassembler should check
             // against NONE
             throw new RuntimeException("bug detected");
@@ -92,8 +92,9 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
         @Override
-        final int decipher(int firstCondensedByte, DeciphererInput in, DeciphererOutput out)
+        final int decipher(DeciphererInput in, DeciphererOutput out)
                 throws IncompleteInstruction {
+            int firstCondensedByte = in.getUnsignedByte(0);
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
             byte[] bytes = new byte[]{0, 0, 0, 0, 0};
@@ -162,12 +163,17 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final int decipher(int opcode, DeciphererInput in, DeciphererOutput out) throws UnknownOpcode,
+        final int decipher(DeciphererInput in, DeciphererOutput out) throws UnknownOpcode,
                 IncompleteInstruction {
+            int opcode = in.getUnsignedByte(dispatchSuboffset);
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return Bytecode.decipher(bytecode, dispatchTable[opcode], linkage, in, out);
+            int size = Bytecode.decipher(bytecode, dispatchTable[opcode], linkage, in, out);
+            if (dispatchSuboffset + 1 > size) {
+                size = dispatchSuboffset + 1;
+            }
+            return size;
         }
 
         @Override
@@ -574,10 +580,10 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
                     out.append(minitable[currentValue & (minitable.length - 1)]);
                 } else if (step >= DISPATCH_0
                         && step < DISPATCH_0 + MAX_REFERRED_LANGUAGE_COUNT) {
-                    int suboffset = step - DISPATCH_0;
-                    ClassicLang newLang = linkage.getReferredLanguage(suboffset);
-                    int subsize = newLang.decipher(currentValue, in, out);
-                    currentInstructionSize.feed(suboffset + subsize);
+                    int index = step - DISPATCH_0;
+                    ClassicLang newLang = linkage.getReferredLanguage(index);
+                    int subsize = newLang.decipher(in, out);
+                    currentInstructionSize.feed(subsize);
                 } else if (step >= TEMPSWITCH_0
                         && step < TEMPSWITCH_0 + MAX_REFERRED_LANGUAGE_COUNT) {
                     ClassicLang newLang = linkage.getReferredLanguage(step - TEMPSWITCH_0);
