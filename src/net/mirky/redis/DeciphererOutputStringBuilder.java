@@ -22,4 +22,8 @@ final class DeciphererOutputStringBuilder extends DeciphererOutput {
     public final void switchBack() {
         // no effect in the output generation phase
     }
+
+    public final void terminate() {
+        // no effect in the output generation phase
+    }
 }
