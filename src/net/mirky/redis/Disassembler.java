@@ -21,7 +21,7 @@ public final class Disassembler {
     private final Format format;
     private final API api;
     private final boolean[] undeciphered;
-    private final Map<Integer, TreeMap<String, DecipheredInstruction>> deciphered;
+    private final Map<Integer, TreeMap<ClassicLang, DecipheredInstruction>> deciphered;
     private final Map<Integer, ArrayList<String>> problems;
 
     /**
@@ -278,7 +278,7 @@ public final class Disassembler {
         for (int i = 0; i < data.length; i++) {
             undeciphered[i] = true;
         }
-        deciphered = new HashMap<Integer, TreeMap<String, DecipheredInstruction>>();
+        deciphered = new HashMap<Integer, TreeMap<ClassicLang, DecipheredInstruction>>();
         problems = new HashMap<Integer, ArrayList<String>>();
         entryPoints = new HashSet<Integer>();
         queue = new LinkedList<PendingEntryPoint>();
@@ -289,7 +289,7 @@ public final class Disassembler {
     }
 
     private final void storeInstructionAndPass(ClassicLang lang, String asString) {
-        addInstructionEntry(lang.name, asString, currentInstructionSize);
+        addInstructionEntry(lang, asString, currentInstructionSize);
         for (int i = 0; i < currentInstructionSize; i++) {
             undeciphered[currentOffset + i] = false;
         }
@@ -297,14 +297,14 @@ public final class Disassembler {
         currentInstructionSize = 0;
     }
 
-    private final void addInstructionEntry(String langName, String asString, int size) {
-        TreeMap<String, DecipheredInstruction> point = deciphered.get(new Integer(currentOffset));
+    private final void addInstructionEntry(ClassicLang lang, String asString, int size) {
+        TreeMap<ClassicLang, DecipheredInstruction> point = deciphered.get(new Integer(currentOffset));
         if (point == null) {
-            point = new TreeMap<String, DecipheredInstruction>();
+            point = new TreeMap<ClassicLang, DecipheredInstruction>();
             deciphered.put(new Integer(currentOffset), point);
         }
-        assert !point.containsKey(langName) || langName.equals("!");
-        point.put(langName, new DecipheredInstruction(size, asString));
+        assert !point.containsKey(lang);
+        point.put(lang, new DecipheredInstruction(size, asString));
     }
 
     final void recordProblem(String message) {
@@ -316,9 +316,9 @@ public final class Disassembler {
         point.add(message);
     }
 
-    final boolean haveProcessed(int offset, String langName) {
-        TreeMap<String, DecipheredInstruction> point = deciphered.get(new Integer(offset));
-        return point != null && point.containsKey(langName);
+    final boolean haveProcessed(int offset, ClassicLang lang) {
+        TreeMap<ClassicLang, DecipheredInstruction> point = deciphered.get(new Integer(offset));
+        return point != null && point.containsKey(lang);
     }
 
     final int getUnsignedLewyde(int suboffset) throws IncompleteInstruction {
@@ -353,7 +353,7 @@ public final class Disassembler {
         int offset = address - format.getOrigin();
         if (offset >= 0 && offset < data.length) {
             entryPoints.add(new Integer(offset));
-            if (!haveProcessed(offset, lang.name)) {
+            if (!haveProcessed(offset, lang)) {
                 queue.add(new PendingEntryPoint(offset, new LangSequencer.Frame[]{new LangSequencer.Frame(
                         lang.getDefaultCountdown(), lang)}));
             }
@@ -373,7 +373,7 @@ public final class Disassembler {
             currentOffset = entryPoint.offset;
             sequencer.init(entryPoint.sequencerFrames);
             DECIPHERING_LOOP : do {
-                if (haveProcessed(currentOffset, sequencer.getCurrentLang().name)) {
+                if (haveProcessed(currentOffset, sequencer.getCurrentLang())) {
                     break DECIPHERING_LOOP;
                 }
                 try {
@@ -611,7 +611,7 @@ public final class Disassembler {
         TreeSet<Integer> decipheredKeys = new TreeSet<Integer>(deciphered.keySet());
         decipheredKeys.addAll(problems.keySet());
         int lastOffset = 0;
-        String lastLang = "<none>";
+        ClassicLang lastLang = ClassicLang.NONE;
         for (Integer boxedOffset : decipheredKeys) {
             int offset = boxedOffset.intValue();
             if (offset > lastOffset) {
@@ -624,24 +624,18 @@ public final class Disassembler {
                     port.println("          ! " + message);
                 }
             }
-            TreeMap<String, DecipheredInstruction> instructions = deciphered.get(boxedOffset);
+            TreeMap<ClassicLang, DecipheredInstruction> instructions = deciphered.get(boxedOffset);
             if (instructions != null) {
-                for (Map.Entry<String, DecipheredInstruction> entry : instructions.entrySet()) {
-                    String lang = entry.getKey();
+                for (Map.Entry<ClassicLang, DecipheredInstruction> entry : instructions.entrySet()) {
+                    ClassicLang lang = entry.getKey();
                     DecipheredInstruction instruction = entry.getValue();
                     if (offset < lastOffset) {
                         port.println("          ! retreat " + (lastOffset - offset));
                         lastOffset = offset;
                     }
-                    try {
-                        if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !ClassicLang.MANAGER.get(lang).isTrivial()) {
-                            port.println("          .switch " + lang);
-                            lastLang = lang;
-                        }
-                    } catch (ResourceManager.ResolutionError e) {
-                        // We've already used this lang for disassembly. Why would
-                        // retrieving it again fail?
-                        throw new RuntimeException("bug detected", e);
+                    if (!lang.equals(lastLang) && !lang.isTrivial()) {
+                        port.println("          .switch " + lang.name);
+                        lastLang = lang;
                     }
                     if (entryPoints.contains(new Integer(offset))) {
                         port.print(Hex.t(offset + format.getOrigin()));
