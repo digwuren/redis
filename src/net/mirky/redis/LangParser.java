@@ -20,7 +20,6 @@ final class LangParser {
     int referredLanguageCounter;
     int dispatchSuboffset;
     int defaultCountdown;
-    boolean trivial;
     private final List<MinitableReferencePatch> minitableReferencePatches;
 
     LangParser() {
@@ -36,7 +35,6 @@ final class LangParser {
         referredLanguageCounter = 0;
         dispatchSuboffset = 0;
         defaultCountdown = 0; // by default, no default countdown
-        trivial = false; // by default, not trivial
         minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
     }
 
@@ -44,7 +42,6 @@ final class LangParser {
         Set<String> knownHeaderItems = new TreeSet<String>();
         // note that the membership is checked with a downcased specimen
         knownHeaderItems.add("default-countdown");
-        knownHeaderItems.add("trivial");
         Set<String> seenHeaderLines = new TreeSet<String>();
         
         ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.LineSource.File(reader), new ParseUtil.ErrorLocator(name, 0), '#');
@@ -69,14 +66,6 @@ final class LangParser {
                 lexer.skipSpaces();
                 if (itemName.equalsIgnoreCase("Default-countdown")) {
                     defaultCountdown = lexer.readUnsignedInteger("default countdown");
-                } else if (itemName.equalsIgnoreCase("Trivial")) {
-                    if (lexer.passOptDashedWord("true")) {
-                        trivial = true;
-                    } else if (lexer.passOptDashedWord("false")) {
-                        trivial = false;
-                    } else {
-                        lexer.error("expected 'true' or 'false'");
-                    }
                 } else {
                     lexer.errorAtPos(posBeforeName, "unknown lang file header item");
                 }

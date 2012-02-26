@@ -208,7 +208,6 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     };
 
     static final class Tabular extends ClassicLang {
-        private final boolean trivial;
         private final Tabular.Linkage linkage;
         private final byte[] bytecode;
         private final int[] dispatchTable;
@@ -222,11 +221,10 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         private final int dispatchSuboffset;
 
         @SuppressWarnings("synthetic-access")
-        private Tabular(String name, int defaultCountdown, boolean trivial, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
+        private Tabular(String name, int defaultCountdown, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
             super(name, defaultCountdown);
             assert dispatchTable.length == 256;
             assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
-            this.trivial = trivial;
             this.linkage = linkage;
             this.dispatchSuboffset = parser.dispatchSuboffset;
             this.bytecode = bytecode;
@@ -236,7 +234,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         static final ClassicLang.Tabular loadTabular(String name, BufferedReader reader) throws IOException {
             LangParser parser = new LangParser();
             parser.parse(name, reader);
-            return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
+            return new Tabular(name, parser.defaultCountdown, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
         }
 
         @Override
@@ -255,16 +253,13 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
 
         @Override
         final boolean isTrivial() {
-            return trivial;
+            return false;
         }
 
         @Override
         final void dumpLang(String langName, PrintStream port) {
             port.println("# " + langName + " is a tabular language");
             port.println("Default-countdown: " + getDefaultCountdown());
-            if (trivial) {
-                port.println("Trivial: true");
-            }
             for (int i = 0; i < linkage.minitables.length; i++) {
                 String[] minitable = linkage.minitables[i];
                 if (minitable != null) {
