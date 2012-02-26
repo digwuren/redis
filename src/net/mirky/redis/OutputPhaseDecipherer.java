@@ -77,20 +77,23 @@ final class OutputPhaseDecipherer {
                         break;
     
                     case Disassembler.Bytecode.ENTRY_POINT_REFERENCE:
+                        out.noteAbsoluteEntryPoint(currentValue);
+                        break;
+
                     case Disassembler.Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
                         // ignore in output generation phase
                         break;
-    
+
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
                         out.append("0x");
                         out.append(Hex.b(currentValue));
                         break;
-    
+
                     case Disassembler.Bytecode.UNSIGNED_WYDE:
                         out.append("0x");
                         out.append(Hex.w(currentValue));
                         break;
-    
+
                     case Disassembler.Bytecode.SIGNED_BYTE:
                         if ((currentValue & 0x80) == 0) {
                             currentValue &= 0x7F;
@@ -102,7 +105,7 @@ final class OutputPhaseDecipherer {
                         out.append("0x");
                         out.append(Hex.b(currentValue));
                         break;
-    
+
                     case Disassembler.Bytecode.SIGNED_WYDE:
                         if ((currentValue & 0x8000) == 0) {
                             currentValue &= 0x7FFF;

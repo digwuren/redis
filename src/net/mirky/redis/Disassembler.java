@@ -781,7 +781,7 @@ public final class Disassembler {
             sequencer.switchBack();
         }
 
-        public final void append(int value) {
+        public final void append(int i) {
             // no effect in the waving phase
         }
 

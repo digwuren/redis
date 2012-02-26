@@ -30,4 +30,8 @@ final class DeciphererOutputStringBuilder extends DeciphererOutput {
     public final void setCountdown(int newCountdown) {
         // no effect in the output generation phase
     }
+
+    public final void noteAbsoluteEntryPoint(int address) {
+        // no effect in the output generation phase
+    }
 }
