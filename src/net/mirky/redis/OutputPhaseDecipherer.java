@@ -75,13 +75,14 @@ final class OutputPhaseDecipherer {
                     case Disassembler.Bytecode.SHR_6:
                         currentValue >>>= 6;
                         break;
-    
+
                     case Disassembler.Bytecode.ENTRY_POINT_REFERENCE:
                         out.noteAbsoluteEntryPoint(currentValue);
                         break;
 
                     case Disassembler.Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
-                        // ignore in output generation phase
+                        out.noteAbsoluteEntryPoint(currentValue);
+                        out.lookupAPI(currentValue);
                         break;
 
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
