@@ -32,11 +32,9 @@ import net.mirky.redis.analysers.ZXSBasicProgramAnalyser;
  */
 public abstract class ClassicLang extends AbstractBinaryLanguage implements Comparable<ClassicLang> {
     final String name;
-    private final int defaultCountdown;
 
-    private ClassicLang(String name, int defaultCountdown) {
+    private ClassicLang(String name) {
         this.name = name;
-        this.defaultCountdown = defaultCountdown;
     }
 
     @Override
@@ -70,12 +68,10 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     }
 
     @Override
-    public final int getDefaultCountdown() {
-        return defaultCountdown;
-    }
+    public abstract int getDefaultCountdown();
 
     @SuppressWarnings("synthetic-access")
-    static final ClassicLang NONE = new ClassicLang("none", 0) {
+    static final ClassicLang NONE = new ClassicLang("none") {
         @Override
         final int decipher(DeciphererInput in, DeciphererOutput out) {
             // should never be called -- the disassembler should check
@@ -86,6 +82,11 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         @Override
         final boolean isTrivial() {
             return true;
+        }
+
+        @Override
+        public final int getDefaultCountdown() {
+            return 0;
         }
     };
 
@@ -218,7 +219,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
 
         @SuppressWarnings("synthetic-access")
         private Tabular(String name, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
-            super(name, 0);
+            super(name);
             assert dispatchTable.length == 256;
             assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
             this.linkage = linkage;
@@ -253,9 +254,13 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
+        public final int getDefaultCountdown() {
+            return 0;
+        }
+
+        @Override
         final void dumpLang(String langName, PrintStream port) {
             port.println("# " + langName + " is a tabular language");
-            port.println("Default-countdown: " + getDefaultCountdown());
             for (int i = 0; i < linkage.minitables.length; i++) {
                 String[] minitable = linkage.minitables[i];
                 if (minitable != null) {
@@ -401,7 +406,12 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     static abstract class DataLang extends ClassicLang {
         @SuppressWarnings("synthetic-access")
         public DataLang(String name) {
-            super(name, 1);
+            super(name);
+        }
+
+        @Override
+        public final int getDefaultCountdown() {
+            return 1;
         }
     }
     
