@@ -406,7 +406,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -422,11 +422,11 @@ public final class Disassembler {
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
-                sequencer.switchTemporarily(newLang);
+                ctx.switchTemporarily(newLang);
             } else if (step >= Bytecode.ENTRY_POINT_0
                     && step < Bytecode.ENTRY_POINT_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang lang = linkage.getReferredLanguage(step - Bytecode.ENTRY_POINT_0);
-                noteAbsoluteEntryPoint(currentValue, lang);
+                ctx.noteAbsoluteEntryPoint(currentValue, lang);
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
@@ -450,22 +450,12 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.ENTRY_POINT_REFERENCE:
-                        noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
+                        ctx.noteAbsoluteEntryPoint(currentValue);
                         break;
 
                     case Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
-                        noteAbsoluteEntryPoint(currentValue, sequencer.getCurrentLang());
-                        /*
-                         * XXX: Note that we don't care which language is used
-                         * to call the API entry point; all can cause the
-                         * switch. This can theoretically cause false positives.
-                         * In practice, they would be quite convoluted and
-                         * reasonably unlikely.
-                         */
-                        SequencerEffect effect = api.getSequencerEffect(currentValue);
-                        if (effect != null) {
-                            effect.affectSequencer(sequencer);
-                        }
+                        ctx.noteAbsoluteEntryPoint(currentValue);
+                        ctx.lookupAPI(currentValue);
                         break;
 
                     case Bytecode.UNSIGNED_BYTE:
@@ -476,23 +466,23 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.TERMINATE:
-                        sequencer.switchPermanently(ClassicLang.NONE);
+                        ctx.terminate();
                         break;
 
                     case Bytecode.SET_COUNTDOWN_6:
-                        sequencer.setCountdown(6);
+                        ctx.setCountdown(6);
                         break;
                         
                     case Bytecode.SET_COUNTDOWN_8:
-                        sequencer.setCountdown(8);
+                        ctx.setCountdown(8);
                         break;
                         
                     case Bytecode.SET_COUNTDOWN_12:
-                        sequencer.setCountdown(12);
+                        ctx.setCountdown(12);
                         break;
                         
                     case Bytecode.SWITCH_BACK:
-                        sequencer.switchBack();
+                        ctx.switchBack();
                         break;
 
                     case Bytecode.BYTE_SIGNEDREL_1:
@@ -769,6 +759,10 @@ public final class Disassembler {
         Hex.dump(data, format.getOrigin(), format.getDecoding(), undeciphered, port);
     }
 
+    public final WavingContext getWavingContext() {
+        return new WavingContext();
+    }
+    
     // An offset-lang pair, used to queue entry points not yet processed.
     static final class PendingEntryPoint {
         final int offset;
@@ -1024,6 +1018,47 @@ public final class Disassembler {
             final boolean takeOneDown() {
                 return countdown > 0 && --countdown == 0;
             }
+        }
+    }
+    
+    @SuppressWarnings("synthetic-access")
+    final class WavingContext {
+        public final void switchTemporarily(ClassicLang newLang) {
+            sequencer.switchTemporarily(newLang);
+        }
+
+        public final void noteAbsoluteEntryPoint(int address) {
+            noteAbsoluteEntryPoint(address, sequencer.getCurrentLang());
+        }
+
+        public final void noteAbsoluteEntryPoint(int address, ClassicLang lang) {
+            Disassembler.this.noteAbsoluteEntryPoint(address, lang);
+        }
+
+        public final void terminate() {
+            sequencer.switchPermanently(ClassicLang.NONE);
+        }
+
+        public final void lookupAPI(int currentValue) {
+            /*
+             * XXX: Note that we don't care which language is used
+             * to call the API entry point; all can cause the
+             * switch. This can theoretically cause false positives.
+             * In practice, they would be quite convoluted and
+             * reasonably unlikely.
+             */
+            SequencerEffect effect = api.getSequencerEffect(currentValue);
+            if (effect != null) {
+                effect.affectSequencer(sequencer);
+            }
+        }
+
+        public final void setCountdown(int newCountdown) {
+            sequencer.setCountdown(newCountdown);
+        }
+
+        public final void switchBack() {
+            sequencer.switchBack();
         }
     }
 }

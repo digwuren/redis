@@ -94,8 +94,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     @SuppressWarnings("synthetic-access")
     static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
         @Override
-        final void decipher(Disassembler disassembler, int firstCondensedByte)
-                throws IncompleteInstruction {
+        final void decipher(Disassembler disassembler, int firstCondensedByte) {
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
             int significandOffset = condensedExponent == 0 ? 2 : 1;
@@ -177,7 +176,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            disassembler.decipher(bytecode, dispatchTable[opcode], linkage);
+            disassembler.decipher(bytecode, dispatchTable[opcode], linkage, disassembler.getWavingContext());
         }
 
         @Override
