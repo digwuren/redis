@@ -51,15 +51,6 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         return this.name.compareTo(that.name);
     }
 
-    /**
-     * Checks triviality status of the language. Switches to a trivial
-     * language and back are not explicitly marked in disassembler's output.
-     * This is handy for raw value languages.
-     * 
-     * @return whether the language is trivial
-     */
-    abstract boolean isTrivial();
-
     abstract int decipher(DeciphererInput in, DeciphererOutput out) throws UnknownOpcode,
             IncompleteInstruction;
 

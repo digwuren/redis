@@ -26,6 +26,11 @@ public abstract class BinaryElementType extends AbstractBinaryLanguage {
             throws ImageError;
 
     @Override
+    public final boolean isTrivial() {
+        return true;
+    }
+    
+    @Override
     public final int getDefaultCountdown() {
         return 1;
     }
