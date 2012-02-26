@@ -410,7 +410,7 @@ public final class Disassembler {
                     StringBuilder sb = new StringBuilder();
                     int size;
                     try {
-                        size = lang.decipher(getUnsignedByte(0), input, sb);
+                        size = lang.decipher(getUnsignedByte(0), input, new DeciphererOutputStringBuilder(sb));
                         if (size < 1) {
                             size = 1;
                         }

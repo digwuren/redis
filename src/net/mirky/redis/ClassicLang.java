@@ -59,7 +59,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     abstract int decipher(int opcode, DeciphererInput in, WavingContext out) throws UnknownOpcode,
     IncompleteInstruction;
 
-    abstract int decipher(int opcode, DeciphererInput in, StringBuilder out) throws UnknownOpcode,
+    abstract int decipher(int opcode, DeciphererInput in, DeciphererOutputStringBuilder out) throws UnknownOpcode,
             IncompleteInstruction;
 
     void dumpLang(String langName, PrintStream port) {
@@ -81,7 +81,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final int decipher(int opcode, DeciphererInput in, StringBuilder out) {
+        final int decipher(int opcode, DeciphererInput in, DeciphererOutputStringBuilder out) {
             // should never be called -- the disassembler should check
             // against NONE
             throw new RuntimeException("bug detected");
@@ -104,7 +104,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final int decipher(int firstCondensedByte, DeciphererInput in, StringBuilder out)
+        final int decipher(int firstCondensedByte, DeciphererInput in, DeciphererOutputStringBuilder out)
                 throws IncompleteInstruction {
             int significandByteCount = (firstCondensedByte >> 6) + 1;
             byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
@@ -131,7 +131,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             }
             ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(bytes);
             out.append(" // ");
-            number.prepareForDisassemblyDisplay(out);
+            number.prepareForDisassemblyDisplay(out.sb);
             return significandOffset + significandByteCount;
         }
 
@@ -183,12 +183,12 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final int decipher(int opcode, DeciphererInput in, StringBuilder out) throws UnknownOpcode,
+        final int decipher(int opcode, DeciphererInput in, DeciphererOutputStringBuilder out) throws UnknownOpcode,
                 IncompleteInstruction {
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, in, new DeciphererOutputStringBuilder(out));
+            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, in, out);
         }
 
         @Override
