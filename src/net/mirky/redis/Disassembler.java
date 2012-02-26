@@ -16,6 +16,8 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import net.mirky.redis.ClassicLang.UnknownOpcode;
+
 public final class Disassembler {
     private final byte[] data;
     private final Format format;
@@ -594,10 +596,21 @@ public final class Disassembler {
             }
             TreeMap<ClassicLang, DecipheredInstruction> instructions = deciphered.get(boxedOffset);
             if (instructions != null) {
-                // FIXME: instead of using the existing DecipheredInstruction, decode anew
                 for (Map.Entry<ClassicLang, DecipheredInstruction> entry : instructions.entrySet()) {
                     ClassicLang lang = entry.getKey();
-                    DecipheredInstruction instruction = entry.getValue();
+                    currentOffset = offset;
+                    currentInstructionSize = 0;
+                    sequencer.switchPermanently(lang);
+                    sequencer.setCountdown(1);
+                    StringBuilder sb = new StringBuilder();
+                    try {
+                        lang.decipher(this, getUnsignedByte(0), sb);
+                    } catch (UnknownOpcode e) {
+                        throw new RuntimeException("bug detected", e);
+                    } catch (IncompleteInstruction e) {
+                        throw new RuntimeException("bug detected", e);
+                    }
+                    DecipheredInstruction instruction = new DecipheredInstruction(currentInstructionSize, sb.toString());
                     if (offset < lastOffset) {
                         port.println("          ! retreat " + (lastOffset - offset));
                         lastOffset = offset;
