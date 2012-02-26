@@ -29,7 +29,7 @@ final class WavingPhaseDecipherer {
         for (int i = startPosition;; i++) {
             byte step = code[i];
             if (step >= 0x20 && step <= 0x7E) {
-                // ignore -- no output
+                out.append((char) step);
             } else if (step >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
                     && step < Disassembler.Bytecode.MINITABLE_LOOKUP_0 + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
                 // ignore -- no output
