@@ -179,7 +179,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return Disassembler.decipher(bytecode, dispatchTable[opcode], linkage, input, ctx);
+            return WavingPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, input, ctx);
         }
 
         @Override
@@ -188,7 +188,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return Disassembler.decipher(bytecode, dispatchTable[opcode], linkage, input, sb);
+            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, input, sb);
         }
 
         @Override
