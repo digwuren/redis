@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 final class LangParser {
     byte[] bytecode;
@@ -19,7 +17,6 @@ final class LangParser {
     final Map<String, Integer> referredLanguagesByName;
     int referredLanguageCounter;
     int dispatchSuboffset;
-    int defaultCountdown;
     private final List<MinitableReferencePatch> minitableReferencePatches;
 
     LangParser() {
@@ -34,43 +31,12 @@ final class LangParser {
         referredLanguagesByName = new HashMap<String, Integer>();
         referredLanguageCounter = 0;
         dispatchSuboffset = 0;
-        defaultCountdown = 0; // by default, no default countdown
         minitableReferencePatches = new ArrayList<MinitableReferencePatch>();
     }
 
     final void parse(String name, BufferedReader reader) throws IOException {
-        Set<String> knownHeaderItems = new TreeSet<String>();
-        // note that the membership is checked with a downcased specimen
-        knownHeaderItems.add("default-countdown");
-        Set<String> seenHeaderLines = new TreeSet<String>();
-        
         ParseUtil.IndentableLexer lexer = new ParseUtil.IndentableLexer(new ParseUtil.LineSource.File(reader), new ParseUtil.ErrorLocator(name, 0), '#');
         try {
-            while (true) {
-                if (!lexer.atAlphanumeric()) {
-                    break;
-                }
-                int posBeforeItemName = lexer.getPos();
-                String itemName = lexer.peekDashedWord(null);
-                if (!knownHeaderItems.contains(itemName.toLowerCase())) {
-                    break;
-                }
-                if (seenHeaderLines.contains(itemName.toLowerCase())) {
-                    lexer.errorAtPos(posBeforeItemName, "duplicate lang header");
-                }
-                seenHeaderLines.add(itemName.toLowerCase());
-                int posBeforeName = lexer.getPos();
-                lexer.readDashedWord(null);
-                lexer.skipSpaces();
-                lexer.pass(':');
-                lexer.skipSpaces();
-                if (itemName.equalsIgnoreCase("Default-countdown")) {
-                    defaultCountdown = lexer.readUnsignedInteger("default countdown");
-                } else {
-                    lexer.errorAtPos(posBeforeName, "unknown lang file header item");
-                }
-                lexer.passLogicalNewline();
-            }
             lexer.passDashedWord("dispatch");
             parseDispatchTable(lexer);
             while (!lexer.atEndOfFile()) {

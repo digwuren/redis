@@ -89,8 +89,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
     };
 
-    @SuppressWarnings("synthetic-access")
-    static final ClassicLang BYTE = new ClassicLang("byte", 1) {
+    static final ClassicLang BYTE = new ClassicLang.DataLang("byte") {
         @Override
         final boolean isTrivial() {
             return true;
@@ -104,8 +103,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
     };
 
-    @SuppressWarnings("synthetic-access")
-    static final ClassicLang LEWYDE = new ClassicLang("lewyde", 1) {
+    static final ClassicLang LEWYDE = new ClassicLang.DataLang("lewyde") {
         @Override
         final boolean isTrivial() {
             return true;
@@ -119,8 +117,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
     };
 
-    @SuppressWarnings("synthetic-access")
-    static final ClassicLang ZXSB_ERROR = new ClassicLang("zxsb-error", 1) {
+    static final ClassicLang ZXSB_ERROR = new ClassicLang.DataLang("zxsb-error") {
         @Override
         final boolean isTrivial() {
             return true;
@@ -166,8 +163,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         
     };
 
-    @SuppressWarnings("synthetic-access")
-    static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
+    static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang.DataLang("condensed-zxsnum") {
         @Override
         final int decipher(DeciphererInput in, DeciphererOutput out)
                 throws IncompleteInstruction {
@@ -221,8 +217,8 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         private final int dispatchSuboffset;
 
         @SuppressWarnings("synthetic-access")
-        private Tabular(String name, int defaultCountdown, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
-            super(name, defaultCountdown);
+        private Tabular(String name, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
+            super(name, 0);
             assert dispatchTable.length == 256;
             assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
             this.linkage = linkage;
@@ -234,7 +230,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         static final ClassicLang.Tabular loadTabular(String name, BufferedReader reader) throws IOException {
             LangParser parser = new LangParser();
             parser.parse(name, reader);
-            return new Tabular(name, parser.defaultCountdown, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
+            return new Tabular(name, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
         }
 
         @Override
@@ -402,6 +398,13 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
     }
 
+    static abstract class DataLang extends ClassicLang {
+        @SuppressWarnings("synthetic-access")
+        public DataLang(String name) {
+            super(name, 1);
+        }
+    }
+    
     public static final ResourceManager<ClassicLang> MANAGER = new ResourceManager<ClassicLang>("lang") {
         @Override
         public final ClassicLang load(String name, BufferedReader reader) throws IOException {
