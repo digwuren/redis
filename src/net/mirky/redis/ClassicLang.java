@@ -184,7 +184,6 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         @Override
         final void dumpLang(String langName, PrintStream port) {
             port.println("# " + langName + " is a tabular language");
-            port.println("Dispatch-suboffset: " + dispatchSuboffset);
             port.println("Default-countdown: " + getDefaultCountdown());
             if (trivial) {
                 port.println("Trivial: true");
@@ -201,11 +200,13 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
                 }
             }
             linkage.dumpReferredLanguages(port);
+            port.println();
+            port.println("dispatch(" + dispatchSuboffset + ")");
             for (int i = 0; i < 256; i++) {
-                if ((i & 0x0F) == 0) {
+                if ((i & 0x0F) == 0 && i != 0) {
                     port.println();
                 }
-                port.print("0x" + Hex.b(i) + ' ');
+                port.print("    [0x" + Hex.b(i) + "] ");
                 if (dispatchTable[i] != -1) {
                     port.print("(@0x" + Hex.w(dispatchTable[i]) + ") ");
                     dumpDecipherer(i, dispatchTable[i], port);
