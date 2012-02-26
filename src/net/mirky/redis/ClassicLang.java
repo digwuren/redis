@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import net.mirky.redis.Disassembler.Bytecode;
+import net.mirky.redis.Disassembler.Bytecode.DeciphererOutput;
 import net.mirky.redis.Disassembler.DeciphererInput;
 import net.mirky.redis.Disassembler.IncompleteInstruction;
 import net.mirky.redis.ResourceManager.ResolutionError;

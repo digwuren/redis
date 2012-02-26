@@ -16,9 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.mirky.redis.ClassicLang.Tabular;
-import net.mirky.redis.ClassicLang.Tabular.Linkage;
-import net.mirky.redis.ClassicLang.UnknownOpcode;
+import net.mirky.redis.Disassembler.Bytecode.DeciphererOutput;
 
 public final class Disassembler {
     private final byte[] data;
@@ -53,7 +51,7 @@ public final class Disassembler {
      * external data storage yet.
      */
 
-    static final class Bytecode {
+    public static final class Bytecode {
         private Bytecode() {
             // not a real constructor
         }
@@ -434,6 +432,19 @@ public final class Disassembler {
                     }
                 }
             }
+        }
+
+        public static abstract class DeciphererOutput {
+            public abstract void append(char c);
+            public abstract void append(String s);
+            public abstract void append(int i);
+            public abstract void switchBack();
+            public abstract void terminate();
+            public abstract void setCountdown(int newCountdown);
+            public abstract void noteAbsoluteEntryPoint(int address);
+            public abstract void noteAbsoluteEntryPoint(int currentValue, ClassicLang lang);
+            public abstract void lookupAPI(int address);
+            public abstract void switchTemporarily(ClassicLang newLang);
         }
     }
 
