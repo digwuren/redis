@@ -86,7 +86,7 @@ final class WavingPhaseDecipherer {
                         out.noteAbsoluteEntryPoint(currentValue);
                         out.lookupAPI(currentValue);
                         break;
-    
+
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
                         out.append("0x");
                         out.append(Hex.b(currentValue));

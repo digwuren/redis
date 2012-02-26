@@ -46,7 +46,8 @@ final class OutputPhaseDecipherer {
                 currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Disassembler.Bytecode.TEMPSWITCH_0
                     && step < Disassembler.Bytecode.TEMPSWITCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                // ignore in output generation phase
+                ClassicLang newLang = linkage.getReferredLanguage(step - Disassembler.Bytecode.TEMPSWITCH_0);
+                out.switchTemporarily(newLang);
             } else if (step >= Disassembler.Bytecode.ENTRY_POINT_0
                     && step < Disassembler.Bytecode.ENTRY_POINT_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // ignore in output generation phase

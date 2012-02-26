@@ -38,4 +38,8 @@ final class DeciphererOutputStringBuilder extends DeciphererOutput {
     public final void lookupAPI(int address) {
         // no effect in the output generation phase
     }
+
+    public final void switchTemporarily(ClassicLang newLang) {
+        // no effect in the output generation phase
+    }
 }
