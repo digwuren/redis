@@ -199,18 +199,19 @@ public final class Format {
         };
 
         @SimpleTypeName("lang")
-        static final Simple<ClassicLang> LANG = new Simple<ClassicLang>() {
+        static final Simple<Named<ClassicLang>> LANG = new Simple<Named<ClassicLang>>() {
             @Override
-            final void stringify(ClassicLang value, StringBuilder sb) {
+            final void stringify(Named<ClassicLang> value, StringBuilder sb) {
                 sb.append(value.name);
             }
 
             @Override
-            final ClassicLang parse(String name) throws OptionError {
+            final Named<ClassicLang> parse(String name) throws OptionError {
                 try {
-                    return ClassicLang.MANAGER.get(name);
+                    ClassicLang lang = ClassicLang.MANAGER.get(name);
+                    return new Named<ClassicLang>(name, lang);
                 } catch (ResourceManager.ResolutionError e) {
-                    throw new OptionError("unknown CPU: " + name, e);
+                    throw new OptionError("unknown lang: " + name, e);
                 }
             }
         };
@@ -1074,7 +1075,7 @@ public final class Format {
                 langPart = null;
             }
             int address = Format.OptionType.UNSIGNED_HEX_INTEGER.parse(addressPart).intValue();
-            ClassicLang lang = langPart != null ? Format.OptionType.LANG.parse(langPart) : null;
+            ClassicLang lang = langPart != null ? Format.OptionType.LANG.parse(langPart).content : null;
             return new Format.EntryPoint(address, lang, true);
         }
     }
