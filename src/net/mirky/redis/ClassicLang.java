@@ -188,7 +188,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, input, sb);
+            return OutputPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, input, new OutputPhaseDecipherer.DeciphererOutputStringBuilder(sb));
         }
 
         @Override

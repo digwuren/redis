@@ -1,12 +1,6 @@
 package net.mirky.redis;
 
-import net.mirky.redis.ClassicLang.Tabular;
-import net.mirky.redis.ClassicLang.Tabular.Linkage;
-import net.mirky.redis.ClassicLang.UnknownOpcode;
-import net.mirky.redis.Disassembler.Bytecode;
 import net.mirky.redis.Disassembler.DeciphererInput;
-import net.mirky.redis.Disassembler.IncompleteInstruction;
-import net.mirky.redis.Disassembler.Maximiser;
 
 final class OutputPhaseDecipherer {
     private OutputPhaseDecipherer() {
@@ -29,7 +23,7 @@ final class OutputPhaseDecipherer {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
+    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, DeciphererOutputStringBuilder sb) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
         Disassembler.Maximiser currentInstructionSize = new Disassembler.Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
@@ -48,7 +42,7 @@ final class OutputPhaseDecipherer {
                     && step < Disassembler.Bytecode.DISPATCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 int suboffset = step - Disassembler.Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
-                int subsize = newLang.decipher(currentValue, input, sb);
+                int subsize = newLang.decipher(currentValue, input, sb.sb);
                 currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Disassembler.Bytecode.TEMPSWITCH_0
                     && step < Disassembler.Bytecode.TEMPSWITCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
@@ -170,6 +164,26 @@ final class OutputPhaseDecipherer {
                         throw new RuntimeException("bug detected");
                 }
             }
+        }
+    }
+    
+    static final class DeciphererOutputStringBuilder {
+        public final StringBuilder sb;
+        
+        public DeciphererOutputStringBuilder(StringBuilder sb) {
+            this.sb = sb;
+        }
+
+        public final void append(char c) {
+            sb.append(c);
+        }
+
+        public final void append(String s) {
+            sb.append(s);
+        }
+
+        public final void append(int i) {
+            sb.append(i);
         }
     }
 }
