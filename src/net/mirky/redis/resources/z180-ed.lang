@@ -1,3 +1,5 @@
+Dispatch-suboffset: 1
+
 dispatch
     [0x57]  ldai
     [0x5F]  ldar
