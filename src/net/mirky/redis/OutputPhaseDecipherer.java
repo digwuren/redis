@@ -120,9 +120,15 @@ final class OutputPhaseDecipherer {
                         break;
                         
                     case Disassembler.Bytecode.SET_COUNTDOWN_6:
+                        out.setCountdown(6);
+                        break;
+                        
                     case Disassembler.Bytecode.SET_COUNTDOWN_8:
+                        out.setCountdown(8);
+                        break;
+                        
                     case Disassembler.Bytecode.SET_COUNTDOWN_12:
-                        // ignore in output generation phase
+                        out.setCountdown(12);
                         break;
                         
                     case Disassembler.Bytecode.SWITCH_BACK:
