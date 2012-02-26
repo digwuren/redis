@@ -104,16 +104,6 @@ public final class Disassembler {
         @DeciphererStep(name = "subrentry", sizeRequirement = -1)
         static final byte SUBROUTINE_ENTRY_POINT_REFERENCE = 0x05;
 
-        // Mark the address pointed by current integer value an entry point in
-        // the 'byte' language.
-        @DeciphererStep(name = "entry byte", sizeRequirement = -1)
-        static final byte BYTE_ENTRY_POINT_REFERENCE = 0x06;
-
-        // Mark the address pointed by current integer value an entry point in
-        // the 'lewyde' language.
-        @DeciphererStep(name = "entry lewyde", sizeRequirement = -1)
-        static final byte LEWYDE_ENTRY_POINT_REFERENCE = 0x07;
-
         // Output the current integer value as an unsigned hex byte.
         @DeciphererStep(name = "<byte> unsigned", sizeRequirement = 1, sizeAfter = 0)
         static final byte UNSIGNED_BYTE = 0x08;
@@ -197,6 +187,9 @@ public final class Disassembler {
         // Re-dispatch according to a sublanguage:
         static final byte DISPATCH_0 = (byte) 0xA0;
         static final int MAX_REFERRED_LANGUAGE_COUNT = 8;
+        
+        // Declare entry point in a referred language:
+        static final int ENTRY_POINT_0 = (byte) 0xB0;
         
         // Switches and temporary switches:
         static final byte TEMPSWITCH_0 = (byte) 0xA8;
@@ -438,6 +431,10 @@ public final class Disassembler {
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
                 sequencer.switchTemporarily(newLang);
+            } else if (step >= Bytecode.ENTRY_POINT_0
+                    && step < Bytecode.ENTRY_POINT_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+                ClassicLang lang = linkage.getReferredLanguage(step - Bytecode.ENTRY_POINT_0);
+                noteAbsoluteEntryPoint(currentValue, lang);
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
@@ -476,22 +473,6 @@ public final class Disassembler {
                         SequencerEffect effect = api.getSequencerEffect(currentValue);
                         if (effect != null) {
                             effect.affectSequencer(sequencer);
-                        }
-                        break;
-
-                    case Bytecode.BYTE_ENTRY_POINT_REFERENCE:
-                        try {
-                            noteAbsoluteEntryPoint(currentValue, ClassicLang.MANAGER.get("byte"));
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
-                        }
-                        break;
-
-                    case Bytecode.LEWYDE_ENTRY_POINT_REFERENCE:
-                        try {
-                            noteAbsoluteEntryPoint(currentValue, ClassicLang.MANAGER.get("lewyde"));
-                        } catch (ResourceManager.ResolutionError e) {
-                            throw new RuntimeException("bug detected", e);
                         }
                         break;
 

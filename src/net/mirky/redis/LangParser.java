@@ -218,6 +218,13 @@ final class LangParser {
             }
             coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(arg)));
             return 0;
+        } else if (verb.equals("entry") && arg != null) {
+            if (size == 0) {
+                lexer.errorAtPos(posBeforeStep, "misplaced entry");
+            }
+            coll.add((byte) (Disassembler.Bytecode.ENTRY_POINT_0 + resolveReferredLanguage(arg)));
+            return size;
+            // note that "entry" *without* an argument is handled as an ordinary disassembler instruction
         } else {
             String step = arg == null ? verb : verb + ' ' + arg;
             Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveSimpleStep(step);
