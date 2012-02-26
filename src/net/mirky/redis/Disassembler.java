@@ -353,6 +353,7 @@ public final class Disassembler {
     }
 
     public final void run() throws RuntimeException {
+        WavingContext ctx = this.getWavingContext();
         while (!queue.isEmpty()) {
             PendingEntryPoint entryPoint = queue.removeFirst();
             currentOffset = entryPoint.offset;
@@ -363,7 +364,7 @@ public final class Disassembler {
                 }
                 try {
                     try {
-                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0));
+                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), ctx);
                         addInstructionEntry(currentOffset, sequencer.getCurrentLang());
                         for (int i = 0; i < currentInstructionSize; i++) {
                             undeciphered[currentOffset + i] = false;
@@ -418,7 +419,7 @@ public final class Disassembler {
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
-                newLang.decipher(this, currentValue);
+                newLang.decipher(this, currentValue, ctx);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
