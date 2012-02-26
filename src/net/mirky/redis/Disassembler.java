@@ -381,7 +381,10 @@ public final class Disassembler {
     /**
      * Run the given disassembler bytecode on this {@link Disassembler}
      * instance, determine the instruction's size, and mark referred entry
-     * points.  This is the wave-phase variant of the bytecode interpreter; it does not generate output.
+     * points. This is the wave-phase variant of the bytecode interpreter; it
+     * does not generate output.
+     * 
+     * @return the instruction's size
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
@@ -527,8 +530,8 @@ public final class Disassembler {
      * the instruction's size, and mark referred entry points. This is the
      * output generation phase variant; it does not mark the entry points or
      * affect the sequencer.
-     * @param input TODO
-     * @return 
+     * 
+     * @return the instruction's size
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
