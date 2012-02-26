@@ -285,8 +285,8 @@ public final class Disassembler {
         currentInstructionSize = 0;
     }
 
-    private final void storeInstructionAndPass(String lang, String asString) {
-        addInstructionEntry(lang, asString, currentInstructionSize);
+    private final void storeInstructionAndPass(ClassicLang lang, String asString) {
+        addInstructionEntry(lang.name, asString, currentInstructionSize);
         for (int i = 0; i < currentInstructionSize; i++) {
             undeciphered[currentOffset + i] = false;
         }
@@ -294,14 +294,14 @@ public final class Disassembler {
         currentInstructionSize = 0;
     }
 
-    private final void addInstructionEntry(String lang, String asString, int size) {
+    private final void addInstructionEntry(String langName, String asString, int size) {
         TreeMap<String, DecipheredInstruction> point = deciphered.get(new Integer(currentOffset));
         if (point == null) {
             point = new TreeMap<String, DecipheredInstruction>();
             deciphered.put(new Integer(currentOffset), point);
         }
-        assert !point.containsKey(lang) || lang.equals("!") || lang.equals("!!");
-        point.put(lang, new DecipheredInstruction(size, asString));
+        assert !point.containsKey(langName) || langName.equals("!");
+        point.put(langName, new DecipheredInstruction(size, asString));
     }
 
     final void recordProblem(String message) {
@@ -372,7 +372,7 @@ public final class Disassembler {
                     try {
                         StringBuilder sb = new StringBuilder();
                         sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), sb);
-                        storeInstructionAndPass(sequencer.getCurrentLang().name, sb.toString());
+                        storeInstructionAndPass(sequencer.getCurrentLang(), sb.toString());
                         sequencer.advance();
                     } catch (ClassicLang.UnknownOpcode e) {
                         this.recordProblem("unknown " + e.lang.name + " opcode");
@@ -386,7 +386,6 @@ public final class Disassembler {
                             sb.append("0x");
                             sb.append(Hex.b(this.getUnsignedByte(i)));
                         }
-                        this.storeInstructionAndPass("!!", sb.toString());
                         break DECIPHERING_LOOP;
                     }
                 } catch (IncompleteInstruction e) {
