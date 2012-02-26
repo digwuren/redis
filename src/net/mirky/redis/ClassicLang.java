@@ -303,6 +303,14 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
                     }
                 }
             }
+
+            public final ClassicLang getReferredLanguage(int index) {
+                try {
+                    return ClassicLang.MANAGER.get(referredLanguages[index]);
+                } catch (ResolutionError e) {
+                    throw new RuntimeException("referred language unknown", e);
+                }
+            }
         }
     }
 

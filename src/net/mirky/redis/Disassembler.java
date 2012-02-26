@@ -430,22 +430,12 @@ public final class Disassembler {
                 sb.append(minitable[currentValue & (minitable.length - 1)]);
             } else if (step >= Bytecode.DISPATCH_0
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                String newLangName = linkage.referredLanguages[step - Bytecode.DISPATCH_0];
-                // note the late binding
-                try {
-                    ClassicLang.MANAGER.get(newLangName).decipher(this, currentValue, sb);
-                } catch (ResourceManager.ResolutionError e) {
-                    throw new RuntimeException("referred language unknown", e);
-                }
+                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.DISPATCH_0);
+                newLang.decipher(this, currentValue, sb);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
-                String newLangName = linkage.referredLanguages[step - Bytecode.TEMPSWITCH_0];
-                // note the late binding
-                try {
-                    sequencer.switchTemporarily(ClassicLang.MANAGER.get(newLangName));
-                } catch (ResourceManager.ResolutionError e) {
-                    throw new RuntimeException("referred language unknown", e);
-                }
+                ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
+                sequencer.switchTemporarily(newLang);
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 currentValue = getUnsignedByte(step - Bytecode.GET_BYTE_0);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
