@@ -32,7 +32,12 @@ final class WavingPhaseDecipherer {
                 out.append((char) step);
             } else if (step >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
                     && step < Disassembler.Bytecode.MINITABLE_LOOKUP_0 + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-                // ignore -- no output
+                String[] minitable = linkage.minitables[step - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
+                // note that we're checking this at the minitable construction
+                // time
+                assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
+                // mask off excess bits, then fetch a string from the minitable
+                out.append(minitable[currentValue & (minitable.length - 1)]);
             } else if (step >= Disassembler.Bytecode.DISPATCH_0
                     && step < Disassembler.Bytecode.DISPATCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 int suboffset = step - Disassembler.Bytecode.DISPATCH_0;
