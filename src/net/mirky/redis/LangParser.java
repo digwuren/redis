@@ -11,9 +11,9 @@ import java.util.TreeSet;
 
 final class LangParser {
     byte[] bytecode;
-    private final Disassembler.Lang.Tabular.BytecodeCollector coll;
+    private final ClassicLang.Tabular.BytecodeCollector coll;
     final int[] dispatchTable;
-    final Disassembler.Lang.Tabular.Linkage linkage;
+    final ClassicLang.Tabular.Linkage linkage;
     final Map<String, Integer> minitablesByName;
     private int minitableCounter;
     final Map<String, Integer> referredLanguagesByName;
@@ -28,8 +28,8 @@ final class LangParser {
         for (int i = 0; i < 256; i++) {
             dispatchTable[i] = -1;
         }
-        coll = new Disassembler.Lang.Tabular.BytecodeCollector();
-        linkage = new Disassembler.Lang.Tabular.Linkage();
+        coll = new ClassicLang.Tabular.BytecodeCollector();
+        linkage = new ClassicLang.Tabular.Linkage();
         minitablesByName = new HashMap<String, Integer>();
         minitableCounter = 0;
         referredLanguagesByName = new HashMap<String, Integer>();

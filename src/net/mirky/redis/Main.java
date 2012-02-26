@@ -201,7 +201,7 @@ public final class Main extends AbstractMain {
             System.exit(1);
         }
         try {
-            Disassembler.Lang.MANAGER.get(arguments[0]).dumpLang(System.out);
+            ClassicLang.MANAGER.get(arguments[0]).dumpLang(System.out);
         } catch (ResourceManager.ResolutionError e) {
             System.err.println("redis: " + arguments[0] + ": unknown disassembly language");
             System.exit(1);

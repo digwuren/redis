@@ -6,6 +6,7 @@ import net.mirky.redis.Disassembler;
 import net.mirky.redis.Format;
 import net.mirky.redis.Format.UnknownOption;
 import net.mirky.redis.Analyser;
+import net.mirky.redis.ClassicLang;
 import net.mirky.redis.ReconstructionDataCollector;
 
 @Format.Optionses({
@@ -40,7 +41,7 @@ public class RawBinaryAnalyser extends Analyser.Leaf {
     @Override
     protected final ReconstructionDataCollector dis(Format format, byte[] data, PrintStream port) throws UnknownOption, RuntimeException {
         Disassembler disassembler = new Disassembler(data, format);
-        Disassembler.Lang cpu = (Disassembler.Lang) ((Format.Option.SimpleOption) format.getOption("cpu")).value;
+        ClassicLang cpu = (ClassicLang) ((Format.Option.SimpleOption) format.getOption("cpu")).value;
         Format.Option.EntryPoints entryPoints = (Format.Option.EntryPoints) format.getOption("entry");
         for (Format.EntryPoint entryPoint : entryPoints) {
             disassembler.noteAbsoluteEntryPoint(entryPoint.address, entryPoint.lang != null ? entryPoint.lang : cpu);

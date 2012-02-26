@@ -8,16 +8,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import net.mirky.redis.ResourceManager.ResolutionError;
-import net.mirky.redis.analysers.ZXSBasicProgramAnalyser;
 
 public final class Disassembler {
     private final byte[] data;
@@ -341,9 +337,9 @@ public final class Disassembler {
         return data[base] & 0xFF;
     }
 
-    public final void noteAbsoluteEntryPoint(int address, Disassembler.Lang lang) {
+    public final void noteAbsoluteEntryPoint(int address, ClassicLang lang) {
         // special case
-        if (lang == Lang.NONE) {
+        if (lang == ClassicLang.NONE) {
             return;
         }
         int offset = address - format.getOrigin();
@@ -378,7 +374,7 @@ public final class Disassembler {
                         sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), sb);
                         storeInstructionAndPass(sequencer.getCurrentLang().name, sb.toString());
                         sequencer.advance();
-                    } catch (Lang.UnknownOpcode e) {
+                    } catch (ClassicLang.UnknownOpcode e) {
                         this.recordProblem("unknown " + e.lang.name + " opcode");
                         StringBuilder sb = new StringBuilder();
                         sb.setLength(0);
@@ -411,8 +407,8 @@ public final class Disassembler {
     // necessarily dispatch by the first byte in this instruction; some
     // languages have instructions
     // with multiple dispatches).
-    final void decipher(byte[] code, int startPosition, Lang.Tabular.Linkage linkage, StringBuilder sb) throws RuntimeException,
-            IncompleteInstruction, Lang.UnknownOpcode {
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws RuntimeException,
+            IncompleteInstruction, ClassicLang.UnknownOpcode {
         currentValue = 0; // just in case
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -431,7 +427,7 @@ public final class Disassembler {
                 String newLangName = linkage.referredLanguages[step - Bytecode.DISPATCH_0];
                 // note the late binding
                 try {
-                    Lang.MANAGER.get(newLangName).decipher(this, currentValue, sb);
+                    ClassicLang.MANAGER.get(newLangName).decipher(this, currentValue, sb);
                 } catch (ResourceManager.ResolutionError e) {
                     throw new RuntimeException("referred language unknown", e);
                 }
@@ -440,7 +436,7 @@ public final class Disassembler {
                 String newLangName = linkage.referredLanguages[step - Bytecode.TEMPSWITCH_0];
                 // note the late binding
                 try {
-                    sequencer.switchTemporarily(Lang.MANAGER.get(newLangName));
+                    sequencer.switchTemporarily(ClassicLang.MANAGER.get(newLangName));
                 } catch (ResourceManager.ResolutionError e) {
                     throw new RuntimeException("referred language unknown", e);
                 }
@@ -487,7 +483,7 @@ public final class Disassembler {
 
                     case Bytecode.BYTE_ENTRY_POINT_REFERENCE:
                         try {
-                            noteAbsoluteEntryPoint(currentValue, Lang.MANAGER.get("byte"));
+                            noteAbsoluteEntryPoint(currentValue, ClassicLang.MANAGER.get("byte"));
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
@@ -495,7 +491,7 @@ public final class Disassembler {
 
                     case Bytecode.LEWYDE_ENTRY_POINT_REFERENCE:
                         try {
-                            noteAbsoluteEntryPoint(currentValue, Lang.MANAGER.get("lewyde"));
+                            noteAbsoluteEntryPoint(currentValue, ClassicLang.MANAGER.get("lewyde"));
                         } catch (ResourceManager.ResolutionError e) {
                             throw new RuntimeException("bug detected", e);
                         }
@@ -536,7 +532,7 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.TERMINATE:
-                        sequencer.switchPermanently(Lang.NONE);
+                        sequencer.switchPermanently(ClassicLang.NONE);
                         break;
 
                     case Bytecode.SET_COUNTDOWN_6:
@@ -623,7 +619,7 @@ public final class Disassembler {
                     lastOffset = offset;
                 }
                 try {
-                    if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !Lang.MANAGER.get(lang).isTrivial()) {
+                    if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !ClassicLang.MANAGER.get(lang).isTrivial()) {
                         port.println("          .switch " + lang);
                         lastLang = lang;
                     }
@@ -685,326 +681,6 @@ public final class Disassembler {
         }
     }
 
-    /**
-     * A {@link Lang} roughly represents a particular bytecode/machine code
-     * language such as {@code i8080} or {@code m68000}. Most of the actual
-     * languages are stored in *.lang resource files, which are translated into
-     * an internal bytecode when the {@link Lang} instance is constructed. (See
-     * {@link Lang.Tabular} for details.)
-     * 
-     * {@link Lang}s are equity-comparable by their identity, and hashable and
-     * ordering-comparable by their name. This allows them to be stored in both
-     * hashed and tree:d sets. Note that {@link Lang} names are unique because
-     * of the caching done by {@link Lang#get(String)}.
-     */
-    public static abstract class Lang extends AbstractBinaryLanguage implements Comparable<Lang> {
-        final String name;
-        private final int defaultCountdown;
-
-        private Lang(String name, int defaultCountdown) {
-            this.name = name;
-            this.defaultCountdown = defaultCountdown;
-        }
-
-        @Override
-        public final int hashCode() {
-            return name.hashCode();
-        }
-
-        @Override
-        public final boolean equals(Object that) {
-            return this == that;
-        }
-
-        public final int compareTo(Lang that) {
-            return this.name.compareTo(that.name);
-        }
-
-        /**
-         * Checks triviality status of the language. Switches to a trivial
-         * language and back are not explicitly marked in disassembler's output.
-         * This is handy for raw value languages.
-         * 
-         * @return whether the language is trivial
-         */
-        abstract boolean isTrivial();
-
-        abstract void decipher(Disassembler disassembler, int opcode, StringBuilder sb) throws UnknownOpcode,
-                IncompleteInstruction;
-
-        void dumpLang(PrintStream port) {
-            port.println(name + " is a builtin language");
-        }
-
-        @Override
-        public final int getDefaultCountdown() {
-            return defaultCountdown;
-        }
-
-        @SuppressWarnings("synthetic-access")
-        static final Lang NONE = new Lang("none", 0) {
-            @Override
-            final void decipher(Disassembler disassembler, int opcode, StringBuilder sb) {
-                // should never be called -- the disassembler should check
-                // against NONE
-                throw new RuntimeException("bug detected");
-            }
-
-            @Override
-            final boolean isTrivial() {
-                return true;
-            }
-        };
-
-        @SuppressWarnings("synthetic-access")
-        static final Lang CONDENSED_ZXSNUM = new Lang("condensed-zxsnum", 1) {
-            @Override
-            final void decipher(Disassembler disassembler, int firstCondensedByte, StringBuilder sb)
-                    throws IncompleteInstruction {
-                int significandByteCount = (firstCondensedByte >> 6) + 1;
-                byte condensedExponent = (byte) (firstCondensedByte & 0x3F);
-                byte[] bytes = new byte[]{0, 0, 0, 0, 0};
-                int significandOffset;
-                if (condensedExponent == 0) {
-                    bytes[0] = (byte) disassembler.getUnsignedByte(1);
-                    significandOffset = 2;
-                } else {
-                    bytes[0] = condensedExponent;
-                    significandOffset = 1;
-                }
-                bytes[0] += 0x50;
-                for (int i = 0; i < significandByteCount; i++) {
-                    bytes[i + 1] = (byte) disassembler.getUnsignedByte(significandOffset + i);
-                }
-                sb.append("byte ");
-                for (int i = 0; i < significandOffset + significandByteCount; i++) {
-                    if (i != 0) {
-                        sb.append(", ");
-                    }
-                    sb.append("0x");
-                    sb.append(Hex.b(disassembler.getUnsignedByte(i)));
-                }
-                ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(bytes);
-                sb.append(" // ");
-                number.prepareForDisassemblyDisplay(sb);
-            }
-
-            @Override
-            final boolean isTrivial() {
-                return true;
-            }
-        };
-
-        static final class Tabular extends Lang {
-            private final boolean trivial;
-            private final Tabular.Linkage linkage;
-            private final byte[] bytecode;
-            private final int[] dispatchTable;
-            /*
-             * Note that the dispatch suboffset declaration is only used for
-             * dumping the parsed language table. The actual dispatch key is
-             * either implicitly fetched from suboffset zero, or explicitly
-             * declared by the parent language -- possibly without any reference
-             * to a fixed suboffset at all.
-             */
-            private final int dispatchSuboffset;
-
-            @SuppressWarnings("synthetic-access")
-            private Tabular(String name, int defaultCountdown, boolean trivial, byte[] bytecode, int[] dispatchTable, Tabular.Linkage linkage, LangParser parser) {
-                super(name, defaultCountdown);
-                assert dispatchTable.length == 256;
-                assert linkage.minitables.length <= Bytecode.MAX_MINITABLE_COUNT;
-                this.trivial = trivial;
-                this.linkage = linkage;
-                this.dispatchSuboffset = parser.dispatchSuboffset;
-                this.bytecode = bytecode;
-                this.dispatchTable = dispatchTable;
-            }
-
-            static final Tabular loadTabular(String name, BufferedReader reader) throws IOException {
-                LangParser parser = new LangParser();
-                parser.parse(name, reader);
-                return new Tabular(name, parser.defaultCountdown, parser.trivial, parser.bytecode, parser.dispatchTable, parser.linkage, parser);
-            }
-
-            @Override
-            final void decipher(Disassembler disassembler, int opcode, StringBuilder sb) throws UnknownOpcode,
-                    IncompleteInstruction {
-                if (dispatchTable[opcode] == -1) {
-                    throw new Lang.UnknownOpcode(this);
-                }
-                disassembler.decipher(bytecode, dispatchTable[opcode], linkage, sb);
-            }
-
-            @Override
-            final boolean isTrivial() {
-                return trivial;
-            }
-
-            @Override
-            final void dumpLang(PrintStream port) {
-                port.println("# " + name + " is a tabular language");
-                port.println("Dispatch-suboffset: " + dispatchSuboffset);
-                port.println("Default-countdown: " + getDefaultCountdown());
-                if (trivial) {
-                    port.println("Trivial: true");
-                }
-                for (int i = 0; i < linkage.minitables.length; i++) {
-                    String[] minitable = linkage.minitables[i];
-                    if (minitable != null) {
-                        port.print("minitable minitable#" + i + ":");
-                        for (int j = 0; j < minitable.length; j++) {
-                            port.print(' ');
-                            port.print(minitable[j]);
-                        }
-                        port.println();
-                    }
-                }
-                for (int i = 0; i < linkage.referredLanguages.length; i++) {
-                    if (linkage.referredLanguages[i] != null) {
-                        port.println("# referred lang " + i + " is " + linkage.referredLanguages[i]);
-                    }
-                }
-                for (int i = 0; i < 256; i++) {
-                    if ((i & 0x0F) == 0) {
-                        port.println();
-                    }
-                    port.print("0x" + Hex.b(i) + ' ');
-                    if (dispatchTable[i] != -1) {
-                        port.print("(@0x" + Hex.w(dispatchTable[i]) + ") ");
-                        dumpDecipherer(i, dispatchTable[i], port);
-                        port.println();
-                    } else {
-                        port.println('-');
-                    }
-                }
-                port.println();
-                try {
-                    Hex.dump(bytecode, 0, Decoding.MANAGER.get("ascii"), port);
-                } catch (ResolutionError e) {
-                    throw new RuntimeException("The ASCII decoding is missing?");
-                }
-            }
-
-            private final void dumpDecipherer(int opcode, int startPosition, PrintStream port) {
-                boolean broketed = false;
-                DECIPHERER_LOOP : for (int i = startPosition; bytecode[i] != Bytecode.COMPLETE; i++) {
-                    byte b = bytecode[i];
-                    if (b == Disassembler.Bytecode.GET_BYTE_0 + dispatchSuboffset) {
-                        int currentValue = opcode;
-                        for (int k = i + 1; k < bytecode.length; k++) {
-                            if (bytecode[k] == Disassembler.Bytecode.SHR_3) {
-                                currentValue >>>= 3;
-                            } else if (bytecode[k] == Disassembler.Bytecode.SHR_4) {
-                                currentValue >>>= 4;
-                            } else if (bytecode[k] == Disassembler.Bytecode.SHR_5) {
-                                currentValue >>>= 5;
-                            } else if (bytecode[k] == Disassembler.Bytecode.SHR_6) {
-                                currentValue >>>= 6;
-                            } else if (bytecode[k] >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
-                                    && bytecode[k] < Disassembler.Bytecode.MINITABLE_LOOKUP_0
-                                            + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
-                                String[] minitable = linkage.minitables[bytecode[k]
-                                        - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
-                                if (minitable == null) {
-                                    break;
-                                }
-                                if (broketed) {
-                                    port.print('>');
-                                    broketed = false;
-                                }
-                                port.print(minitable[currentValue & (minitable.length - 1)]);
-                                i = k;
-                                continue DECIPHERER_LOOP;
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-                    if (b >= 0x20 && b <= 0x7E) {
-                        if (broketed) {
-                            port.print('>');
-                            broketed = false;
-                        }
-                        port.print((char) b);
-                    } else {
-                        if (!broketed) {
-                            port.print('<');
-                            broketed = true;
-                        } else {
-                            port.print(", ");
-                        }
-                        port.print("0x" + Hex.b(b));
-                    }
-                }
-                if (broketed) {
-                    port.print('>');
-                }
-            }
-
-            static final class BytecodeCollector {
-                private final ArrayList<Byte> steps;
-
-                BytecodeCollector() {
-                    steps = new ArrayList<Byte>();
-                }
-
-                final void add(byte code) {
-                    steps.add(new Byte(code));
-                }
-
-                final byte[] finish() {
-                    byte[] bytecode = new byte[steps.size()];
-                    for (int i = 0; i < bytecode.length; i++) {
-                        bytecode[i] = steps.get(i).byteValue();
-                    }
-                    return bytecode;
-                }
-
-                final int currentPosition() {
-                    return steps.size();
-                }
-            }
-
-            static final class Linkage {
-                final String[][] minitables;
-                final String[] referredLanguages;
-                
-                Linkage() {
-                    minitables = new String[Disassembler.Bytecode.MAX_MINITABLE_COUNT][];
-                    referredLanguages = new String[Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
-                }
-            }
-        }
-
-        public static final ResourceManager<Lang> MANAGER = new ResourceManager<Lang>("lang") {
-            @Override
-            public final Lang load(String name, BufferedReader reader) throws IOException {
-                return Tabular.loadTabular(name, reader);
-            }
-        };
-        
-        static {
-            MANAGER.registerSpecial("none", Lang.NONE);
-            MANAGER.registerSpecial("condensed-zxsnum", Lang.CONDENSED_ZXSNUM);
-        }
-        
-
-        /**
-         * Thrown when a bytecode table lookup fails. {@link #run()} catches it,
-         * terminates disassembly of the current sequence, and makes sure that
-         * all fetched bytes of the current instruction are listed as raw bytes
-         * for the user to be able to see what could not be parsed.
-         */
-        static final class UnknownOpcode extends Exception {
-            final Lang lang;
-
-            UnknownOpcode(Lang lang) {
-                this.lang = lang;
-            }
-        }
-    }
-
     static abstract class SequencerEffect {
         abstract void affectSequencer(LangSequencer sequencer);
 
@@ -1016,9 +692,9 @@ public final class Disassembler {
         }
 
         static final class SwitchPermanently extends SequencerEffect {
-            private final Lang lang;
+            private final ClassicLang lang;
 
-            SwitchPermanently(Lang lang) {
+            SwitchPermanently(ClassicLang lang) {
                 this.lang = lang;
             }
 
@@ -1029,9 +705,9 @@ public final class Disassembler {
         }
 
         static final class SwitchTemporarily extends SequencerEffect {
-            private final Lang lang;
+            private final ClassicLang lang;
 
-            SwitchTemporarily(Lang lang) {
+            SwitchTemporarily(ClassicLang lang) {
                 this.lang = lang;
             }
 
@@ -1075,14 +751,14 @@ public final class Disassembler {
                             throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
                         }
                         // this will throw exception if the lang is unknown
-                        Lang newLang = Lang.MANAGER.get(fields[2]);
+                        ClassicLang newLang = ClassicLang.MANAGER.get(fields[2]);
                         effect = new SequencerEffect.SwitchTemporarily(newLang);
                     } else if (fields[1].equals("switch-permanently")) {
                         if (fields.length > 3) {
                             throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
                         }
                         // this will throw exception if the lang is unknown
-                        Lang newLang = Lang.MANAGER.get(fields[2]);
+                        ClassicLang newLang = ClassicLang.MANAGER.get(fields[2]);
                         effect = new SequencerEffect.SwitchPermanently(newLang);
                     } else {
                         throw new RuntimeException("invalid API vector declaration \"" + line + "\"");
@@ -1119,7 +795,7 @@ public final class Disassembler {
     }
 
     static final class LangSequencer {
-        private Lang currentLang;
+        private ClassicLang currentLang;
         private LinkedList<Frame> stack;
 
         LangSequencer() {
@@ -1135,7 +811,7 @@ public final class Disassembler {
             }
         }
 
-        Lang getCurrentLang() {
+        ClassicLang getCurrentLang() {
             if (currentLang == null) {
                 if (!stack.isEmpty()) {
                     Frame topFrame = stack.getLast();
@@ -1144,7 +820,7 @@ public final class Disassembler {
                         stack.removeLast();
                     }
                 } else {
-                    currentLang = Lang.NONE;
+                    currentLang = ClassicLang.NONE;
                 }
             }
             return currentLang;
@@ -1161,13 +837,13 @@ public final class Disassembler {
 
         // note that the switch does not happen immediately but
         // after the next call to advance()
-        final void switchPermanently(Lang newLang) {
+        final void switchPermanently(ClassicLang newLang) {
             assert newLang != null;
             terminate();
             switchTemporarily(newLang);
         }
 
-        final void switchTemporarily(Lang newLang) {
+        final void switchTemporarily(ClassicLang newLang) {
             assert newLang != null;
             assert newLang.getDefaultCountdown() >= 0;
             stack.addLast(new Frame(newLang.getDefaultCountdown(), newLang));
@@ -1185,7 +861,7 @@ public final class Disassembler {
         }
 
         final boolean sequencerHasMore() {
-            return getCurrentLang() != Lang.NONE;
+            return getCurrentLang() != ClassicLang.NONE;
         }
 
         /**
@@ -1210,9 +886,9 @@ public final class Disassembler {
 
         static final class Frame {
             int countdown;
-            final Lang lang;
+            final ClassicLang lang;
 
-            Frame(int countdown, Lang lang) {
+            Frame(int countdown, ClassicLang lang) {
                 this.countdown = countdown;
                 this.lang = lang;
             }

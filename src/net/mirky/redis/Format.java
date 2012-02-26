@@ -199,16 +199,16 @@ public final class Format {
         };
 
         @SimpleTypeName("lang")
-        static final Simple<Disassembler.Lang> LANG = new Simple<Disassembler.Lang>() {
+        static final Simple<ClassicLang> LANG = new Simple<ClassicLang>() {
             @Override
-            final void stringify(Disassembler.Lang value, StringBuilder sb) {
+            final void stringify(ClassicLang value, StringBuilder sb) {
                 sb.append(value.name);
             }
 
             @Override
-            final Disassembler.Lang parse(String name) throws OptionError {
+            final ClassicLang parse(String name) throws OptionError {
                 try {
-                    return Disassembler.Lang.MANAGER.get(name);
+                    return ClassicLang.MANAGER.get(name);
                 } catch (ResourceManager.ResolutionError e) {
                     throw new OptionError("unknown CPU: " + name, e);
                 }
@@ -1029,10 +1029,10 @@ public final class Format {
      */
     public static final class EntryPoint {
         public final int address;
-        public final Disassembler.Lang lang;
+        public final ClassicLang lang;
         final boolean explicit;
 
-        EntryPoint(int address, Disassembler.Lang lang, boolean explicit) {
+        EntryPoint(int address, ClassicLang lang, boolean explicit) {
             this.address = address;
             this.lang = lang;
             this.explicit = explicit;
@@ -1074,7 +1074,7 @@ public final class Format {
                 langPart = null;
             }
             int address = Format.OptionType.UNSIGNED_HEX_INTEGER.parse(addressPart).intValue();
-            Disassembler.Lang lang = langPart != null ? Format.OptionType.LANG.parse(langPart) : null;
+            ClassicLang lang = langPart != null ? Format.OptionType.LANG.parse(langPart) : null;
             return new Format.EntryPoint(address, lang, true);
         }
     }
