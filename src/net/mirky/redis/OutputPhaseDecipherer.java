@@ -167,7 +167,7 @@ final class OutputPhaseDecipherer {
         }
     }
     
-    static final class DeciphererOutputStringBuilder {
+    static final class DeciphererOutputStringBuilder extends DeciphererOutput {
         public final StringBuilder sb;
         
         public DeciphererOutputStringBuilder(StringBuilder sb) {

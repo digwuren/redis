@@ -742,7 +742,7 @@ public final class Disassembler {
     }
 
     @SuppressWarnings("synthetic-access")
-    final class WavingContext {
+    final class WavingContext extends DeciphererOutput {
         public final void switchTemporarily(ClassicLang newLang) {
             sequencer.switchTemporarily(newLang);
         }
