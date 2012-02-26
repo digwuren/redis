@@ -160,7 +160,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             if (dispatchTable[opcode] == -1) {
                 throw new ClassicLang.UnknownOpcode(this);
             }
-            return WavingPhaseDecipherer.decipher(bytecode, dispatchTable[opcode], linkage, in, out);
+            return Bytecode.decipher(bytecode, dispatchTable[opcode], linkage, in, out);
         }
 
         @Override

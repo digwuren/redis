@@ -16,6 +16,10 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import net.mirky.redis.ClassicLang.Tabular;
+import net.mirky.redis.ClassicLang.Tabular.Linkage;
+import net.mirky.redis.ClassicLang.UnknownOpcode;
+
 public final class Disassembler {
     private final byte[] data;
     private final Format format;
@@ -253,6 +257,181 @@ public final class Disassembler {
                     return size != 0;
                 } else {
                     return size == sizeRequirement;
+                }
+            }
+        }
+
+        /**
+         * Run the given disassembler bytecode.
+         * 
+         * @return the instruction's size
+         * 
+         * @throws Disassembler.IncompleteInstruction
+         *             if the end of the binary object in the {@link Disassembler}
+         *             is encountered before the instruction ends
+         * @throws ClassicLang.UnknownOpcode
+         *             if {@link Lang.Tabular} dispatch fails (which is not
+         *             necessarily dispatch by the first byte in this instruction;
+         *             some languages have instructions with multiple dispatches)
+         */
+        static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput in, DeciphererOutput out) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
+            Disassembler.Maximiser currentInstructionSize = new Disassembler.Maximiser(0);
+            int currentValue = 0;
+            for (int i = startPosition;; i++) {
+                byte step = code[i];
+                if (step >= 0x20 && step <= 0x7E) {
+                    out.append((char) step);
+                } else if (step >= MINITABLE_LOOKUP_0
+                        && step < MINITABLE_LOOKUP_0 + MAX_MINITABLE_COUNT) {
+                    String[] minitable = linkage.minitables[step - MINITABLE_LOOKUP_0];
+                    // note that we're checking this at the minitable construction
+                    // time
+                    assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
+                    // mask off excess bits, then fetch a string from the minitable
+                    out.append(minitable[currentValue & (minitable.length - 1)]);
+                } else if (step >= DISPATCH_0
+                        && step < DISPATCH_0 + MAX_REFERRED_LANGUAGE_COUNT) {
+                    int suboffset = step - DISPATCH_0;
+                    ClassicLang newLang = linkage.getReferredLanguage(suboffset);
+                    int subsize = newLang.decipher(currentValue, in, out);
+                    currentInstructionSize.feed(suboffset + subsize);
+                } else if (step >= TEMPSWITCH_0
+                        && step < TEMPSWITCH_0 + MAX_REFERRED_LANGUAGE_COUNT) {
+                    ClassicLang newLang = linkage.getReferredLanguage(step - TEMPSWITCH_0);
+                    out.switchTemporarily(newLang);
+                } else if (step >= ENTRY_POINT_0
+                        && step < ENTRY_POINT_0 + MAX_REFERRED_LANGUAGE_COUNT) {
+                    ClassicLang lang = linkage.getReferredLanguage(step - ENTRY_POINT_0);
+                    out.noteAbsoluteEntryPoint(currentValue, lang);
+                } else if (step >= GET_BYTE_0 && step <= GET_BYTE_0 + MAX_SUBOFFSET) {
+                    int suboffset = step - GET_BYTE_0;
+                    currentValue = in.getUnsignedByte(suboffset);
+                    currentInstructionSize.feed(suboffset + 1);
+                } else if (step >= GET_LEWYDE_0 && step <= GET_LEWYDE_0 + MAX_SUBOFFSET) {
+                    int suboffset = step - GET_LEWYDE_0;
+                    currentValue = in.getUnsignedLewyde(suboffset);
+                    currentInstructionSize.feed(suboffset + 2);
+                } else {
+                    switch (step) {
+                        case SHR_3:
+                            currentValue >>>= 3;
+                            break;
+        
+                        case SHR_4:
+                            currentValue >>>= 4;
+                            break;
+        
+                        case SHR_5:
+                            currentValue >>>= 5;
+                            break;
+        
+                        case SHR_6:
+                            currentValue >>>= 6;
+                            break;
+        
+                        case ENTRY_POINT_REFERENCE:
+                            out.noteAbsoluteEntryPoint(currentValue);
+                            break;
+        
+                        case SUBROUTINE_ENTRY_POINT_REFERENCE:
+                            out.noteAbsoluteEntryPoint(currentValue);
+                            out.lookupAPI(currentValue);
+                            break;
+        
+                        case UNSIGNED_BYTE:
+                            out.append("0x");
+                            out.append(Hex.b(currentValue));
+                            break;
+        
+                        case UNSIGNED_WYDE:
+                            out.append("0x");
+                            out.append(Hex.w(currentValue));
+                            break;
+        
+                        case SIGNED_BYTE:
+                            if ((currentValue & 0x80) == 0) {
+                                currentValue &= 0x7F;
+                            } else {
+                                currentValue |= ~0x7F;
+                                currentValue = -currentValue;
+                                out.append('-');
+                            }
+                            out.append("0x");
+                            out.append(Hex.b(currentValue));
+                            break;
+        
+                        case SIGNED_WYDE:
+                            if ((currentValue & 0x8000) == 0) {
+                                currentValue &= 0x7FFF;
+                            } else {
+                                currentValue |= ~0x7FFF;
+                                currentValue = -currentValue;
+                                out.append('-');
+                            }
+                            out.append("0x");
+                            out.append(Hex.w(currentValue));
+                            break;
+        
+                        case TERMINATE:
+                            out.terminate();
+                            break;
+        
+                        case SET_COUNTDOWN_6:
+                            out.setCountdown(6);
+                            break;
+                            
+                        case SET_COUNTDOWN_8:
+                            out.setCountdown(8);
+                            break;
+                            
+                        case SET_COUNTDOWN_12:
+                            out.setCountdown(12);
+                            break;
+                            
+                        case SWITCH_BACK:
+                            out.switchBack();
+                            break;
+        
+                        case BYTE_SIGNEDREL_1:
+                            if ((currentValue & 0x80) == 0) {
+                                currentValue &= 0x7F;
+                            } else {
+                                currentValue |= ~0x7F;
+                            }
+                            currentValue += in.getCurrentInstructionAddress() + 1;
+                            break;
+        
+                        case BYTE_SIGNEDREL_2:
+                            if ((currentValue & 0x80) == 0) {
+                                currentValue &= 0x7F;
+                            } else {
+                                currentValue |= ~0x7F;
+                            }
+                            currentValue += in.getCurrentInstructionAddress() + 2;
+                            break;
+        
+                        case AND_3:
+                            currentValue &= 3;
+                            break;
+        
+                        case AND_7:
+                            currentValue &= 7;
+                            break;
+        
+                        case AND_0x38:
+                            currentValue &= 0x38;
+                            break;
+        
+                        case DECIMAL:
+                            out.append(currentValue);
+                            break;
+        
+                        case COMPLETE:
+                            return currentInstructionSize.get();
+        
+                        default:
+                            throw new RuntimeException("bug detected");
+                    }
                 }
             }
         }
