@@ -35,6 +35,10 @@ final class DeciphererOutputStringBuilder extends DeciphererOutput {
         // no effect in the output generation phase
     }
 
+    public final void noteAbsoluteEntryPoint(int currentValue, ClassicLang lang) {
+        // no effect in the output generation phase
+    }
+
     public final void lookupAPI(int address) {
         // no effect in the output generation phase
     }
