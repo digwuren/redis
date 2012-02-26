@@ -57,8 +57,8 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     abstract void decipher(Disassembler disassembler, int opcode, StringBuilder sb) throws UnknownOpcode,
             IncompleteInstruction;
 
-    void dumpLang(PrintStream port) {
-        port.println(name + " is a builtin language");
+    void dumpLang(String langName, PrintStream port) {
+        port.println(langName + " is a builtin language");
     }
 
     @Override
@@ -167,8 +167,8 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
         }
 
         @Override
-        final void dumpLang(PrintStream port) {
-            port.println("# " + name + " is a tabular language");
+        final void dumpLang(String langName, PrintStream port) {
+            port.println("# " + langName + " is a tabular language");
             port.println("Dispatch-suboffset: " + dispatchSuboffset);
             port.println("Default-countdown: " + getDefaultCountdown());
             if (trivial) {
