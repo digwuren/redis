@@ -41,7 +41,6 @@ public final class Disassembler {
     // Disassembler's internal state
     private int currentOffset;
     private final LangSequencer sequencer;
-    private int currentInstructionSize;
 
     /*
      * Bytecode values for the internal bytecode. Note that the bytecode is
@@ -277,7 +276,6 @@ public final class Disassembler {
         externalPointsOfInterest = new TreeMap<Integer, TreeSet<ClassicLang>>();
         currentOffset = -1;
         sequencer = new LangSequencer();
-        currentInstructionSize = 0;
     }
 
     private final void addInstructionEntry(int offset, ClassicLang lang) {
@@ -305,7 +303,6 @@ public final class Disassembler {
     }
 
     final int getUnsignedLewyde(int suboffset) throws IncompleteInstruction {
-        updateInstructionSize(suboffset + 2);
         int base = currentOffset + suboffset;
         if (base < 0 || data.length - 2 < base) {
             throw new IncompleteInstruction();
@@ -313,14 +310,7 @@ public final class Disassembler {
         return (data[base] & 0xFF) + (data[base + 1] & 0xFF) * 256;
     }
 
-    final void updateInstructionSize(int min) {
-        if (min > currentInstructionSize) {
-            currentInstructionSize = min;
-        }
-    }
-
     final int getUnsignedByte(int suboffset) throws IncompleteInstruction {
-        updateInstructionSize(suboffset + 1);
         int base = currentOffset + suboffset;
         if (base < 0 || base >= data.length) {
             throw new IncompleteInstruction();
@@ -363,26 +353,21 @@ public final class Disassembler {
                 }
                 try {
                     try {
-                        sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), input, ctx);
+                        int instructionSize = sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), input, ctx);
+                        if (instructionSize < 1) {
+                            instructionSize = 1;
+                        }
                         addInstructionEntry(currentOffset, sequencer.getCurrentLang());
-                        for (int i = 0; i < currentInstructionSize; i++) {
+                        for (int i = 0; i < instructionSize; i++) {
                             undeciphered[currentOffset + i] = false;
                         }
-                        currentOffset += currentInstructionSize;
-                        currentInstructionSize = 0;
+                        currentOffset += instructionSize;
                         sequencer.advance();
                     } catch (ClassicLang.UnknownOpcode e) {
+                        // FIXME: we should indicate to the user what the opcode
+                        // is, and this should work in a reasonable way no
+                        // matter its suboffset
                         this.recordProblem("unknown " + e.lang.name + " opcode");
-                        StringBuilder sb = new StringBuilder();
-                        sb.setLength(0);
-                        sb.append("byte ");
-                        for (int i = 0; i < currentInstructionSize; i++) {
-                            if (i != 0) {
-                                sb.append(", ");
-                            }
-                            sb.append("0x");
-                            sb.append(Hex.b(this.getUnsignedByte(i)));
-                        }
                         break DECIPHERING_LOOP;
                     }
                 } catch (IncompleteInstruction e) {
@@ -407,6 +392,7 @@ public final class Disassembler {
      *             some languages have instructions with multiple dispatches)
      */
     final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+        Maximiser currentInstructionSize = new Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -420,7 +406,7 @@ public final class Disassembler {
                 int suboffset = step - Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
                 int subsize = newLang.decipher(this, currentValue, input, ctx);
-                updateInstructionSize(suboffset + subsize);
+                currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Bytecode.TEMPSWITCH_0);
@@ -432,11 +418,11 @@ public final class Disassembler {
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Bytecode.GET_BYTE_0;
                 currentValue = input.getUnsignedByte(suboffset);
-                updateInstructionSize(suboffset + 1);
+                currentInstructionSize.feed(suboffset + 1);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Bytecode.GET_LEWYDE_0;
                 currentValue = input.getUnsignedLewyde(suboffset);
-                updateInstructionSize(suboffset + 2);
+                currentInstructionSize.feed(suboffset + 2);
             } else {
                 switch (step) {
                     case Bytecode.SHR_3:
@@ -526,7 +512,7 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.COMPLETE:
-                        return currentInstructionSize;
+                        return currentInstructionSize.get();
 
                     default:
                         throw new RuntimeException("bug detected");
@@ -553,6 +539,7 @@ public final class Disassembler {
      *             some languages have instructions with multiple dispatches)
      */
     final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+        Maximiser currentInstructionSize = new Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
@@ -571,7 +558,7 @@ public final class Disassembler {
                 int suboffset = step - Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
                 int subsize = newLang.decipher(this, currentValue, input, sb);
-                updateInstructionSize(suboffset + subsize);
+                currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // ignore in output generation phase
@@ -581,11 +568,11 @@ public final class Disassembler {
             } else if (step >= Bytecode.GET_BYTE_0 && step <= Bytecode.GET_BYTE_0 + Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Bytecode.GET_BYTE_0;
                 currentValue = input.getUnsignedByte(suboffset);
-                updateInstructionSize(suboffset + 1);
+                currentInstructionSize.feed(suboffset + 1);
             } else if (step >= Bytecode.GET_LEWYDE_0 && step <= Bytecode.GET_LEWYDE_0 + Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Bytecode.GET_LEWYDE_0;
                 currentValue = input.getUnsignedLewyde(suboffset);
-                updateInstructionSize(suboffset + 2);
+                currentInstructionSize.feed(suboffset + 2);
             } else {
                 switch (step) {
                     case Bytecode.SHR_3:
@@ -686,7 +673,7 @@ public final class Disassembler {
                         break;
     
                     case Bytecode.COMPLETE:
-                        return currentInstructionSize;
+                        return currentInstructionSize.get();
     
                     default:
                         throw new RuntimeException("bug detected");
@@ -722,18 +709,21 @@ public final class Disassembler {
             if (instructions != null) {
                 for (ClassicLang lang : instructions) {
                     currentOffset = offset;
-                    currentInstructionSize = 0;
                     sequencer.switchPermanently(lang);
                     sequencer.setCountdown(1);
                     StringBuilder sb = new StringBuilder();
+                    int size;
                     try {
-                        lang.decipher(this, getUnsignedByte(0), input, sb);
+                        size = lang.decipher(this, getUnsignedByte(0), input, sb);
+                        if (size < 1) {
+                            size = 1;
+                        }
                     } catch (ClassicLang.UnknownOpcode e) {
                         throw new RuntimeException("bug detected", e);
                     } catch (IncompleteInstruction e) {
                         throw new RuntimeException("bug detected", e);
                     }
-                    DecipheredInstruction instruction = new DecipheredInstruction(currentInstructionSize, sb.toString());
+                    DecipheredInstruction instruction = new DecipheredInstruction(size, sb.toString());
                     if (offset < lastOffset) {
                         port.println("          ! retreat " + (lastOffset - offset));
                         lastOffset = offset;
@@ -1093,6 +1083,28 @@ public final class Disassembler {
 
         public final void switchBack() {
             sequencer.switchBack();
+        }
+    }
+    
+    public static final class Maximiser {
+        private int value;
+
+        public Maximiser(int value) {
+            this.value = value;
+        }
+        
+        public final void reset(int newValue) {
+            value = newValue;
+        }
+
+        public final int get() {
+            return value;
+        }
+
+        final void feed(int newValue) {
+            if (newValue > value) {
+                value = newValue;
+            }
         }
     }
 }
