@@ -72,20 +72,26 @@ final class WavingPhaseDecipherer {
                     case Disassembler.Bytecode.SHR_6:
                         currentValue >>>= 6;
                         break;
-    
+
                     case Disassembler.Bytecode.ENTRY_POINT_REFERENCE:
                         out.noteAbsoluteEntryPoint(currentValue);
                         break;
-    
+
                     case Disassembler.Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
                         out.noteAbsoluteEntryPoint(currentValue);
                         out.lookupAPI(currentValue);
                         break;
     
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
-                    case Disassembler.Bytecode.UNSIGNED_WYDE:
-                        // ignore -- no output
+                        out.append("0x");
+                        out.append(Hex.b(currentValue));
                         break;
+
+                    case Disassembler.Bytecode.UNSIGNED_WYDE:
+                        out.append("0x");
+                        out.append(Hex.w(currentValue));
+                        break;
+
                     case Disassembler.Bytecode.SIGNED_BYTE:
                         if ((currentValue & 0x80) == 0) {
                             currentValue &= 0x7F;
@@ -113,7 +119,7 @@ final class WavingPhaseDecipherer {
                     case Disassembler.Bytecode.TERMINATE:
                         out.terminate();
                         break;
-    
+
                     case Disassembler.Bytecode.SET_COUNTDOWN_6:
                         out.setCountdown(6);
                         break;
