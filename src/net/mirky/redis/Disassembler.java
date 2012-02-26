@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -21,6 +22,7 @@ public final class Disassembler {
     private final API api;
     private final boolean[] undeciphered;
     private final Map<Integer, TreeMap<String, DecipheredInstruction>> deciphered;
+    private final Map<Integer, ArrayList<String>> problems;
 
     /**
      * Set of instructions referred by the format or other instructions.
@@ -277,6 +279,7 @@ public final class Disassembler {
             undeciphered[i] = true;
         }
         deciphered = new HashMap<Integer, TreeMap<String, DecipheredInstruction>>();
+        problems = new HashMap<Integer, ArrayList<String>>();
         entryPoints = new HashSet<Integer>();
         queue = new LinkedList<PendingEntryPoint>();
         externalPointsOfInterest = new TreeMap<Integer, TreeSet<String>>();
@@ -305,7 +308,12 @@ public final class Disassembler {
     }
 
     final void recordProblem(String message) {
-        addInstructionEntry("!", "! " + message, 0);
+        ArrayList<String> point = problems.get(new Integer(currentOffset));
+        if (point == null) {
+            point = new ArrayList<String>();
+            problems.put(new Integer(currentOffset), point);
+        }
+        point.add(message);
     }
 
     final boolean haveProcessed(int offset, String langName) {
@@ -601,6 +609,7 @@ public final class Disassembler {
      */
     public final void printResults(PrintStream port) {
         TreeSet<Integer> decipheredKeys = new TreeSet<Integer>(deciphered.keySet());
+        decipheredKeys.addAll(problems.keySet());
         int lastOffset = 0;
         String lastLang = "<none>";
         for (Integer boxedOffset : decipheredKeys) {
@@ -609,31 +618,39 @@ public final class Disassembler {
                 port.println();
                 lastOffset = offset;
             }
+            ArrayList<String> pointProblems = problems.get(boxedOffset);
+            if (pointProblems != null) {
+                for (String message : pointProblems) {
+                    port.println("          ! " + message);
+                }
+            }
             TreeMap<String, DecipheredInstruction> instructions = deciphered.get(boxedOffset);
-            for (Map.Entry<String, DecipheredInstruction> entry : instructions.entrySet()) {
-                String lang = entry.getKey();
-                DecipheredInstruction instruction = entry.getValue();
-                if (offset < lastOffset) {
-                    port.println("          ! retreat " + (lastOffset - offset));
-                    lastOffset = offset;
-                }
-                try {
-                    if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !ClassicLang.MANAGER.get(lang).isTrivial()) {
-                        port.println("          .switch " + lang);
-                        lastLang = lang;
+            if (instructions != null) {
+                for (Map.Entry<String, DecipheredInstruction> entry : instructions.entrySet()) {
+                    String lang = entry.getKey();
+                    DecipheredInstruction instruction = entry.getValue();
+                    if (offset < lastOffset) {
+                        port.println("          ! retreat " + (lastOffset - offset));
+                        lastOffset = offset;
                     }
-                } catch (ResourceManager.ResolutionError e) {
-                    // We've already used this lang for disassembly. Why would
-                    // retrieving it again fail?
-                    throw new RuntimeException("bug detected", e);
+                    try {
+                        if (!lang.equals(lastLang) && lang.charAt(0) != '!' && !ClassicLang.MANAGER.get(lang).isTrivial()) {
+                            port.println("          .switch " + lang);
+                            lastLang = lang;
+                        }
+                    } catch (ResourceManager.ResolutionError e) {
+                        // We've already used this lang for disassembly. Why would
+                        // retrieving it again fail?
+                        throw new RuntimeException("bug detected", e);
+                    }
+                    if (entryPoints.contains(new Integer(offset))) {
+                        port.print(Hex.t(offset + format.getOrigin()));
+                    } else {
+                        port.print("      " + Hex.b(offset + format.getOrigin()));
+                    }
+                    port.println(": " + instruction.asString);
+                    lastOffset = offset + instruction.size;
                 }
-                if (entryPoints.contains(new Integer(offset))) {
-                    port.print(Hex.t(offset + format.getOrigin()));
-                } else {
-                    port.print("      " + Hex.b(offset + format.getOrigin()));
-                }
-                port.println(": " + instruction.asString);
-                lastOffset = offset + instruction.size;
             }
         }
         port.println();
