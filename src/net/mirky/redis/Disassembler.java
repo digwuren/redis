@@ -33,7 +33,7 @@ public final class Disassembler {
      * to from the disassembled code but aren't because they lie outside the
      * code's boundaries. Multiple languages per interest point are supported.
      */
-    private final TreeMap<Integer, TreeSet<String>> externalPointsOfInterest;
+    private final TreeMap<Integer, TreeSet<ClassicLang>> externalPointsOfInterest;
 
     /** The breadth-first traversal queue */
     private final LinkedList<PendingEntryPoint> queue;
@@ -282,7 +282,7 @@ public final class Disassembler {
         problems = new HashMap<Integer, ArrayList<String>>();
         entryPoints = new HashSet<Integer>();
         queue = new LinkedList<PendingEntryPoint>();
-        externalPointsOfInterest = new TreeMap<Integer, TreeSet<String>>();
+        externalPointsOfInterest = new TreeMap<Integer, TreeSet<ClassicLang>>();
         currentOffset = -1;
         sequencer = new LangSequencer();
         currentInstructionSize = 0;
@@ -358,12 +358,12 @@ public final class Disassembler {
                         lang.getDefaultCountdown(), lang)}));
             }
         } else {
-            TreeSet<String> set = externalPointsOfInterest.get(new Integer(address));
+            TreeSet<ClassicLang> set = externalPointsOfInterest.get(new Integer(address));
             if (set == null) {
-                set = new TreeSet<String>();
+                set = new TreeSet<ClassicLang>();
                 externalPointsOfInterest.put(new Integer(address), set);
             }
-            set.add(lang.name);
+            set.add(lang);
         }
     }
 
@@ -652,14 +652,14 @@ public final class Disassembler {
         if (externalPointsOfInterest.isEmpty()) {
             port.println("    (none)");
         } else {
-            for (Map.Entry<Integer, TreeSet<String>> entry : externalPointsOfInterest.entrySet()) {
+            for (Map.Entry<Integer, TreeSet<ClassicLang>> entry : externalPointsOfInterest.entrySet()) {
                 port.print(Hex.t(entry.getKey().intValue()) + ": ");
                 boolean first = true;
-                for (String langName : entry.getValue()) {
+                for (ClassicLang lang : entry.getValue()) {
                     if (!first) {
                         port.print(", ");
                     }
-                    port.print(langName);
+                    port.print(lang.name);
                     first = false;
                 }
                 port.println();
