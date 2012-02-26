@@ -396,7 +396,7 @@ public final class Disassembler {
     /**
      * Run the given disassembler bytecode on this {@link Disassembler}
      * instance, determine the instruction's size, and mark referred entry
-     * points.
+     * points.  This is the wave-phase variant of the bytecode interpreter; it does not generate output.
      * 
      * @throws IncompleteInstruction
      *             if the end of the binary object in the {@link Disassembler}
@@ -469,17 +469,8 @@ public final class Disassembler {
                         break;
 
                     case Bytecode.UNSIGNED_BYTE:
-                        // ignore -- no output
-                        break;
-
                     case Bytecode.UNSIGNED_WYDE:
-                        // ignore -- no output
-                        break;
-
                     case Bytecode.SIGNED_BYTE:
-                        // ignore -- no output
-                        break;
-
                     case Bytecode.SIGNED_WYDE:
                         // ignore -- no output
                         break;
