@@ -90,6 +90,53 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     };
 
     @SuppressWarnings("synthetic-access")
+    static final ClassicLang ZXSB_ERROR = new ClassicLang("zxsb-error", 1) {
+        @Override
+        final boolean isTrivial() {
+            return true;
+        }
+
+        // FIXME: this ought to be in a control data table rather than hardcoded
+        @Override
+        final int decipher(DeciphererInput in, DeciphererOutput out) throws IncompleteInstruction {
+            int code = in.getUnsignedByte(0);
+            out.append("byte 0x" + Hex.b(code) + " // ");
+            switch (code) {
+                case 0x00: out.append("1 NEXT without FOR"); break;
+                case 0x01: out.append("2 Variable not found"); break;
+                case 0x02: out.append("3 Subscript wrong"); break;
+                case 0x03: out.append("4 Out of memory"); break;
+                case 0x04: out.append("5 Out of screen"); break;
+                case 0x05: out.append("6 Number too big"); break;
+                case 0x06: out.append("7 RETURN without GOSUB"); break;
+                case 0x07: out.append("8 End of file"); break;
+                case 0x08: out.append("9 STOP statement"); break;
+                case 0x09: out.append("A Invalid argument"); break;
+                case 0x0A: out.append("B Integer out of range"); break;
+                case 0x0B: out.append("C Nonsense in BASIC"); break;
+                case 0x0C: out.append("D BREAK - CONT repeats"); break;
+                case 0x0D: out.append("E Out of DATA"); break;
+                case 0x0E: out.append("F Invalid file name"); break;
+                case 0x0F: out.append("G No room for line"); break;
+                case 0x10: out.append("H STOP in INPUT"); break;
+                case 0x11: out.append("I FOR without NEXT"); break;
+                case 0x12: out.append("J Invalid I/O device"); break;
+                case 0x13: out.append("K Invalid colour"); break;
+                case 0x14: out.append("L BREAK into program"); break;
+                case 0x15: out.append("M RAMTOP no good"); break;
+                case 0x16: out.append("N Statement lost"); break;
+                case 0x17: out.append("O Invalid stream"); break;
+                case 0x18: out.append("P FN without DEF"); break;
+                case 0x19: out.append("Q Parameter error"); break;
+                case 0x1A: out.append("R Tape loading error"); break;
+                default: out.append("???");
+            }
+            return 1;
+        }
+        
+    };
+
+    @SuppressWarnings("synthetic-access")
     static final ClassicLang CONDENSED_ZXSNUM = new ClassicLang("condensed-zxsnum", 1) {
         @Override
         final int decipher(DeciphererInput in, DeciphererOutput out)
@@ -743,6 +790,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
     static {
         MANAGER.registerSpecial("none", ClassicLang.NONE);
         MANAGER.registerSpecial("condensed-zxsnum", ClassicLang.CONDENSED_ZXSNUM);
+        MANAGER.registerSpecial("zxsb-error", ClassicLang.ZXSB_ERROR);
     }
 
     /**
