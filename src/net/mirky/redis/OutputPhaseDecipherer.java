@@ -23,13 +23,13 @@ final class OutputPhaseDecipherer {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, DeciphererOutputStringBuilder sb) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
+    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput in, DeciphererOutputStringBuilder out) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
         Disassembler.Maximiser currentInstructionSize = new Disassembler.Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
             if (step >= 0x20 && step <= 0x7E) {
-                sb.append((char) step);
+                out.append((char) step);
             } else if (step >= Disassembler.Bytecode.MINITABLE_LOOKUP_0
                     && step < Disassembler.Bytecode.MINITABLE_LOOKUP_0 + Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
                 String[] minitable = linkage.minitables[step - Disassembler.Bytecode.MINITABLE_LOOKUP_0];
@@ -37,12 +37,12 @@ final class OutputPhaseDecipherer {
                 // time
                 assert minitable.length > 0 && (minitable.length & (minitable.length - 1)) == 0;
                 // mask off excess bits, then fetch a string from the minitable
-                sb.append(minitable[currentValue & (minitable.length - 1)]);
+                out.append(minitable[currentValue & (minitable.length - 1)]);
             } else if (step >= Disassembler.Bytecode.DISPATCH_0
                     && step < Disassembler.Bytecode.DISPATCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 int suboffset = step - Disassembler.Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
-                int subsize = newLang.decipher(currentValue, input, sb.sb);
+                int subsize = newLang.decipher(currentValue, in, out.sb);
                 currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Disassembler.Bytecode.TEMPSWITCH_0
                     && step < Disassembler.Bytecode.TEMPSWITCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
@@ -52,11 +52,11 @@ final class OutputPhaseDecipherer {
                 // ignore in output generation phase
             } else if (step >= Disassembler.Bytecode.GET_BYTE_0 && step <= Disassembler.Bytecode.GET_BYTE_0 + Disassembler.Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Disassembler.Bytecode.GET_BYTE_0;
-                currentValue = input.getUnsignedByte(suboffset);
+                currentValue = in.getUnsignedByte(suboffset);
                 currentInstructionSize.feed(suboffset + 1);
             } else if (step >= Disassembler.Bytecode.GET_LEWYDE_0 && step <= Disassembler.Bytecode.GET_LEWYDE_0 + Disassembler.Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Disassembler.Bytecode.GET_LEWYDE_0;
-                currentValue = input.getUnsignedLewyde(suboffset);
+                currentValue = in.getUnsignedLewyde(suboffset);
                 currentInstructionSize.feed(suboffset + 2);
             } else {
                 switch (step) {
@@ -82,13 +82,13 @@ final class OutputPhaseDecipherer {
                         break;
     
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
-                        sb.append("0x");
-                        sb.append(Hex.b(currentValue));
+                        out.append("0x");
+                        out.append(Hex.b(currentValue));
                         break;
     
                     case Disassembler.Bytecode.UNSIGNED_WYDE:
-                        sb.append("0x");
-                        sb.append(Hex.w(currentValue));
+                        out.append("0x");
+                        out.append(Hex.w(currentValue));
                         break;
     
                     case Disassembler.Bytecode.SIGNED_BYTE:
@@ -97,10 +97,10 @@ final class OutputPhaseDecipherer {
                         } else {
                             currentValue |= ~0x7F;
                             currentValue = -currentValue;
-                            sb.append('-');
+                            out.append('-');
                         }
-                        sb.append("0x");
-                        sb.append(Hex.b(currentValue));
+                        out.append("0x");
+                        out.append(Hex.b(currentValue));
                         break;
     
                     case Disassembler.Bytecode.SIGNED_WYDE:
@@ -109,18 +109,21 @@ final class OutputPhaseDecipherer {
                         } else {
                             currentValue |= ~0x7FFF;
                             currentValue = -currentValue;
-                            sb.append('-');
+                            out.append('-');
                         }
-                        sb.append("0x");
-                        sb.append(Hex.w(currentValue));
+                        out.append("0x");
+                        out.append(Hex.w(currentValue));
                         break;
     
                     case Disassembler.Bytecode.TERMINATE:
-                    case Disassembler.Bytecode.SWITCH_BACK:
                     case Disassembler.Bytecode.SET_COUNTDOWN_6:
                     case Disassembler.Bytecode.SET_COUNTDOWN_8:
                     case Disassembler.Bytecode.SET_COUNTDOWN_12:
                         // ignore in output generation phase
+                        break;
+                        
+                    case Disassembler.Bytecode.SWITCH_BACK:
+                        out.switchBack();
                         break;
     
                     case Disassembler.Bytecode.BYTE_SIGNEDREL_1:
@@ -129,7 +132,7 @@ final class OutputPhaseDecipherer {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += input.getCurrentInstructionAddress() + 1;
+                        currentValue += in.getCurrentInstructionAddress() + 1;
                         break;
     
                     case Disassembler.Bytecode.BYTE_SIGNEDREL_2:
@@ -138,7 +141,7 @@ final class OutputPhaseDecipherer {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += input.getCurrentInstructionAddress() + 2;
+                        currentValue += in.getCurrentInstructionAddress() + 2;
                         break;
     
                     case Disassembler.Bytecode.AND_3:
@@ -154,7 +157,7 @@ final class OutputPhaseDecipherer {
                         break;
     
                     case Disassembler.Bytecode.DECIMAL:
-                        sb.append(currentValue);
+                        out.append(currentValue);
                         break;
     
                     case Disassembler.Bytecode.COMPLETE:
@@ -184,6 +187,10 @@ final class OutputPhaseDecipherer {
 
         public final void append(int i) {
             sb.append(i);
+        }
+
+        public final void switchBack() {
+            // no effect in the output generation phase
         }
     }
 }

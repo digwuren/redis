@@ -23,7 +23,7 @@ final class WavingPhaseDecipherer {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
+    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput in, WavingContext out) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
         Disassembler.Maximiser currentInstructionSize = new Disassembler.Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
@@ -37,23 +37,23 @@ final class WavingPhaseDecipherer {
                     && step < Disassembler.Bytecode.DISPATCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 int suboffset = step - Disassembler.Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
-                int subsize = newLang.decipher(currentValue, input, ctx);
+                int subsize = newLang.decipher(currentValue, in, out);
                 currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Disassembler.Bytecode.TEMPSWITCH_0
                     && step < Disassembler.Bytecode.TEMPSWITCH_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang newLang = linkage.getReferredLanguage(step - Disassembler.Bytecode.TEMPSWITCH_0);
-                ctx.switchTemporarily(newLang);
+                out.switchTemporarily(newLang);
             } else if (step >= Disassembler.Bytecode.ENTRY_POINT_0
                     && step < Disassembler.Bytecode.ENTRY_POINT_0 + Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 ClassicLang lang = linkage.getReferredLanguage(step - Disassembler.Bytecode.ENTRY_POINT_0);
-                ctx.noteAbsoluteEntryPoint(currentValue, lang);
+                out.noteAbsoluteEntryPoint(currentValue, lang);
             } else if (step >= Disassembler.Bytecode.GET_BYTE_0 && step <= Disassembler.Bytecode.GET_BYTE_0 + Disassembler.Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Disassembler.Bytecode.GET_BYTE_0;
-                currentValue = input.getUnsignedByte(suboffset);
+                currentValue = in.getUnsignedByte(suboffset);
                 currentInstructionSize.feed(suboffset + 1);
             } else if (step >= Disassembler.Bytecode.GET_LEWYDE_0 && step <= Disassembler.Bytecode.GET_LEWYDE_0 + Disassembler.Bytecode.MAX_SUBOFFSET) {
                 int suboffset = step - Disassembler.Bytecode.GET_LEWYDE_0;
-                currentValue = input.getUnsignedLewyde(suboffset);
+                currentValue = in.getUnsignedLewyde(suboffset);
                 currentInstructionSize.feed(suboffset + 2);
             } else {
                 switch (step) {
@@ -74,12 +74,12 @@ final class WavingPhaseDecipherer {
                         break;
     
                     case Disassembler.Bytecode.ENTRY_POINT_REFERENCE:
-                        ctx.noteAbsoluteEntryPoint(currentValue);
+                        out.noteAbsoluteEntryPoint(currentValue);
                         break;
     
                     case Disassembler.Bytecode.SUBROUTINE_ENTRY_POINT_REFERENCE:
-                        ctx.noteAbsoluteEntryPoint(currentValue);
-                        ctx.lookupAPI(currentValue);
+                        out.noteAbsoluteEntryPoint(currentValue);
+                        out.lookupAPI(currentValue);
                         break;
     
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
@@ -90,23 +90,23 @@ final class WavingPhaseDecipherer {
                         break;
     
                     case Disassembler.Bytecode.TERMINATE:
-                        ctx.terminate();
+                        out.terminate();
                         break;
     
                     case Disassembler.Bytecode.SET_COUNTDOWN_6:
-                        ctx.setCountdown(6);
+                        out.setCountdown(6);
                         break;
                         
                     case Disassembler.Bytecode.SET_COUNTDOWN_8:
-                        ctx.setCountdown(8);
+                        out.setCountdown(8);
                         break;
                         
                     case Disassembler.Bytecode.SET_COUNTDOWN_12:
-                        ctx.setCountdown(12);
+                        out.setCountdown(12);
                         break;
                         
                     case Disassembler.Bytecode.SWITCH_BACK:
-                        ctx.switchBack();
+                        out.switchBack();
                         break;
     
                     case Disassembler.Bytecode.BYTE_SIGNEDREL_1:
@@ -115,7 +115,7 @@ final class WavingPhaseDecipherer {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += input.getCurrentInstructionAddress() + 1;
+                        currentValue += in.getCurrentInstructionAddress() + 1;
                         break;
     
                     case Disassembler.Bytecode.BYTE_SIGNEDREL_2:
@@ -124,7 +124,7 @@ final class WavingPhaseDecipherer {
                         } else {
                             currentValue |= ~0x7F;
                         }
-                        currentValue += input.getCurrentInstructionAddress() + 2;
+                        currentValue += in.getCurrentInstructionAddress() + 2;
                         break;
     
                     case Disassembler.Bytecode.AND_3:
@@ -140,7 +140,7 @@ final class WavingPhaseDecipherer {
                         break;
     
                     case Disassembler.Bytecode.DECIMAL:
-                        // ignore -- no output
+                        out.append(currentValue);
                         break;
     
                     case Disassembler.Bytecode.COMPLETE:
