@@ -84,9 +84,30 @@ final class WavingPhaseDecipherer {
     
                     case Disassembler.Bytecode.UNSIGNED_BYTE:
                     case Disassembler.Bytecode.UNSIGNED_WYDE:
-                    case Disassembler.Bytecode.SIGNED_BYTE:
-                    case Disassembler.Bytecode.SIGNED_WYDE:
                         // ignore -- no output
+                        break;
+                    case Disassembler.Bytecode.SIGNED_BYTE:
+                        if ((currentValue & 0x80) == 0) {
+                            currentValue &= 0x7F;
+                        } else {
+                            currentValue |= ~0x7F;
+                            currentValue = -currentValue;
+                            out.append('-');
+                        }
+                        out.append("0x");
+                        out.append(Hex.b(currentValue));
+                        break;
+
+                    case Disassembler.Bytecode.SIGNED_WYDE:
+                        if ((currentValue & 0x8000) == 0) {
+                            currentValue &= 0x7FFF;
+                        } else {
+                            currentValue |= ~0x7FFF;
+                            currentValue = -currentValue;
+                            out.append('-');
+                        }
+                        out.append("0x");
+                        out.append(Hex.w(currentValue));
                         break;
     
                     case Disassembler.Bytecode.TERMINATE:

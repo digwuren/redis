@@ -784,6 +784,10 @@ public final class Disassembler {
         public final void append(int value) {
             // no effect in the waving phase
         }
+
+        public void append(String s) {
+            // no effect in the waving phase
+        }
     }
     
     public static final class Maximiser {

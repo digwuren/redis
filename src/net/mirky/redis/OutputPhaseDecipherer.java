@@ -118,7 +118,7 @@ final class OutputPhaseDecipherer {
                     case Disassembler.Bytecode.TERMINATE:
                         out.terminate();
                         break;
-                        
+
                     case Disassembler.Bytecode.SET_COUNTDOWN_6:
                         out.setCountdown(6);
                         break;
