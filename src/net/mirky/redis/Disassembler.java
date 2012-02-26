@@ -743,22 +743,27 @@ public final class Disassembler {
 
     @SuppressWarnings("synthetic-access")
     final class WavingContext extends DeciphererOutput {
+        @Override
         public final void switchTemporarily(ClassicLang newLang) {
             sequencer.switchTemporarily(newLang);
         }
 
+        @Override
         public final void noteAbsoluteEntryPoint(int address) {
             noteAbsoluteEntryPoint(address, sequencer.getCurrentLang());
         }
 
+        @Override
         public final void noteAbsoluteEntryPoint(int address, ClassicLang lang) {
             Disassembler.this.noteAbsoluteEntryPoint(address, lang);
         }
 
+        @Override
         public final void terminate() {
             sequencer.switchPermanently(ClassicLang.NONE);
         }
 
+        @Override
         public final void lookupAPI(int currentValue) {
             /*
              * XXX: Note that we don't care which language is used
@@ -773,19 +778,28 @@ public final class Disassembler {
             }
         }
 
+        @Override
         public final void setCountdown(int newCountdown) {
             sequencer.setCountdown(newCountdown);
         }
 
+        @Override
         public final void switchBack() {
             sequencer.switchBack();
         }
 
+        @Override
         public final void append(int i) {
             // no effect in the waving phase
         }
 
-        public void append(String s) {
+        @Override
+        public final void append(String s) {
+            // no effect in the waving phase
+        }
+
+        @Override
+        public final void append(char c) {
             // no effect in the waving phase
         }
     }
