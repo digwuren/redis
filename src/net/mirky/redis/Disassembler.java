@@ -42,7 +42,6 @@ public final class Disassembler {
     private int currentOffset;
     private final LangSequencer sequencer;
     private int currentInstructionSize;
-    private int currentValue;
 
     /*
      * Bytecode values for the internal bytecode. Note that the bytecode is
@@ -416,7 +415,7 @@ public final class Disassembler {
     // with multiple dispatches).
     final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws RuntimeException,
             IncompleteInstruction, ClassicLang.UnknownOpcode {
-        currentValue = 0; // just in case
+        int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
             if (step >= 0x20 && step <= 0x7E) {
@@ -626,6 +625,7 @@ public final class Disassembler {
             }
             TreeMap<ClassicLang, DecipheredInstruction> instructions = deciphered.get(boxedOffset);
             if (instructions != null) {
+                // FIXME: instead of using the existing DecipheredInstruction, decode anew
                 for (Map.Entry<ClassicLang, DecipheredInstruction> entry : instructions.entrySet()) {
                     ClassicLang lang = entry.getKey();
                     DecipheredInstruction instruction = entry.getValue();
