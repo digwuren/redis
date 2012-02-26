@@ -1,6 +1,6 @@
 package net.mirky.redis;
 
-abstract class DeciphererOutput {
+public abstract class DeciphererOutput {
     public abstract void append(char c);
     public abstract void append(String s);
     public abstract void append(int i);

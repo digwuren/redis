@@ -1,7 +1,6 @@
 package net.mirky.redis;
 
 import net.mirky.redis.Disassembler.DeciphererInput;
-import net.mirky.redis.Disassembler.WavingContext;
 
 final class WavingPhaseDecipherer {
     private WavingPhaseDecipherer() {
@@ -23,7 +22,7 @@ final class WavingPhaseDecipherer {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput in, WavingContext out) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
+    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput in, DeciphererOutput out) throws Disassembler.IncompleteInstruction, ClassicLang.UnknownOpcode {
         Disassembler.Maximiser currentInstructionSize = new Disassembler.Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {

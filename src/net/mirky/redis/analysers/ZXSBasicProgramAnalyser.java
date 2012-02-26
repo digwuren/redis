@@ -3,6 +3,7 @@ package net.mirky.redis.analysers;
 import java.util.regex.Matcher;
 
 import net.mirky.redis.Analyser;
+import net.mirky.redis.DeciphererOutput;
 import net.mirky.redis.Format;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ImageError;
@@ -125,18 +126,18 @@ public final class ZXSBasicProgramAnalyser extends Analyser.Container {
             }
         }
 
-        public final void prepareForDisassemblyDisplay(StringBuilder sb) {
+        public final void prepareForDisassemblyDisplay(DeciphererOutput out) {
             if (isInteger()) {
                 int value = intValue();
-                sb.append(value);
-                sb.append(", ");
+                out.append(value);
+                out.append(", ");
                 if (value < 0) {
-                    sb.append('-');
-                    sb.append("0x");
-                    sb.append(Hex.w(-value));
+                    out.append('-');
+                    out.append("0x");
+                    out.append(Hex.w(-value));
                 } else {
-                    sb.append("0x");
-                    sb.append(Hex.w(value));
+                    out.append("0x");
+                    out.append(Hex.w(value));
                 }
             } else {
                 // the significand is 32 bits, stored big-endian starting from
@@ -154,18 +155,18 @@ public final class ZXSBasicProgramAnalyser extends Analyser.Container {
                 if (negativep) {
                     result = -result;
                 }
-                sb.append(result);
-                sb.append(", ");
+                out.append(Double.toString(result));
+                out.append(", ");
                 if (negativep) {
-                    sb.append('-');
+                    out.append('-');
                 }
-                sb.append("0x");
-                sb.append(Hex.t((int) significand));
-                sb.append('p');
+                out.append("0x");
+                out.append(Hex.t((int) significand));
+                out.append('p');
                 if (exponent >= 0) {
-                    sb.append('+');
+                    out.append('+');
                 }
-                sb.append(exponent);
+                out.append(exponent);
             }
         }
     }
