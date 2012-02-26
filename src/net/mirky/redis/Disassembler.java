@@ -23,7 +23,7 @@ public final class Disassembler {
     private final Format format;
     private final API api;
     private final boolean[] undeciphered;
-    private final Map<Integer, TreeMap<ClassicLang, DecipheredInstruction>> deciphered;
+    private final Map<Integer, TreeSet<ClassicLang>> deciphered;
     private final Map<Integer, ArrayList<String>> problems;
 
     /**
@@ -272,7 +272,7 @@ public final class Disassembler {
         for (int i = 0; i < data.length; i++) {
             undeciphered[i] = true;
         }
-        deciphered = new HashMap<Integer, TreeMap<ClassicLang, DecipheredInstruction>>();
+        deciphered = new HashMap<Integer, TreeSet<ClassicLang>>();
         problems = new HashMap<Integer, ArrayList<String>>();
         entryPoints = new HashSet<Integer>();
         queue = new LinkedList<PendingEntryPoint>();
@@ -282,14 +282,14 @@ public final class Disassembler {
         currentInstructionSize = 0;
     }
 
-    private final void addInstructionEntry(int offset, ClassicLang lang, DecipheredInstruction instruction) {
-        TreeMap<ClassicLang, DecipheredInstruction> point = deciphered.get(new Integer(offset));
+    private final void addInstructionEntry(int offset, ClassicLang lang) {
+        TreeSet<ClassicLang> point = deciphered.get(new Integer(offset));
         if (point == null) {
-            point = new TreeMap<ClassicLang, DecipheredInstruction>();
+            point = new TreeSet<ClassicLang>();
             deciphered.put(new Integer(offset), point);
         }
-        assert !point.containsKey(lang);
-        point.put(lang, instruction);
+        assert !point.contains(lang);
+        point.add(lang);
     }
 
     final void recordProblem(String message) {
@@ -302,8 +302,8 @@ public final class Disassembler {
     }
 
     final boolean haveProcessed(int offset, ClassicLang lang) {
-        TreeMap<ClassicLang, DecipheredInstruction> point = deciphered.get(new Integer(offset));
-        return point != null && point.containsKey(lang);
+        TreeSet<ClassicLang> point = deciphered.get(new Integer(offset));
+        return point != null && point.contains(lang);
     }
 
     final int getUnsignedLewyde(int suboffset) throws IncompleteInstruction {
@@ -365,7 +365,7 @@ public final class Disassembler {
                     try {
                         StringBuilder sb = new StringBuilder();
                         sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), sb);
-                        addInstructionEntry(currentOffset, sequencer.getCurrentLang(), new DecipheredInstruction(currentInstructionSize, sb.toString()));
+                        addInstructionEntry(currentOffset, sequencer.getCurrentLang());
                         for (int i = 0; i < currentInstructionSize; i++) {
                             undeciphered[currentOffset + i] = false;
                         }
@@ -594,10 +594,9 @@ public final class Disassembler {
                     port.println("          ! " + message);
                 }
             }
-            TreeMap<ClassicLang, DecipheredInstruction> instructions = deciphered.get(boxedOffset);
+            TreeSet<ClassicLang> instructions = deciphered.get(boxedOffset);
             if (instructions != null) {
-                for (Map.Entry<ClassicLang, DecipheredInstruction> entry : instructions.entrySet()) {
-                    ClassicLang lang = entry.getKey();
+                for (ClassicLang lang : instructions) {
                     currentOffset = offset;
                     currentInstructionSize = 0;
                     sequencer.switchPermanently(lang);
