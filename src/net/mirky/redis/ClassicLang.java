@@ -177,7 +177,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             for (int i = 0; i < linkage.minitables.length; i++) {
                 String[] minitable = linkage.minitables[i];
                 if (minitable != null) {
-                    port.print("minitable minitable#" + i + ":");
+                    port.print("minitable minitable-" + i + ":");
                     for (int j = 0; j < minitable.length; j++) {
                         port.print(' ');
                         port.print(minitable[j]);
@@ -185,11 +185,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
                     port.println();
                 }
             }
-            for (int i = 0; i < linkage.referredLanguages.length; i++) {
-                if (linkage.referredLanguages[i] != null) {
-                    port.println("# referred lang " + i + " is " + linkage.referredLanguages[i]);
-                }
-            }
+            linkage.dumpReferredLanguages(port);
             for (int i = 0; i < 256; i++) {
                 if ((i & 0x0F) == 0) {
                     port.println();
@@ -298,6 +294,14 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             Linkage() {
                 minitables = new String[Disassembler.Bytecode.MAX_MINITABLE_COUNT][];
                 referredLanguages = new String[Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT];
+            }
+
+            public final void dumpReferredLanguages(PrintStream port) {
+                for (int i = 0; i < referredLanguages.length; i++) {
+                    if (referredLanguages[i] != null) {
+                        port.println("# referred lang " + i + " is " + referredLanguages[i]);
+                    }
+                }
             }
         }
     }
