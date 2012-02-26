@@ -123,7 +123,7 @@ final class LangParser {
         if (minitable.size() == 0 || (minitable.size() & (minitable.size() - 1)) != 0) {
             lexer.errorAtPos(posBeforeName, "invalid minitable size");
         }
-        if (minitableCounter >= Disassembler.Bytecode.MAX_MINITABLE_COUNT) {
+        if (minitableCounter >= ClassicLang.Bytecode.MAX_MINITABLE_COUNT) {
             lexer.errorAtPos(posBeforeName, "too many minitables");
         }
         minitablesByName.put(tableName, new Integer(minitableCounter));
@@ -170,7 +170,7 @@ final class LangParser {
                     coll.add((byte) c);
                 }
             }
-            coll.add(Disassembler.Bytecode.COMPLETE);
+            coll.add(ClassicLang.Bytecode.COMPLETE);
             lexer.passLogicalNewline();
         }
         lexer.discardDedent();
@@ -210,7 +210,7 @@ final class LangParser {
             if (arg == null) {
                 lexer.errorAtPos(posBeforeArg, "expected lang reference");
             }
-            coll.add((byte) (Disassembler.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(arg)));
+            coll.add((byte) (ClassicLang.Bytecode.TEMPSWITCH_0 + resolveReferredLanguage(arg)));
             return 0;
         } else if (verb.equals("dispatch")) {
             if (size != 1) {
@@ -219,25 +219,25 @@ final class LangParser {
             if (arg == null) {
                 lexer.errorAtPos(posBeforeArg, "expected lang reference");
             }
-            coll.add((byte) (Disassembler.Bytecode.DISPATCH_0 + resolveReferredLanguage(arg)));
+            coll.add((byte) (ClassicLang.Bytecode.DISPATCH_0 + resolveReferredLanguage(arg)));
             return 0;
         } else if (verb.equals("entry") && arg != null) {
             if (size == 0) {
                 lexer.errorAtPos(posBeforeStep, "misplaced entry");
             }
-            coll.add((byte) (Disassembler.Bytecode.ENTRY_POINT_0 + resolveReferredLanguage(arg)));
+            coll.add((byte) (ClassicLang.Bytecode.ENTRY_POINT_0 + resolveReferredLanguage(arg)));
             return size;
             // note that "entry" *without* an argument is handled as an ordinary disassembler instruction
         } else {
             String step = arg == null ? verb : verb + ' ' + arg;
-            Disassembler.Bytecode.StepDeclaration resolvedStep = Disassembler.Bytecode.resolveSimpleStep(step);
+            ClassicLang.Bytecode.StepDeclaration resolvedStep = ClassicLang.Bytecode.resolveSimpleStep(step);
             if (resolvedStep == null) {
                 switch (size) {
                     case 1:
-                        resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<byte> " + step);
+                        resolvedStep = ClassicLang.Bytecode.resolveSimpleStep("<byte> " + step);
                         break;
                     case 2:
-                        resolvedStep = Disassembler.Bytecode.resolveSimpleStep("<wyde> " + step);
+                        resolvedStep = ClassicLang.Bytecode.resolveSimpleStep("<wyde> " + step);
                         break;
                 }
             }
@@ -253,7 +253,7 @@ final class LangParser {
                     lexer.errorAtPos(posBeforeStep, "attempt to look up void value");
                 }
                 int position = coll.currentPosition();
-                coll.add((Disassembler.Bytecode.INVALID));
+                coll.add((ClassicLang.Bytecode.INVALID));
                 minitableReferencePatches.add(new MinitableReferencePatch(position, step, lexer.locAtPos(posBeforeStep)));
                 return 0;
             }
@@ -269,7 +269,7 @@ final class LangParser {
     private final int resolveReferredLanguage(String newLangName) {
         Integer index = referredLanguagesByName.get(newLangName);
         if (index == null) {
-            if (referredLanguageCounter >= Disassembler.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
+            if (referredLanguageCounter >= ClassicLang.Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 // FIXME: this ought to be properly pinpointed
                 throw new RuntimeException("too many referred languages");
             }
@@ -293,15 +293,15 @@ final class LangParser {
         }
     
         public final void apply() {
-            if (bytecode[position] != Disassembler.Bytecode.INVALID) {
+            if (bytecode[position] != ClassicLang.Bytecode.INVALID) {
                 throw new RuntimeException("bug detected");
             }
             if (!minitablesByName.containsKey(minitableName)) {
                 throw new ParseUtil.ControlDataError(loc + ": unknown minitable");
             }
             int minitableNumber = minitablesByName.get(minitableName).intValue();
-            assert minitableNumber < Disassembler.Bytecode.MAX_MINITABLE_COUNT;
-            bytecode[position] = (byte) (Disassembler.Bytecode.MINITABLE_LOOKUP_0 + minitableNumber);
+            assert minitableNumber < ClassicLang.Bytecode.MAX_MINITABLE_COUNT;
+            bytecode[position] = (byte) (ClassicLang.Bytecode.MINITABLE_LOOKUP_0 + minitableNumber);
         }
     }
 }

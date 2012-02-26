@@ -3,7 +3,7 @@ package net.mirky.redis.analysers;
 import java.util.regex.Matcher;
 
 import net.mirky.redis.Analyser;
-import net.mirky.redis.Disassembler.Bytecode.DeciphererOutput;
+import net.mirky.redis.ClassicLang.Bytecode.DeciphererOutput;
 import net.mirky.redis.Format;
 import net.mirky.redis.Hex;
 import net.mirky.redis.ImageError;

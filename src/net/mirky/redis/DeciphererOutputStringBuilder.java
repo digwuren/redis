@@ -1,6 +1,6 @@
 package net.mirky.redis;
 
-import net.mirky.redis.Disassembler.Bytecode.DeciphererOutput;
+import net.mirky.redis.ClassicLang.Bytecode.DeciphererOutput;
 
 final class DeciphererOutputStringBuilder extends DeciphererOutput {
     public final StringBuilder sb;
