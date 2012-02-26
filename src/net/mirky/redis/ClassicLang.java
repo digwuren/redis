@@ -111,7 +111,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             byte[] bytes = new byte[]{0, 0, 0, 0, 0};
             int significandOffset;
             if (condensedExponent == 0) {
-                bytes[0] = (byte) disassembler.getUnsignedByte(1);
+                bytes[0] = (byte) input.getUnsignedByte(1);
                 significandOffset = 2;
             } else {
                 bytes[0] = condensedExponent;
@@ -119,7 +119,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
             }
             bytes[0] += 0x50;
             for (int i = 0; i < significandByteCount; i++) {
-                bytes[i + 1] = (byte) disassembler.getUnsignedByte(significandOffset + i);
+                bytes[i + 1] = (byte) input.getUnsignedByte(significandOffset + i);
             }
             sb.append("byte ");
             for (int i = 0; i < significandOffset + significandByteCount; i++) {
@@ -127,7 +127,7 @@ public abstract class ClassicLang extends AbstractBinaryLanguage implements Comp
                     sb.append(", ");
                 }
                 sb.append("0x");
-                sb.append(Hex.b(disassembler.getUnsignedByte(i)));
+                sb.append(Hex.b(input.getUnsignedByte(i)));
             }
             ZXSBasicProgramAnalyser.ZXSpectrumNumber number = new ZXSBasicProgramAnalyser.ZXSpectrumNumber(bytes);
             sb.append(" // ");
