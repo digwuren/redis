@@ -403,18 +403,20 @@ public final class Disassembler {
         }
     }
 
-    // Run the given internal bytecode on this Disassembler instance and append
-    // the output
-    // to the given StringBuilder (retaining its previous content, if any).
-    // Throws IncompleteInstruction if the end of the binary object in the
-    // Disassembler is encountered
-    // before the current instruction ends, or UnknownOpcode if Lang dispatch
-    // fails (which is not
-    // necessarily dispatch by the first byte in this instruction; some
-    // languages have instructions
-    // with multiple dispatches).
-    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws RuntimeException,
-            IncompleteInstruction, ClassicLang.UnknownOpcode {
+    /**
+     * Run the given disassembler bytecode on this {@link Disassembler}
+     * instance, append the output to the given {@link StringBuilder}, determine
+     * the instruction's size, and mark referred entry points.
+     * 
+     * @throws IncompleteInstruction
+     *             if the end of the binary object in the {@link Disassembler}
+     *             is encountered before the instruction ends
+     * @throws ClassicLang.UnknownOpcode
+     *             if {@link Lang.Tabular} dispatch fails (which is not
+     *             necessarily dispatch by the first byte in this instruction;
+     *             some languages have instructions with multiple dispatches)
+     */
+    final void decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         int currentValue = 0;
         for (int i = startPosition;; i++) {
             byte step = code[i];
