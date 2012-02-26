@@ -353,7 +353,7 @@ public final class Disassembler {
                 }
                 try {
                     try {
-                        int instructionSize = sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), input, ctx);
+                        int instructionSize = sequencer.getCurrentLang().decipher(getUnsignedByte(0), input, ctx);
                         if (instructionSize < 1) {
                             instructionSize = 1;
                         }
@@ -379,8 +379,7 @@ public final class Disassembler {
     }
 
     /**
-     * Run the given disassembler bytecode on this {@link Disassembler}
-     * instance, determine the instruction's size, and mark referred entry
+     * Run the given disassembler bytecode, determine the instruction's size, and mark referred entry
      * points. This is the wave-phase variant of the bytecode interpreter; it
      * does not generate output.
      * 
@@ -394,7 +393,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, WavingContext ctx) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         Maximiser currentInstructionSize = new Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
@@ -408,7 +407,7 @@ public final class Disassembler {
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 int suboffset = step - Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
-                int subsize = newLang.decipher(this, currentValue, input, ctx);
+                int subsize = newLang.decipher(currentValue, input, ctx);
                 currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
@@ -525,8 +524,7 @@ public final class Disassembler {
     }
 
     /**
-     * Run the given disassembler bytecode on this {@link Disassembler}
-     * instance, append the output to the given {@link StringBuilder}, determine
+     * Run the given disassembler bytecode, append the output to the given {@link StringBuilder}, determine
      * the instruction's size, and mark referred entry points. This is the
      * output generation phase variant; it does not mark the entry points or
      * affect the sequencer.
@@ -541,7 +539,7 @@ public final class Disassembler {
      *             necessarily dispatch by the first byte in this instruction;
      *             some languages have instructions with multiple dispatches)
      */
-    final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
+    static final int decipher(byte[] code, int startPosition, ClassicLang.Tabular.Linkage linkage, DeciphererInput input, StringBuilder sb) throws IncompleteInstruction, ClassicLang.UnknownOpcode {
         Maximiser currentInstructionSize = new Maximiser(0);
         int currentValue = 0;
         for (int i = startPosition;; i++) {
@@ -560,7 +558,7 @@ public final class Disassembler {
                     && step < Bytecode.DISPATCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
                 int suboffset = step - Bytecode.DISPATCH_0;
                 ClassicLang newLang = linkage.getReferredLanguage(suboffset);
-                int subsize = newLang.decipher(this, currentValue, input, sb);
+                int subsize = newLang.decipher(currentValue, input, sb);
                 currentInstructionSize.feed(suboffset + subsize);
             } else if (step >= Bytecode.TEMPSWITCH_0
                     && step < Bytecode.TEMPSWITCH_0 + Bytecode.MAX_REFERRED_LANGUAGE_COUNT) {
@@ -717,7 +715,7 @@ public final class Disassembler {
                     StringBuilder sb = new StringBuilder();
                     int size;
                     try {
-                        size = lang.decipher(this, getUnsignedByte(0), input, sb);
+                        size = lang.decipher(getUnsignedByte(0), input, sb);
                         if (size < 1) {
                             size = 1;
                         }
