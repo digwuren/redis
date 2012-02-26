@@ -1,6 +1,4 @@
-Dispatch-suboffset: 1
-
-dispatch
+dispatch(1)
     [0xCB]  <byte 3, dispatch z80-xd-cb>
 
     [0o1?6-0o166]  mov <byte 1, shr 3, reg>, <byte 2, signed>[i<byte 0, shr 5, indexreg>]

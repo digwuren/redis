@@ -6,7 +6,7 @@
 # The notation we use for indexed addressing is displacement[basereg] (TDL ZASM uses round parens).
 # We don't want to overburden round parens with nontrivial semantics.
 
-dispatch
+dispatch(0)
     [0o1??-0x76]  mov <byte 0, shr 3, reg>, <byte 0, reg>
     [0o0?6]       mvi <byte 0, shr 3, reg>, <byte 1, unsigned>
 

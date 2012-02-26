@@ -1,7 +1,7 @@
 Default-countdown: 1
 Trivial: true
 
-dispatch
+dispatch(0)
     [0x00] 1 NEXT without FOR
     [0x01] 2 Variable not found
     [0x02] 3 Subscript wrong

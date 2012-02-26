@@ -2,7 +2,7 @@
 # Notation is mostly Intel's, except we spell register pair names fully out
 # (f. e., dad bc, not dad b)
 
-dispatch
+dispatch(0)
     [0o1??-0x76]  mov <byte 0, shr 3, reg>, <byte 0, reg>
     [0o0?6]       mvi <byte 0, shr 3, reg>, <byte 1, unsigned>
 

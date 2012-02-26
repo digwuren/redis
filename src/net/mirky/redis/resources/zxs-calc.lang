@@ -1,4 +1,4 @@
-dispatch
+dispatch(0)
     [0x00]  jump-true <byte 1, signedrel 1, entry, unsigned>
     [0x01]  exchange
     [0x02]  delete

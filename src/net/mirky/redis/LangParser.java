@@ -43,7 +43,6 @@ final class LangParser {
     final void parse(String name, BufferedReader reader) throws IOException {
         Set<String> knownHeaderItems = new TreeSet<String>();
         // note that the membership is checked with a downcased specimen
-        knownHeaderItems.add("dispatch-suboffset");
         knownHeaderItems.add("default-countdown");
         knownHeaderItems.add("trivial");
         Set<String> seenHeaderLines = new TreeSet<String>();
@@ -68,9 +67,7 @@ final class LangParser {
                 lexer.skipSpaces();
                 lexer.pass(':');
                 lexer.skipSpaces();
-                if (itemName.equalsIgnoreCase("Dispatch-suboffset")) {
-                    dispatchSuboffset = lexer.readUnsignedInteger("dispatch suboffset");
-                } else if (itemName.equalsIgnoreCase("Default-countdown")) {
+                if (itemName.equalsIgnoreCase("Default-countdown")) {
                     defaultCountdown = lexer.readUnsignedInteger("default countdown");
                 } else if (itemName.equalsIgnoreCase("Trivial")) {
                     if (lexer.passOptDashedWord("true")) {
@@ -136,6 +133,12 @@ final class LangParser {
 
     private final void parseDispatchTable(ParseUtil.IndentableLexer lexer) throws IOException,
             RuntimeException {
+        lexer.skipSpaces();
+        lexer.pass('(');
+        lexer.skipSpaces();
+        dispatchSuboffset = lexer.readUnsignedInteger("dispatch suboffset");
+        lexer.skipSpaces();
+        lexer.pass(')');
         lexer.passLogicalNewline();
         lexer.passIndent();
         while (!lexer.atDedent()) {

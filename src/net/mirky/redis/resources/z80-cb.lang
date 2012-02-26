@@ -1,6 +1,4 @@
-Dispatch-suboffset: 1
-
-dispatch
+dispatch(1)
     [0o00?]  rlcr <byte 1, reg>
     [0o01?]  rrcr <byte 1, reg>
     [0o02?]  ralr <byte 1, reg>

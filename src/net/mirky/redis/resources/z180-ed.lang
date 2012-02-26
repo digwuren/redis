@@ -1,6 +1,4 @@
-Dispatch-suboffset: 1
-
-dispatch
+dispatch(1)
     [0x57]  ldai
     [0x5F]  ldar
     [0x47]  stai

@@ -17,7 +17,7 @@
 
 # The analysis comes largely from <http://www.llx.com/~nparker/a2/opcodes.html>.
 
-dispatch
+dispatch(0)
     # the cc=01 instructions (see minitable op01)
     [0b???_000_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[x,zp][]
     [0b???_001_01]  <byte 0, shr 5, op01> <byte 1, unsigned>[zp]
