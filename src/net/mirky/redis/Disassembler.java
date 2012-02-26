@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import net.mirky.redis.Disassembler.DecipheredInstruction;
-
 public final class Disassembler {
     private final byte[] data;
     private final Format format;
@@ -282,15 +280,6 @@ public final class Disassembler {
         currentInstructionSize = 0;
     }
 
-    private final void storeInstructionAndPass(ClassicLang lang, String asString) {
-        addInstructionEntry(currentOffset, lang, new DecipheredInstruction(currentInstructionSize, asString));
-        for (int i = 0; i < currentInstructionSize; i++) {
-            undeciphered[currentOffset + i] = false;
-        }
-        currentOffset += currentInstructionSize;
-        currentInstructionSize = 0;
-    }
-
     private final void addInstructionEntry(int offset, ClassicLang lang, DecipheredInstruction instruction) {
         TreeMap<ClassicLang, DecipheredInstruction> point = deciphered.get(new Integer(offset));
         if (point == null) {
@@ -374,7 +363,12 @@ public final class Disassembler {
                     try {
                         StringBuilder sb = new StringBuilder();
                         sequencer.getCurrentLang().decipher(this, getUnsignedByte(0), sb);
-                        storeInstructionAndPass(sequencer.getCurrentLang(), sb.toString());
+                        addInstructionEntry(currentOffset, sequencer.getCurrentLang(), new DecipheredInstruction(currentInstructionSize, sb.toString()));
+                        for (int i = 0; i < currentInstructionSize; i++) {
+                            undeciphered[currentOffset + i] = false;
+                        }
+                        currentOffset += currentInstructionSize;
+                        currentInstructionSize = 0;
                         sequencer.advance();
                     } catch (ClassicLang.UnknownOpcode e) {
                         this.recordProblem("unknown " + e.lang.name + " opcode");
